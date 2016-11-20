@@ -39,51 +39,53 @@ data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed |
     | Sellable_Not_Accessible | Stolen | Unknown
     deriving (Show,Eq,Generic)
 
-data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier ())
+data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier)
   deriving (Show,Eq,Generic)
+
+data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
 
 data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
     | Prodorder | Recadv | Rma
     deriving (Show,Eq,Generic)
 
 -- Valid Dispositions, defined in section 7.2
+dispositionValidList :: Disposition -> [BusinessStep] 
+dispositionValidList Active           =  [Commissioning]
+dispositionValidList Container_Closed =  [Staging_Outbound]
+dispositionValidList Damaged          =  [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
+dispositionValidList Destroyed  =  [Destroying]
+dispositionValidList Dispensed  =  [] -- nothing defined - page 25 of spec
+dispositionValidList Encoded    =  [Encoding] 
+dispositionValidList Expired    =  [Holding, Staging_Outbound, Storing] 
+dispositionValidList In_Progress=  [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping] 
+dispositionValidList In_Transit =  [Shipping, Departing] 
+dispositionValidList Inactive   =  [Decommissioning] 
+dispositionValidList No_Pedgree_Match   =  [Holding, Staging_Outbound, Storing] 
+dispositionValidList Non_Sellable_Other =  [Holding, Inspecting, Staging_Outbound, Storing] 
+dispositionValidList Partially_Dispensed=  []  -- nothing defined - page 25 of spec
+dispositionValidList Recalled   =  [Holding, Staging_Outbound, Storing] 
+dispositionValidList Reserved   =  [Reserving] 
+dispositionValidList Retail_Sold=  [Retail_Selling] 
+dispositionValidList Returned   =  [Receiving, Holding, Shipping] 
+dispositionValidList Sellable_Accessible     =  [Stocking, Receiving] 
+dispositionValidList Sellable_Not_Accessible =  [Receiving, Storing, Loading, Holding, Inspecting] 
+dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
+dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
+
 dispositionValidFor :: BusinessStep -> Disposition -> Bool
-dispositionValidFor bs Active = bs `elem` [Commissioning]
-dispositionValidFor bs Container_Closed = bs `elem` [Staging_Outbound]
-dispositionValidFor bs Damaged = bs `elem` [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
-dispositionValidFor bs Destroyed = bs `elem` [Destroying]
-dispositionValidFor bs Dispensed = bs `elem` [] -- nothing defined - page 25 of spec
-dispositionValidFor bs Encoded = bs `elem` [Encoding] 
-dispositionValidFor bs Expired = bs `elem` [Holding, Staging_Outbound, Storing] 
-dispositionValidFor bs In_Progress = bs `elem` [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping] 
-dispositionValidFor bs In_Transit = bs `elem` [Shipping, Departing] 
-dispositionValidFor bs Inactive = bs `elem` [Decommissioning] 
-dispositionValidFor bs No_Pedgree_Match= bs `elem` [Holding, Staging_Outbound, Storing] 
-dispositionValidFor bs Non_Sellable_Other = bs `elem` [Holding, Inspecting, Staging_Outbound, Storing] 
-dispositionValidFor bs Partially_Dispensed = bs `elem` []  -- nothing defined - page 25 of spec
-dispositionValidFor bs Recalled = bs `elem` [Holding, Staging_Outbound, Storing] 
-dispositionValidFor bs Reserved = bs `elem` [Reserving] 
-dispositionValidFor bs Retail_Sold = bs `elem` [Retail_Selling] 
-dispositionValidFor bs Returned = bs `elem` [Receiving, Holding, Shipping] 
-dispositionValidFor bs Sellable_Accessible = bs `elem` [Stocking, Receiving] 
-dispositionValidFor bs Sellable_Not_Accessible = bs `elem` [Receiving, Storing, Loading, Holding, Inspecting] 
-dispositionValidFor bs Stolen = bs `elem` [] -- nothing defined - page 25 of spec
-dispositionValidFor bs Unknown = bs `elem` [] -- nothing defined - page 25 of spec
+dispositionValidFor bs disp = bs `elem` (dispositionValidList disp)
+
 
 -- The why smart constructor
 -- Have to make sure the disposition is valid for that particular business
 -- step.
-why :: BusinessStep -> Disposition -> [BusinessTransactionReference] -> [SrcDestReference] -> Maybe Why
+why :: BusinessStep -> Disposition -> [BusinessTransactionReference] -> [SrcDestReference] -> Why
 why step disp trans srcdsts = if dispositionValidFor step disp 
-                              then Just $ Why step disp trans srcdsts
-                              else Nothing
+                              then Why step disp trans srcdsts
+                              else error ("Disposition not valid for business step. " ++
+                                  " Valid BusinessSteps for " ++ show(disp) ++ "include: " ++
+                                  show(dispositionValidList disp))
 
-
-
--- NOTE what is uri supposed to represent?
-data BusinessTransactionIdentifier uri =
-    EPCPureIdentity uri | URN uri | Http uri  --probably need to make explicit constructors for these
-    deriving (Show,Eq,Generic)
 
 
 -- URIs!
@@ -97,7 +99,9 @@ data BusinessTransactionIdentifier uri =
 -- src/dest type or error reason
 --
 -- Not all dispositions can be used with all business steps. Each disposition
--- has a list of business steps it's valid for.
+-- has a list of business steps it's valid for. This is why we have a smart
+-- constructor for Why. It checks whether the disposition is valid for
+-- the particular business step.
 --
 
 
@@ -106,7 +110,10 @@ data SrcDestReference = SDR SrcDestType Where deriving (Show,Eq,Generic)
 
 data SrcDestTypeURI = SDTU Payload deriving (Show,Eq,Generic)
 
-data SrcDestType = OwningParty | PossessingParty deriving (Show,Eq,Generic)
+-- These are the Source/Dest Type URI payloads
+-- urn:epcglobal:cbv:sdt:payload
+-- FIXME LOCATION
+data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,Eq,Generic)
 
 
 -- example
