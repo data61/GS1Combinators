@@ -19,7 +19,7 @@ data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDe
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
-type Namespace = String -- registered IANA namespace
+--type Namespace = String -- registered IANA namespace
 --data Location  = Location  deriving (Show,Eq,Generic)
 data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
 

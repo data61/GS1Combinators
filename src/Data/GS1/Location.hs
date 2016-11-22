@@ -2,29 +2,31 @@
 
 module Data.GS1.Location where
 
+import Data.GS1.Namespace
 import GHC.Generics
 
-{--
+{- 
  - section 8.4.2
  - RFC2141
  - location id
---}
+ -}
 type LocId = String
 
-{--
+{- 
  - A location is either a ReadPointLocation or a BusinessLocation
  - FIXME: To add more definitions
---}
+ -}
 data Location = ReadPointLocation LocId | BusinessLocation LocId
   deriving (Eq, Generic)
 
 getLocId :: Location -> LocId
-getLocId (ReadPointLocation id) = id
-getLocId (BusinessLocation id) = id
+getLocId location = case location of
+                      (ReadPointLocation id) -> id
+                      (BusinessLocation id)  -> id
 
--- TODO: to implement a proper version with URNNamespace
+-- Global Location Number
 instance Show Location where
-  show location = "urn:URNNamespace:**:loc:" ++ (getLocId location)
+  show location = "urn:epc:id:sgln:" ++ (getLocId location)
 
 data ReadPointLocation = RP LocId
   deriving (Show, Eq, Generic)
@@ -41,10 +43,10 @@ type Longitude = Double
 data GeoLocation = GeoLocation Latitude Longitude
   deriving (Eq)
 
-{--
+{- 
  - non-normative representation
  - simplest form of RFC5870
---}
+ -}
 geoFormatSimple :: GeoLocation -> String
 geoFormatSimple (GeoLocation lat lon) = "geo" ++ ":" ++ (show lat) ++ "," ++ (show lon)
 
