@@ -3,6 +3,7 @@
 module Data.GS1 where
 
 import GHC.Generics
+import Data.GS1.Location
 
 data Event = Event What When Where Why
 
@@ -10,16 +11,16 @@ data Event = Event What When Where Why
 
 newtype What = What [URI] deriving (Show,Eq,Generic)
 type    When = EPCISTime
-data    Where = Where ReadPointLocation BuisinessLocation deriving (Show,Eq,Generic)
-newtype ReadPointLocation = RP Location deriving (Show,Eq,Generic)
-newtype BuisinessLocation = Biz Location deriving (Show,Eq,Generic)
+data    Where = Where ReadPointLocation BusinessLocation deriving (Show,Eq,Generic)
+-- newtype ReadPointLocation = RP Location deriving (Show,Eq,Generic)
+-- newtype BuisinessLocation = Biz Location deriving (Show,Eq,Generic)
 data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDestReference] deriving (Show,Eq,Generic)
 
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
-type Namespace = String -- registered IANA namespace
-data Location  = Location  deriving (Show,Eq,Generic)
+--type Namespace = String -- registered IANA namespace
+--data Location  = Location  deriving (Show,Eq,Generic)
 data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
