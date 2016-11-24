@@ -4,4 +4,4 @@ import Test.Hspec (hspec)
 import Tests.Location
 
 main :: IO ()
-main = hspec testPassLocId
+main = hspec testPassGLN
