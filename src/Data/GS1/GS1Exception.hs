@@ -8,3 +8,9 @@ data GLNException = InvalidGLNLengthException String
   deriving (Show, Typeable)
 
 instance Exception GLNException
+
+-- |Type EPCISTimeException
+data EPCISTimeException = InvalidDateException String | InvalidTimeException String
+  deriving (Show, Typeable)
+
+instance Exception EPCISTimeException
