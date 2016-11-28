@@ -14,7 +14,7 @@ type    When = EPCISTime
 data    Where = Where ReadPointLocation BusinessLocation deriving (Show,Eq,Generic)
 -- newtype ReadPointLocation = RP Location deriving (Show,Eq,Generic)
 -- newtype BuisinessLocation = Biz Location deriving (Show,Eq,Generic)
-data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDestReference] deriving (Show,Eq,Generic)
+data Action = Add | Observe | Delete
 
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
@@ -49,27 +49,28 @@ data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
     | Prodorder | Recadv | Rma
     deriving (Show,Eq,Generic)
 
+
 -- Valid Dispositions, defined in section 7.2
-dispositionValidList :: Disposition -> [BusinessStep] 
+dispositionValidList :: Disposition -> [BusinessStep]
 dispositionValidList Active           =  [Commissioning]
 dispositionValidList Container_Closed =  [Staging_Outbound]
 dispositionValidList Damaged          =  [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
 dispositionValidList Destroyed  =  [Destroying]
 dispositionValidList Dispensed  =  [] -- nothing defined - page 25 of spec
-dispositionValidList Encoded    =  [Encoding] 
-dispositionValidList Expired    =  [Holding, Staging_Outbound, Storing] 
-dispositionValidList In_Progress=  [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping] 
-dispositionValidList In_Transit =  [Shipping, Departing] 
-dispositionValidList Inactive   =  [Decommissioning] 
-dispositionValidList No_Pedgree_Match   =  [Holding, Staging_Outbound, Storing] 
-dispositionValidList Non_Sellable_Other =  [Holding, Inspecting, Staging_Outbound, Storing] 
+dispositionValidList Encoded    =  [Encoding]
+dispositionValidList Expired    =  [Holding, Staging_Outbound, Storing]
+dispositionValidList In_Progress=  [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping]
+dispositionValidList In_Transit =  [Shipping, Departing]
+dispositionValidList Inactive   =  [Decommissioning]
+dispositionValidList No_Pedgree_Match   =  [Holding, Staging_Outbound, Storing]
+dispositionValidList Non_Sellable_Other =  [Holding, Inspecting, Staging_Outbound, Storing]
 dispositionValidList Partially_Dispensed=  []  -- nothing defined - page 25 of spec
-dispositionValidList Recalled   =  [Holding, Staging_Outbound, Storing] 
-dispositionValidList Reserved   =  [Reserving] 
-dispositionValidList Retail_Sold=  [Retail_Selling] 
-dispositionValidList Returned   =  [Receiving, Holding, Shipping] 
-dispositionValidList Sellable_Accessible     =  [Stocking, Receiving] 
-dispositionValidList Sellable_Not_Accessible =  [Receiving, Storing, Loading, Holding, Inspecting] 
+dispositionValidList Recalled   =  [Holding, Staging_Outbound, Storing]
+dispositionValidList Reserved   =  [Reserving]
+dispositionValidList Retail_Sold=  [Retail_Selling]
+dispositionValidList Returned   =  [Receiving, Holding, Shipping]
+dispositionValidList Sellable_Accessible     =  [Stocking, Receiving]
+dispositionValidList Sellable_Not_Accessible =  [Receiving, Storing, Loading, Holding, Inspecting]
 dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
 dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 
@@ -81,7 +82,7 @@ dispositionValidFor bs disp = bs `elem` (dispositionValidList disp)
 -- Have to make sure the disposition is valid for that particular business
 -- step.
 why :: BusinessStep -> Disposition -> [BusinessTransactionReference] -> [SrcDestReference] -> Why
-why step disp trans srcdsts = if dispositionValidFor step disp 
+why step disp trans srcdsts = if dispositionValidFor step disp
                               then Why step disp trans srcdsts
                               else error ("Disposition not valid for business step. " ++
                                   " Valid BusinessSteps for " ++ show(disp) ++ "include: " ++
@@ -123,4 +124,4 @@ data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,E
 myTime = EPCISTime
 
 --myEvent :: Event
---myEvent = Event (W []) myTime (W (RP Location) 
+--myEvent = Event (W []) myTime (W (RP Location)
