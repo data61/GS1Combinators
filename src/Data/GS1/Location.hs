@@ -1,27 +1,27 @@
-{-# LANGUAGE DeriveGeneric, FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Data.GS1.Location where
 
-import Control.Exception
-import Data.Char
-import Data.GS1.GS1Exception
-import GHC.Generics
+import           Control.Exception
+import           Data.Char
+import           Data.GS1.GS1Exception
+import           GHC.Generics
 
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
 calcCheckDigit :: GS1CompanyPrefix -> LocationRef -> Int
-calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref))
-                            where getDigit arr
-                                    | length arr /= 12 = -1
-                                    | otherwise        = 10 - ((sumDigit arr) `mod` 10)
-                                        where sumDigit arr2 = case arr2 of
-                                                               []       -> 0
-                                                               [_]      -> 0
-                                                               (a:b:xs) -> (a + b * 3) + (sumDigit xs)
+calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
+  getDigit arr
+    | length arr /= 12 = -1
+    | otherwise        = 10 - (sumDigit arr `mod` 10)
+    where sumDigit arr2 = case arr2 of
+                          (a:b:xs) -> a + b * 3 + sumDigit xs
+                          _        -> 0
 
 -- |validateGLN
 validateGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
-validateGLN pref ref cd = (calcCheckDigit pref ref) == (read cd::Int)
+validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 
 -- |Global Location Number
 data GLN = GLN GS1CompanyPrefix LocationRef CheckDigit
@@ -71,8 +71,8 @@ data GeoLocation = GeoLocation Latitude Longitude
 
 -- |non-normative representation - simplest form of RFC5870
 geoFormatSimple :: GeoLocation -> String
-geoFormatSimple (GeoLocation lat lon) = "geo" ++ ":" ++ (show lat) ++ "," ++ (show lon)
+geoFormatSimple (GeoLocation lat lon) = "geo" ++ ":" ++ show lat ++ "," ++ show lon
 
 instance Show GeoLocation where
-  show geo = geoFormatSimple geo
+  show = geoFormatSimple
 
