@@ -1,7 +1,11 @@
 module Main where
 
-import Test.Hspec (hspec)
 import Tests.Location
+import Tests.EPCISTime
+
+import Test.Hspec (hspec)
 
 main :: IO ()
-main = hspec testPassGLN
+main = do
+  hspec testPassGLN
+  hspec testTime
