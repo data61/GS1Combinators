@@ -2,6 +2,7 @@
 
 module Data.GS1 where
 
+import           Data.GS1.EPCISTime
 import           Data.GS1.Location
 import           GHC.Generics
 
@@ -12,16 +13,13 @@ data Event = Event What When Where Why
 newtype What = What [URI] deriving (Show,Eq,Generic)
 type    When = EPCISTime
 data    Where = Where ReadPointLocation BusinessLocation deriving (Show,Eq,Generic)
--- newtype ReadPointLocation = RP Location deriving (Show,Eq,Generic)
--- newtype BuisinessLocation = Biz Location deriving (Show,Eq,Generic)
 data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDestReference] deriving (Show,Eq,Generic)
 
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
---type Namespace = String -- registered IANA namespace
---data Location  = Location  deriving (Show,Eq,Generic)
-data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
+
+--data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
@@ -49,7 +47,7 @@ data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
     | Prodorder | Recadv | Rma
     deriving (Show,Eq,Generic)
 
--- Valid Dispositions, defined in section 7.2
+-- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BusinessStep]
 dispositionValidList Active           =  [Commissioning]
 dispositionValidList Container_Closed =  [Staging_Outbound]
@@ -121,7 +119,7 @@ data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,E
 -- example
 --
 
-myTime = EPCISTime
+--myTime = EPCISTime
 
 --myEvent :: Event
 --myEvent = Event (W []) myTime (W (RP Location)
