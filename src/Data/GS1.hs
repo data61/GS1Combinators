@@ -2,8 +2,9 @@
 
 module Data.GS1 where
 
-import GHC.Generics
-import Data.GS1.Location
+import           Data.GS1.EPCISTime
+import           Data.GS1.Location
+import           GHC.Generics
 
 data Event = Event What When Where Why
 
@@ -19,9 +20,8 @@ data Action = Add | Observe | Delete
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
---type Namespace = String -- registered IANA namespace
---data Location  = Location  deriving (Show,Eq,Generic)
-data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
+
+--data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
@@ -49,8 +49,7 @@ data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
     | Prodorder | Recadv | Rma
     deriving (Show,Eq,Generic)
 
-
--- Valid Dispositions, defined in section 7.2
+-- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BusinessStep]
 dispositionValidList Active           =  [Commissioning]
 dispositionValidList Container_Closed =  [Staging_Outbound]
@@ -75,18 +74,19 @@ dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
 dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 
 dispositionValidFor :: BusinessStep -> Disposition -> Bool
-dispositionValidFor bs disp = bs `elem` (dispositionValidList disp)
+dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 
 
 -- The why smart constructor
 -- Have to make sure the disposition is valid for that particular business
 -- step.
 why :: BusinessStep -> Disposition -> [BusinessTransactionReference] -> [SrcDestReference] -> Why
-why step disp trans srcdsts = if dispositionValidFor step disp
-                              then Why step disp trans srcdsts
-                              else error ("Disposition not valid for business step. " ++
-                                  " Valid BusinessSteps for " ++ show(disp) ++ "include: " ++
-                                  show(dispositionValidList disp))
+why step disp trans srcdsts =
+    if dispositionValidFor step disp
+    then Why step disp trans srcdsts
+    else error $ "Disposition not valid for business step. " ++
+                  " Valid BusinessSteps for " ++ show disp ++ "include: " ++
+                  show (dispositionValidList disp)
 
 
 
@@ -121,7 +121,7 @@ data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,E
 -- example
 --
 
-myTime = EPCISTime
+--myTime = EPCISTime
 
 --myEvent :: Event
 --myEvent = Event (W []) myTime (W (RP Location)
