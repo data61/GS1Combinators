@@ -2,7 +2,6 @@
 
 module Data.GS1 where
 
-import           Data.GS1.EPCISTime
 import           Data.GS1.Location
 import           GHC.Generics
 
@@ -19,7 +18,8 @@ data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDe
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
 
---data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
+-- TODO use built-in time package
+data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
