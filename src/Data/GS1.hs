@@ -12,7 +12,9 @@ data Event = Event What When Where Why
 newtype What = What [URI] deriving (Show,Eq,Generic)
 type    When = EPCISTime
 data    Where = Where ReadPointLocation BusinessLocation deriving (Show,Eq,Generic)
-data    Why = Why BusinessStep Disposition [BusinessTransactionReference] [SrcDestReference] deriving (Show,Eq,Generic)
+-- newtype ReadPointLocation = RP Location deriving (Show,Eq,Generic)
+-- newtype BuisinessLocation = Biz Location deriving (Show,Eq,Generic)
+data Action = Add | Observe | Delete
 
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
