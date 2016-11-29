@@ -5,7 +5,7 @@ module Data.GS1 where
 import           Data.GS1.Location
 import           GHC.Generics
 
-data Event = Event What When Where Why
+data Event = Event What When Where --Why
 
 -- Verbs
 
@@ -76,7 +76,7 @@ dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 dispositionValidFor :: BusinessStep -> Disposition -> Bool
 dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 
-
+{-
 -- The why smart constructor
 -- Have to make sure the disposition is valid for that particular business
 -- step.
@@ -87,7 +87,7 @@ why step disp trans srcdsts =
     else error $ "Disposition not valid for business step. " ++
                   " Valid BusinessSteps for " ++ show disp ++ "include: " ++
                   show (dispositionValidList disp)
-
+-}
 
 
 -- URIs!
