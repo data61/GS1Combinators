@@ -1,12 +1,25 @@
 {-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Data.GS1.Location where
 
+import           Control.Lens.Prism
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except
 import           Control.Exception
 import           Data.Char
-import           Data.GS1.GS1Exception
+import           Data.List
 import           GHC.Generics
+import           Text.Printf
+
+data LocationError
+  = GLNInvalid
+  deriving (Show, Eq, Generic)
+
+makeClassyPrisms ''LocationError
 
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
@@ -20,7 +33,11 @@ calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
                           _        -> 0
 
 -- |validateGLN
+-- TODO: each pref ref could be validated
 validateGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
+validateGLN "" _ _      = False
+validateGLN _ _ ""      = False
+validateGLN _ _ ""      = False
 validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 
 -- |Global Location Number
@@ -28,13 +45,13 @@ data GLN = GLN GS1CompanyPrefix LocationRef CheckDigit
   deriving (Eq)
 
 instance Show GLN where
-  show (GLN pref ref cd) = pref ++ "." ++ ref ++ "." ++ cd
+  show (GLN pref ref cd) = intercalate "." [pref, ref, cd]
 
--- |Creates a GLN with valid format
-gln :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> GLN
+gln ::(AsLocationError e, MonadError e m)
+     => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m GLN
 gln pref ref cd
-  | validateGLN pref ref cd = GLN pref ref cd
-  | otherwise               = throw (InvalidGLNLengthException "invalid length")
+  | validateGLN pref ref cd = pure (GLN pref ref cd)
+  | otherwise               = throwing _GLNInvalid ()
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -71,7 +88,7 @@ data GeoLocation = GeoLocation Latitude Longitude
 
 -- |non-normative representation - simplest form of RFC5870
 geoFormatSimple :: GeoLocation -> String
-geoFormatSimple (GeoLocation lat lon) = "geo" ++ ":" ++ show lat ++ "," ++ show lon
+geoFormatSimple (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
 
 instance Show GeoLocation where
   show = geoFormatSimple
