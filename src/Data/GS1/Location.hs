@@ -74,6 +74,9 @@ instance Show Location where
 data Location = Location GLN
   deriving (Eq, Generic)
 
+locationFormat :: Location -> String
+locationFormat (Location n) = printf "urn:epc:id:sgln:%s" (show n)
+
 -- |Location synonym
 type ReadPointLocation = Location
 
