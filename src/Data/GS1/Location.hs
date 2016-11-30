@@ -31,12 +31,10 @@ calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
                           _        -> 0
 
 wellFormatGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
-wellFormatGLN pref ref cd
-  | (_concat pref ref == 12) && (length cd == 1) && (_isNum pref ref cd) = True
-  | otherwise                                                            = False
-  where _concat a b = length (intercalate "" [a, b])
+wellFormatGLN pref ref cd = _concat pref ref == 12 && length cd == 1 && _isNum pref ref cd
+  where _concat a b = length (concat [a, b])
         _isNum a b c = 
-          let mint = readMaybe (intercalate "" [a, b, c]) :: Maybe Integer in
+          let mint = readMaybe (concat [a, b, c]) :: Maybe Integer in
           case mint of
             Just _  -> True
             Nothing -> False
