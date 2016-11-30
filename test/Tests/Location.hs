@@ -9,10 +9,10 @@ testPassGLN :: Spec
 testPassGLN = do
   describe "Location" $ do
     it "GLN is verified correctly" $
-      show ((gln "0614141" "18133" "9") :: EitherLG) `shouldBe` "Right 0614141.18133.9"
+      ((gln "0614141" "18133" "9") :: EitherLG) `shouldBe` Right (GLN "0614141" "18133" "9")
 
     it "GLN is verified correctly" $
-      show ((gln "0532132" "14112" "7") :: EitherLG) `shouldBe` "Right 0532132.14112.7"
+      ((gln "0532132" "14112" "7") :: EitherLG) `shouldBe` Right (GLN "0532132" "14112" "7")
 
     it "IllegalFormat: Invalid length" $
       ((gln "0614141" "1813392322222222222" "2") :: EitherLG) `shouldBe` Left IllegalFormat
