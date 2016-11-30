@@ -5,18 +5,18 @@
 
 module Data.GS1.Location where
 
-import           Control.Lens.Prism
 import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except
-import           Control.Exception
 import           Data.Char
 import           Data.List
 import           GHC.Generics
 import           Text.Printf
+import           Text.Read
 
 data LocationError
-  = GLNInvalid
+  = IllegalFormat
+  | InvalidChecksum
   deriving (Show, Eq, Generic)
 
 makeClassyPrisms ''LocationError
@@ -25,19 +25,22 @@ makeClassyPrisms ''LocationError
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
 calcCheckDigit :: GS1CompanyPrefix -> LocationRef -> Int
 calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
-  getDigit arr
-    | length arr /= 12 = -1
-    | otherwise        = 10 - (sumDigit arr `mod` 10)
+  getDigit arr = 10 - (sumDigit arr `mod` 10)
     where sumDigit arr2 = case arr2 of
                           (a:b:xs) -> a + b * 3 + sumDigit xs
                           _        -> 0
 
+wellFormatGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
+wellFormatGLN pref ref cd = _concat pref ref == 12 && length cd == 1 && _isNum pref ref cd
+  where _concat a b = length (concat [a, b])
+        _isNum a b c = 
+          let mint = readMaybe (concat [a, b, c]) :: Maybe Integer in
+          case mint of
+            Just _  -> True
+            Nothing -> False
+
 -- |validateGLN
--- TODO: each pref ref could be validated
 validateGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
-validateGLN "" _ _      = False
-validateGLN _ "" _      = False
-validateGLN _ _ ""      = False
 validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 
 -- |Global Location Number
@@ -50,8 +53,9 @@ instance Show GLN where
 gln ::(AsLocationError e, MonadError e m)
      => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m GLN
 gln pref ref cd
-  | validateGLN pref ref cd = pure (GLN pref ref cd)
-  | otherwise               = throwing _GLNInvalid ()
+  | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
+  | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
+  | otherwise                       = pure (GLN pref ref cd)
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
