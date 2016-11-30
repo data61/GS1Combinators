@@ -6,7 +6,7 @@ import           Data.GS1.EPCISTime
 import           Data.GS1.Location
 import           GHC.Generics
 
-data Event = Event What When Where Why
+data Event = Event (Maybe EventID) What When Where Why
 
 -- Verbs
 
@@ -48,6 +48,14 @@ data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Sho
 data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
     | Prodorder | Recadv | Rma
     deriving (Show,Eq,Generic)
+
+
+-- data What = ObjectEvent [EPCObject] | AggregationEvent (Maybe Parent) [Child] | TransactionEvent ??
+--   | TransformationEvent Input Output TransformationID
+
+-- newtype Input = [EPCObject]
+-- newtype Output = [EPCObject]
+
 
 -- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BusinessStep]
