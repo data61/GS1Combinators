@@ -36,7 +36,7 @@ calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
 -- TODO: each pref ref could be validated
 validateGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
 validateGLN "" _ _      = False
-validateGLN _ _ ""      = False
+validateGLN _ "" _      = False
 validateGLN _ _ ""      = False
 validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 
