@@ -15,9 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.GS1,
-                       Data.GS1.GS1Exception,
-                       Data.GS1.Location
+  exposed-modules:     Data.GS1
+                     , Data.GS1.Location
   build-depends:       base >= 4.7 && < 5
                      , mtl
                      , time

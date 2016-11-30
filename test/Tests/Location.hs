@@ -14,11 +14,14 @@ testPassGLN = do
     it "GLN is verified correctly" $
       show ((gln "0532132" "14112" "7") :: EitherLG) `shouldBe` "Right 0532132.14112.7"
 
-    it "InvalidGLNLengthException is caught" $
-      show ((gln "0614141" "1813392322222222222" "2") :: EitherLG) `shouldBe` "Left GLNInvalid"
+    it "IllegalFormat: Invalid length" $
+      ((gln "0614141" "1813392322222222222" "2") :: EitherLG) `shouldBe` Left IllegalFormat
 
-    it "InvalidGLNLengthException is caught" $
-      show ((gln "" "" "") :: EitherLG) `shouldBe` "Left GLNInvalid"
+    it "IllegalFormat: Invalid length" $
+      ((gln "" "" "") :: EitherLG) `shouldBe` Left IllegalFormat
 
-    it "Exception caused by invalid character is caught" $
-      show ((gln "0614141" "181ab" "9") :: EitherLG) `shouldBe` "Left GLNInvalid"
+    it "IllegalFormat: Invalid character" $
+      ((gln "0614141" "181ab" "9") :: EitherLG) `shouldBe` Left IllegalFormat
+
+    it "InvalidChecksum"  $
+      ((gln "0614141" "18133" "5") :: EitherLG) `shouldBe` Left InvalidChecksum
