@@ -2,6 +2,7 @@ module Tests.Location where
 
 import Test.Hspec
 import Data.GS1.Location
+import Data.GS1.URN
 
 type EitherLG = Either LocationError GLN
 
@@ -25,3 +26,6 @@ testPassGLN = do
 
     it "InvalidChecksum"  $
       ((gln "0614141" "18133" "5") :: EitherLG) `shouldBe` Left InvalidChecksum
+
+    it "PrettyPrint Location as URN" $
+      ppURN (Location (GLN "0614141" "18133" "9")) `shouldBe` "urn:epc:id:sgln:0614141.18133.9"
