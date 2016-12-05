@@ -16,13 +16,12 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Data.GS1
-                     , Data.GS1.Location
-<<<<<<< HEAD
-                     , Data.GS1.Namespace
-                     , Data.GS1.URN
-=======
+                     , Data.GS1.EPC
                      , Data.GS1.Event
->>>>>>> upstream/master
+                     , Data.GS1.Location
+                     , Data.GS1.Namespace
+                     , Data.GS1.Object
+                     , Data.GS1.URI
   build-depends:       base >= 4.7 && < 5
                      , mtl
                      , time
@@ -42,7 +41,7 @@ test-suite GS1Combinators-test
   hs-source-dirs:      src test
   main-is:             Spec.hs
   other-modules:       Data.GS1.Location
-                     , Data.GS1.URN
+                     , Data.GS1.URI
                      , Tests.Location
   build-depends:       base
                      , GS1Combinators

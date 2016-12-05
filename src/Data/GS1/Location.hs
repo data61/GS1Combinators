@@ -52,7 +52,7 @@ ppGLN :: GLN -> String
 ppGLN (GLN pref ref cd) = intercalate "." [pref, ref, cd]
 
 instance Show GLN where
-  show _gln = ppGLN _gln
+  show = ppGLN
 
 -- |Creates a valid GLN
 gln ::(AsLocationError e, MonadError e m)
@@ -97,4 +97,3 @@ ppGeoLocation (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
 
 instance Show GeoLocation where
   show = ppGeoLocation
-
