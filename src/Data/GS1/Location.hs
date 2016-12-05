@@ -47,9 +47,14 @@ validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 data GLN = GLN GS1CompanyPrefix LocationRef CheckDigit
   deriving (Eq)
 
-instance Show GLN where
-  show (GLN pref ref cd) = intercalate "." [pref, ref, cd]
+-- |Pretty print GLN
+ppGLN :: GLN -> String
+ppGLN (GLN pref ref cd) = intercalate "." [pref, ref, cd]
 
+instance Show GLN where
+  show _gln = ppGLN _gln
+
+-- |Creates a valid GLN
 gln ::(AsLocationError e, MonadError e m)
      => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m GLN
 gln pref ref cd
@@ -66,16 +71,9 @@ type LocationRef = String
 -- |Calculated according to an algorithm https://en.wikipedia.org/wiki/Global_Location_Number
 type CheckDigit = String
 
--- |Global Location Number
-instance Show Location where
-  show (Location n) = "urn:epc:id:sgln:" ++ show n
-
 -- |Location takes a GLN as its argument
 data Location = Location GLN
-  deriving (Eq, Generic)
-
-locationFormat :: Location -> String
-locationFormat (Location n) = printf "urn:epc:id:sgln:%s" (show n)
+  deriving (Show, Eq, Generic)
 
 -- |Location synonym
 type ReadPointLocation = Location
@@ -94,9 +92,9 @@ data GeoLocation = GeoLocation Latitude Longitude
   deriving (Eq)
 
 -- |non-normative representation - simplest form of RFC5870
-geoFormatSimple :: GeoLocation -> String
-geoFormatSimple (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
+ppGeoLocation :: GeoLocation -> String
+ppGeoLocation (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
 
 instance Show GeoLocation where
-  show = geoFormatSimple
+  show = ppGeoLocation
 
