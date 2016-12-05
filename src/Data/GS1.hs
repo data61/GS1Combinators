@@ -3,40 +3,12 @@
 module Data.GS1 where
 
 import           Data.GS1.Location
+import           Data.GS1.Event
 import           GHC.Generics
 
 -- TODO implement these
 data URI = URI deriving (Show,Eq,Generic)-- URN Namespace Payload |EPC |URI Namespace Payload deriving (Show,Eq,Generic)
 type Payload = String
-
--- TODO use built-in time package
-data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
-
-data BusinessStep = Accepting | Arriving | Assembling | Collecting
-    | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
-    | Decommissioning | Departing | Destroying | Disassembling | Dispensing | Encoding
-    | Entering_Exiting | Holding | Inspecting | Installing | Killing | Loading | Other
-    | Packing | Picking | Receiving | Removing | Repackaging | Repairing | Replacing
-    | Reserving | Retail_Selling | Shipping | Staging_Outbound | Stock_Taking | Stocking
-    | Storing | Transporting | Unloading | Void_Shipping
-    deriving (Show,Eq,Generic)
-
---show BusinessStep ~= urn:epcglobal:cbv:bizstep:BusinessStepConstructor
-
-data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed | Encoded
-    | Expired | In_Progress | In_Transit | Inactive | No_Pedgree_Match | Non_Sellable_Other
-    | Partially_Dispensed | Recalled | Reserved | Retail_Sold | Returned | Sellable_Accessible
-    | Sellable_Not_Accessible | Stolen | Unknown
-    deriving (Show,Eq,Generic)
-
-data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier)
-  deriving (Show,Eq,Generic)
-
-data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
-
-data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
-    | Prodorder | Recadv | Rma
-    deriving (Show,Eq,Generic)
 
 
 
