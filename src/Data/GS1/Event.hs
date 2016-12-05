@@ -1,14 +1,16 @@
 module Data.GS1.Event where
+import           GHC.Generics
 
+{--
 data Event = Event EventID EventType What When Where Why
-
+data EventID = EventID deriving (Show,Eq,Generic) --FIXME
 
 
 data EventType = ObjectEvent | AggregationEvent | TransactionEvent | TransformationEvent
   deriving (Show,Eq,Generic)
 
 
-data What = What (Maybe EPCISObject) (Maybe TransactionEvent) (Maybe ParentID) (Maybe Action) (Maybe ILMD)
+data What = What (Maybe [EPCISObject]) (Maybe TransactionEvent) (Maybe ParentID) (Maybe Action) (Maybe ILMD)
   deriving (Show,Eq,Generic)
 
 -- data What = ObjectEvent [EPCObject] | AggregationEvent (Maybe Parent) [Child] | TransactionEvent ??
@@ -17,12 +19,41 @@ data What = What (Maybe EPCISObject) (Maybe TransactionEvent) (Maybe ParentID) (
 data Why = Why  (Maybe BusinessStep)  (Maybe Disposition) (Maybe [BusinessTransactionIdentifier])
   deriving (Show,Eq,Generic)
 
-data Where = (Maybe ReadPointLocation) (Maybe BusinessLocation) (Maybe [SrcDestType])
+data Where = Where (Maybe ReadPointLocation) (Maybe BusinessLocation) (Maybe [SrcDestType])
   deriving (Show,Eq,Generic)
 
-When = EPCISTime --eventTime recordTime eventTimeZoneOffset
+data When = When EPCISTime --eventTime recordTime eventTimeZoneOffset
 
 data Action = Add | Observe | Delete
+
+-- TODO use built-in time package
+data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
+
+data BusinessStep = Accepting | Arriving | Assembling | Collecting
+    | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
+    | Decommissioning | Departing | Destroying | Disassembling | Dispensing | Encoding
+    | Entering_Exiting | Holding | Inspecting | Installing | Killing | Loading | Other
+    | Packing | Picking | Receiving | Removing | Repackaging | Repairing | Replacing
+    | Reserving | Retail_Selling | Shipping | Staging_Outbound | Stock_Taking | Stocking
+    | Storing | Transporting | Unloading | Void_Shipping
+    deriving (Show,Eq,Generic)
+
+--show BusinessStep ~= urn:epcglobal:cbv:bizstep:BusinessStepConstructor
+
+data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed | Encoded
+    | Expired | In_Progress | In_Transit | Inactive | No_Pedgree_Match | Non_Sellable_Other
+    | Partially_Dispensed | Recalled | Reserved | Retail_Sold | Returned | Sellable_Accessible
+    | Sellable_Not_Accessible | Stolen | Unknown
+    deriving (Show,Eq,Generic)
+
+data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier)
+  deriving (Show,Eq,Generic)
+
+data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
+
+data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
+    | Prodorder | Recadv | Rma
+    deriving (Show,Eq,Generic)
 
 
 
@@ -65,9 +96,9 @@ why step disp trans srcdsts =
                   show (dispositionValidList disp)
 
 
+--}
 
-
-{-
+{--
 == Object Event ==
  An ObjectEvent Captures information about an event pertaining to one or more physical or digital objects identified by instance-level (EPC) or class-level (EPC Class) identifiers.
  While more than one EPC and/or EPC Class may appear in an ObjectEvent, no relationship or association between those objects i implied other than the coincidence of having experienced identical events in the real world
@@ -86,9 +117,9 @@ why step disp trans srcdsts =
         ReadPoint*
         BusinessLocation*
         [SrcDestType]*
--}
+--}
 
-{-
+{--
 == Aggregation Event ==
 
  - Fields -
@@ -106,9 +137,9 @@ why step disp trans srcdsts =
         ReadPoint*
         BusinessLocation*
         [SrcDestType]
--}
+--}
 
-{-
+{--
 == Quantity Event ==
  - Fields -
  When - EventTime/RecordTime/EventTimeOffset
@@ -121,9 +152,9 @@ why step disp trans srcdsts =
  Where -
         ReadPoint*
         BusinessLocation*
--}
+--}
 
-{-
+{--
 == Transaction Events ==
 - Fields -
  When - EventTime/RecordTime/EventTimeOffset
@@ -140,9 +171,9 @@ why step disp trans srcdsts =
         ReadPoint
         BusinessLocation
         [SrcDestType]
--}
+--}
 
-{-
+{--
 == Transformation Events ==
 - Fields -
  When - EventTime/RecordTime/EventTimeOffset
@@ -158,7 +189,7 @@ why step disp trans srcdsts =
         BusinessLocation*
         [SrcDestType]*
         ILMD*
--}
+--}
 
 
 
