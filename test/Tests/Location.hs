@@ -30,3 +30,12 @@ testPassGLN = do
 
     it "PrettyPrint Location as URI" $
       ppURI (Location (GLN "0614141" "18133" "9")) `shouldBe` "urn:epc:id:sgln:0614141.18133.9"
+
+    it "Returns the proper URI prefix)" $
+      uriPrefix (Location (GLN "0614141" "18133" "9")) `shouldBe` "urn:epc:id"
+
+    it "Returns the proper URI quantifier)" $
+      uriQuantifier (Location (GLN "0614141" "18133" "9")) `shouldBe` "sgln"
+
+    it "Returns the proper URI quantifier)" $
+      uriPayload (Location (GLN "0614141" "18133" "9")) `shouldBe` "0614141.18133.9"

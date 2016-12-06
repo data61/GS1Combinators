@@ -30,10 +30,19 @@ instance Show GS1URI where
 
 -- |Anything that could be converted into URI
 class URI a where
-  ppURI :: a -> String
+  ppURI         :: a -> String
+  uriPrefix     :: a -> URIPrefix
+  uriQuantifier :: a -> URIQuantifier
+  uriPayload    :: a -> URIPayload
 
 instance URI GS1URI where
-  ppURI (GS1URI _pref _qt _pl) = intercalate ":" (map show [_pref, _qt, _pl])
+  ppURI (GS1URI _pref _qt _pl)   = intercalate ":" (map show [_pref, _qt, _pl])
+  uriPrefix (GS1URI _pref _ _)   = _pref
+  uriQuantifier (GS1URI _ _qt _) = _qt
+  uriPayload (GS1URI _ _ _pl)     = _pl
 
 instance URI Location where
-  ppURI (Location _gln) = intercalate ":" ["urn:epc:id", "sgln", (ppGLN _gln)]
+  ppURI (Location _gln)      = intercalate ":" ["urn:epc:id", "sgln", (ppGLN _gln)]
+  uriPrefix _                = "urn:epc:id"
+  uriQuantifier _            = "sgln"
+  uriPayload (Location _gln) = ppGLN _gln
