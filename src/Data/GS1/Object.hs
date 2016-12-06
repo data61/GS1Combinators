@@ -1,6 +1,7 @@
 module Data.GS1.Object where
 
-import Control.Lens.TH
+--import Control.Lens.TH
+import Data.GS1.EPC
 import Data.GS1.URI
 
 -- |EPCIS 1.0
@@ -9,14 +10,14 @@ data Object = PhysicalObject { _id :: ObjectID } | DigitalObject { _id :: Object
 -- |The ObjectID
 -- |Ref: CBV 8.2 & 8.3, EPCIS 1.0
 data ObjectID = InstanceLevelID {
-                 _epcList    :: [String]
+                 _epcList    :: [EPC]
                , _parentID   :: ObjectID
-               , _childEPCs  :: [String]
-               , _inputEPCS  :: [String]
-               , _outputEPCS :: [String]
+               , _childEPCs  :: [EPC]
+               , _inputEPCS  :: [EPC]
+               , _outputEPCS :: [EPC]
                }
                | ClassLevelID {
-                 _epcClass :: String
+                 _epcClass :: EpcClass
                }
 
 -- |Any identifiable object will be identified by ObjectID

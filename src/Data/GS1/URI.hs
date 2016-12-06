@@ -4,6 +4,7 @@ module Data.GS1.URI where
 
 import GHC.Generics
 import Data.List
+import Data.GS1.EPC
 import Data.GS1.Location
 
 --TODO more restrictions
