@@ -5,8 +5,13 @@ import           GHC.Generics
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.Maybe
+import           Data.Time.Clock
 
-data EPCISTime = EPCISTime String deriving (Show,Eq,Generic) --FIXME
+
+{-
+   A timestamp, giving the date and time in a time zone-independent manner. For bindings in which fields of this type are represented textually, an ISO-8601 compliant representation SHOULD be used.
+-}
+type EPCISTime = UniversalTime
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
@@ -23,10 +28,16 @@ data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed |
     | Sellable_Not_Accessible | Stolen | Unknown
     deriving (Show,Eq,Generic)
 
-data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
-
-data BusinessTransactionType = Bol | Desadv | Inv | Pedigree | Po | Poc
-    | Prodorder | Recadv | Rma
+type BusinessTransactionIdentifier = Maybe String --FIXME - user defined element
+data BusinessTransactionType = Bol BusinessTransactionIdentifier
+                             | Desadv BusinessTransactionIdentifier
+                             | Inv BusinessTransactionIdentifier
+                             | Pedigree BusinessTransactionIdentifier
+                             | Po BusinessTransactionIdentifier
+                             | Poc BusinessTransactionIdentifier
+                             | Prodorder BusinessTransactionIdentifier
+                             | Recadv BusinessTransactionIdentifier
+                             | Rma BusinessTransactionIdentifier
     deriving (Show,Eq,Generic)
 
 
@@ -58,9 +69,10 @@ dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 dispositionValidFor :: BusinessStep -> Disposition -> Bool
 dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 
-type ILMD = String --FIXME - should be defined in Object.hs
-type TransformationID = String -- FIXME should be defined in Object.hs maybe...
-data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,Eq,Generic)
+type TransformationID = String -- FIXME user defined element
+type SrcDestID = String -- FIXME user defined element
+data SrcDestType = OwningParty SrcDestID | PossessingParty SrcDestID
+  deriving (Show,Eq,Generic)
 
 
 data When = When EPCISTime --eventTime recordTime eventTimeZoneOffset
@@ -77,7 +89,7 @@ data What = ObjectWhat {
               _objects :: [ObjectID],
               _action  :: Action,
               _btt     :: [BusinessTransactionType],
-              _ilmd    :: Maybe ILMD
+              _ilmd    :: Maybe Ilmd
             }
           | AggregationWhat {
               _parentID :: Maybe ObjectID,
@@ -94,7 +106,7 @@ data What = ObjectWhat {
               _output   :: [ObjectID],
               _transformationID :: TransformationID,
               _btt      :: [BusinessTransactionType],
-              _ilmd    :: Maybe ILMD
+              _ilmd    :: Maybe Ilmd
              }
           | TransactionWhat {
               _parentID :: Maybe ObjectID,
@@ -122,7 +134,7 @@ data Event = Event {
 
 
 objectEvent :: EventID -> [ObjectID] -> Action -> [BusinessTransactionType] ->
-    Maybe ILMD ->When -> Why -> Where -> Event
+    Maybe Ilmd ->When -> Why -> Where -> Event
 objectEvent id objects action btt ilmd when why whre =
   Event ObjectEvent id (ObjectWhat objects action btt ilmd) when why whre
 
@@ -139,7 +151,8 @@ quantityEvent id objects btt when why whre=
   Event QuantityEvent id (QuantityWhat objects btt) when why whre
 
 transformationEvent :: EventID -> [ObjectID] -> [ObjectID] -> TransformationID
-                    -> [BusinessTransactionType] -> Maybe ILMD -> When -> Why -> Where -> Event
+                    -> [BusinessTransactionType] -> Maybe Ilmd -> When -> Why ->
+                      Where -> Event
 transformationEvent id inputs outputs transformID btt  ilmd when why whre =
   Event TransformationEvent id (TransformationWhat inputs outputs transformID btt ilmd)
     when why whre
@@ -151,24 +164,22 @@ transactionEvent id parentID objects action btt when why whre =
 
 data Why = Why  {
   _businessStep :: (Maybe BusinessStep),
-  _disposition  :: (Maybe Disposition),
-  _businessTransactionList :: [BusinessTransactionIdentifier]
+  _disposition  :: (Maybe Disposition)
 } deriving (Show,Eq,Generic)
 
 -- The why smart constructor
 -- Have to make sure the disposition is valid for that particular business
 -- step.
 -- FIXME: do we care if the businessStep and disposition match if one of them is Nothing?
-why :: Maybe BusinessStep -> Maybe Disposition ->
-  [BusinessTransactionIdentifier]  -> Why
-why step disp trans
+why :: Maybe BusinessStep -> Maybe Disposition -> Why
+why step disp
     |isJust step && isJust disp =
       if dispositionValidFor (fromJust step) (fromJust disp)
-      then (Why step disp trans )
+      then (Why step disp)
       else error $ "Disposition not valid for business step. " ++
         " Valid BusinessSteps for " ++ show (fromJust disp) ++ "include: " ++
                       show (dispositionValidList (fromJust disp))
-    |otherwise = (Why step disp trans)
+    |otherwise = (Why step disp)
 
 
 
@@ -181,7 +192,7 @@ why step disp trans
  When - EventTime/RecordTime/EventTimeOffset
  What - EpcList* quantityList* (an ObjectEvent shall contain a non-empty epcList or a non-empty quantityList or both)
         Action
-        ILMD
+        Ilmd
         [BusinessTransactionType]*
  Why -
         BusinessStep*
@@ -255,7 +266,7 @@ why step disp trans
         [OutputEPC]*, [OutputQuantity]*
         TransformationID*
         [BusinessTransactionType]
-        ILMD*
+        Ilmd*
  Why  -
         BusinessStep*
         Disposition*
