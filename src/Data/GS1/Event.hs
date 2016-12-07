@@ -144,9 +144,16 @@ quantityEvent :: EventID -> [EPCISObject] -> [BusinessTransactionType] ->
 quantityEvent id objects btt when why whre=
   Event QuantityEvent id (QuantityWhat objects btt) when why whre
 
+transformationEvent :: EventID -> [EPCISObject] -> [EPCISObject] -> TransformationID
+                    -> [BusinessTransactionType] -> Maybe ILMD -> When -> Why -> Where -> Event
+transformationEvent id inputs outputs transformID btt  ilmd when why whre =
+  Event TransformationEvent id (TransformationWhat inputs outputs transformID btt ilmd)
+    when why whre
 
-
-
+transactionEvent :: EventID -> Maybe EPCISObject -> [EPCISObject] -> Action ->
+  [BusinessTransactionType] -> When -> Why -> Where -> Event
+transactionEvent id parentID objects action btt when why whre =
+  Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
 
 data Why = Why  {
   _businessStep :: (Maybe BusinessStep),
