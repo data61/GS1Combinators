@@ -6,10 +6,13 @@ import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.Maybe
 import           Data.Time.Clock
+import           Data.Time.LocalTime
 
 
 {-
-   A timestamp, giving the date and time in a time zone-independent manner. For bindings in which fields of this type are represented textually, an ISO-8601 compliant representation SHOULD be used.
+   A timestamp, giving the date and time in a time zone-independent manner.
+   For bindings in which fields of this type are represented textually,
+   an ISO-8601 compliant representation SHOULD be used.
 -}
 type EPCISTime = UniversalTime
 
@@ -75,8 +78,11 @@ data SrcDestType = OwningParty SrcDestID | PossessingParty SrcDestID
   deriving (Show,Eq,Generic)
 
 
-data When = When EPCISTime --eventTime recordTime eventTimeZoneOffset
- deriving (Show,Eq,Generic)
+data When = When {
+    _eventTime :: EPCISTime,
+    _recordTime :: EPCISTime,
+    _timeZone :: TimeZone
+                 } deriving (Show,Eq,Generic)
 
 
 data Where = Where {
@@ -119,7 +125,7 @@ data What = ObjectWhat {
 data EventType = ObjectEvent | AggregationEvent | QuantityEvent |
   TransactionEvent | TransformationEvent  deriving (Show,Eq,Generic)
 
-type EventID = Int --FIXME
+type EventID = Int --FIXME - user defined element
 
 data Action = Add | Observe | Delete  deriving (Show,Eq,Generic)
 
