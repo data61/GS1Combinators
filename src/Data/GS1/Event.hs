@@ -3,6 +3,7 @@
 module Data.GS1.Event where
 import           GHC.Generics
 import           Data.GS1.Location
+import           Data.GS1.Object
 import           Data.Maybe
 
 data EPCISTime = EPCISTime String deriving (Show,Eq,Generic) --FIXME
@@ -16,16 +17,11 @@ data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Storing | Transporting | Unloading | Void_Shipping
     deriving (Show,Eq,Generic)
 
---show BusinessStep ~= urn:epcglobal:cbv:bizstep:BusinessStepConstructor
-
 data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed | Encoded
     | Expired | In_Progress | In_Transit | Inactive | No_Pedgree_Match | Non_Sellable_Other
     | Partially_Dispensed | Recalled | Reserved | Retail_Sold | Returned | Sellable_Accessible
     | Sellable_Not_Accessible | Stolen | Unknown
     deriving (Show,Eq,Generic)
-
-data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier)
-  deriving (Show,Eq,Generic) --FIXME
 
 data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
 
@@ -77,34 +73,32 @@ data Where = Where {
   _srcDestType :: (Maybe [SrcDestType])
 } deriving (Show,Eq,Generic)
 
-type EPCISObject = String --FIXME - Import Object module when available
-
 data What = ObjectWhat {
-              _objects :: [EPCISObject],
+              _objects :: [ObjectID],
               _action  :: Action,
               _btt     :: [BusinessTransactionType],
               _ilmd    :: Maybe ILMD
             }
           | AggregationWhat {
-              _parentID :: Maybe EPCISObject,
-              _objects  :: [EPCISObject],
+              _parentID :: Maybe ObjectID,
+              _objects  :: [ObjectID],
               _action   :: Action,
               _btt      :: [BusinessTransactionType]
             }
           | QuantityWhat {
-              _objects  :: [EPCISObject],
+              _objects  :: [ObjectID],
               _btt      :: [BusinessTransactionType]
             }
           | TransformationWhat {
-              _input    :: [EPCISObject],
-              _output   :: [EPCISObject],
+              _input    :: [ObjectID],
+              _output   :: [ObjectID],
               _transformationID :: TransformationID,
               _btt      :: [BusinessTransactionType],
               _ilmd    :: Maybe ILMD
              }
           | TransactionWhat {
-              _parentID :: Maybe EPCISObject,
-              _objects  :: [EPCISObject],
+              _parentID :: Maybe ObjectID,
+              _objects  :: [ObjectID],
               _action   :: Action,
               _btt      :: [BusinessTransactionType]
             } deriving (Show,Eq,Generic)
@@ -127,30 +121,30 @@ data Event = Event {
 } deriving (Show,Eq,Generic)
 
 
-objectEvent :: EventID -> [EPCISObject] -> Action -> [BusinessTransactionType] ->
+objectEvent :: EventID -> [ObjectID] -> Action -> [BusinessTransactionType] ->
     Maybe ILMD ->When -> Why -> Where -> Event
 objectEvent id objects action btt ilmd when why whre =
   Event ObjectEvent id (ObjectWhat objects action btt ilmd) when why whre
 
 --TODO: check parent is present when needed (based on action)
-aggregationEvent :: EventID -> Maybe EPCISObject -> [EPCISObject] -> Action ->
+aggregationEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
   [BusinessTransactionType] -> When -> Why -> Where -> Event
 aggregationEvent id parent objects action btt when why whre =
   Event AggregationEvent id (AggregationWhat parent objects action btt) when why whre
 
---TODO: check that all EPCISObjects are class objects with quantities.
-quantityEvent :: EventID -> [EPCISObject] -> [BusinessTransactionType] ->
+--TODO: check that all ObjectIDs are class objects with quantities.
+quantityEvent :: EventID -> [ObjectID] -> [BusinessTransactionType] ->
   When -> Why -> Where -> Event
 quantityEvent id objects btt when why whre=
   Event QuantityEvent id (QuantityWhat objects btt) when why whre
 
-transformationEvent :: EventID -> [EPCISObject] -> [EPCISObject] -> TransformationID
+transformationEvent :: EventID -> [ObjectID] -> [ObjectID] -> TransformationID
                     -> [BusinessTransactionType] -> Maybe ILMD -> When -> Why -> Where -> Event
 transformationEvent id inputs outputs transformID btt  ilmd when why whre =
   Event TransformationEvent id (TransformationWhat inputs outputs transformID btt ilmd)
     when why whre
 
-transactionEvent :: EventID -> Maybe EPCISObject -> [EPCISObject] -> Action ->
+transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
   [BusinessTransactionType] -> When -> Why -> Where -> Event
 transactionEvent id parentID objects action btt when why whre =
   Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
