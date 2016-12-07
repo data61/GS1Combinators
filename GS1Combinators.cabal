@@ -40,7 +40,8 @@ test-suite GS1Combinators-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      src test
   main-is:             Spec.hs
-  other-modules:       Data.GS1.Location
+  other-modules:       Data.GS1.EPC
+                     , Data.GS1.Location
                      , Data.GS1.URI
                      , Tests.Location
   build-depends:       base
