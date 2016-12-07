@@ -5,15 +5,22 @@ import Data.GS1.EPC
 import Data.GS1.URI
 
 -- |TODO expand it to the proper implementation when necessary
-type Amount = Double
+-- EPCIS Page 29
+type Quantity = Integer
 
-type Unit = String
+type Uom = String
 
 -- |Simple quantity representation
-data Quantity = Quantity Unit Amount
+data QuantityElement = QuantityElement EpcClass Quantity Uom
 
 -- |EPCIS 1.0
 data Object = PhysicalObject { _id :: ObjectID } | DigitalObject { _id :: ObjectID }
+
+-- |EPCIS 7.3.6
+-- Not sure if it is right way
+-- ILMD is data that describes a specific instance of a physical or digital
+-- object, or a specific batch/lot of objects that are produced in batches/lot. 
+type Ilmd = [String]
 
 -- |The ObjectID
 -- |Ref: CBV 8.2 & 8.3, EPCIS 1.0
@@ -23,10 +30,12 @@ data ObjectID = InstanceLevelID {
                , _childEPCs  :: [EPC]
                , _inputEPCS  :: [EPC]
                , _outputEPCS :: [EPC]
+               , _ilmd       :: Ilmd
                }
                | ClassLevelID {
                  _epcClass :: EpcClass
-               , _quantity :: Quantity
+               , _quantity :: QuantityElement
+               , _ilmd     :: Ilmd
                }
 
 -- |Any identifiable object will be identified by ObjectID
