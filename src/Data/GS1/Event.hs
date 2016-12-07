@@ -1,33 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Data.GS1.Event where
 import           GHC.Generics
+import           Data.GS1.Location
+import           Data.Maybe
 
-{--
-data Event = Event EventID EventType What When Where Why
-data EventID = EventID deriving (Show,Eq,Generic) --FIXME
-
-
-data EventType = ObjectEvent | AggregationEvent | TransactionEvent | TransformationEvent
-  deriving (Show,Eq,Generic)
-
-
-data What = What (Maybe [EPCISObject]) (Maybe TransactionEvent) (Maybe ParentID) (Maybe Action) (Maybe ILMD)
-  deriving (Show,Eq,Generic)
-
--- data What = ObjectEvent [EPCObject] | AggregationEvent (Maybe Parent) [Child] | TransactionEvent ??
---   | TransformationEvent Input Output TransformationID
-
-data Why = Why  (Maybe BusinessStep)  (Maybe Disposition) (Maybe [BusinessTransactionIdentifier])
-  deriving (Show,Eq,Generic)
-
-data Where = Where (Maybe ReadPointLocation) (Maybe BusinessLocation) (Maybe [SrcDestType])
-  deriving (Show,Eq,Generic)
-
-data When = When EPCISTime --eventTime recordTime eventTimeZoneOffset
-
-data Action = Add | Observe | Delete
-
--- TODO use built-in time package
-data EPCISTime = EPCISTime deriving (Show,Eq,Generic)
+data EPCISTime = EPCISTime String deriving (Show,Eq,Generic) --FIXME
 
 data BusinessStep = Accepting | Arriving | Assembling | Collecting
     | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
@@ -47,7 +25,7 @@ data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed |
     deriving (Show,Eq,Generic)
 
 data BusinessTransactionReference = BTR BusinessTransactionType (BusinessTransactionIdentifier)
-  deriving (Show,Eq,Generic)
+  deriving (Show,Eq,Generic) --FIXME
 
 data BusinessTransactionIdentifier = BusinessTransactionIdentifier deriving (Show,Eq,Generic) --FIXME
 
@@ -84,19 +62,114 @@ dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 dispositionValidFor :: BusinessStep -> Disposition -> Bool
 dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 
+type ILMD = String --FIXME - should be defined in Object.hs
+type TransformationID = String -- FIXME should be defined in Object.hs maybe...
+data SrcDestType = OwningParty | PossessingParty | Loc Location deriving (Show,Eq,Generic)
+
+
+data When = When EPCISTime --eventTime recordTime eventTimeZoneOffset
+ deriving (Show,Eq,Generic)
+
+
+data Where = Where {
+  _readPoint   :: (Maybe ReadPointLocation),
+  _bizLocation :: (Maybe BusinessLocation),
+  _srcDestType :: (Maybe [SrcDestType])
+} deriving (Show,Eq,Generic)
+
+type EPCISObject = String --FIXME - Import Object module when available
+
+data What = ObjectWhat {
+              _objects :: [EPCISObject],
+              _action  :: Action,
+              _btt     :: [BusinessTransactionType],
+              _ilmd    :: Maybe ILMD
+            }
+          | AggregationWhat {
+              _parentID :: Maybe EPCISObject,
+              _objects  :: [EPCISObject],
+              _action   :: Action,
+              _btt      :: [BusinessTransactionType]
+            }
+          | QuantityWhat {
+              _objects  :: [EPCISObject],
+              _btt      :: [BusinessTransactionType]
+            }
+          | TransformationWhat {
+              _input    :: [EPCISObject],
+              _output   :: [EPCISObject],
+              _transformationID :: TransformationID,
+              _btt      :: [BusinessTransactionType],
+              _ilmd    :: Maybe ILMD
+             }
+          | TransactionWhat {
+              _parentID :: Maybe EPCISObject,
+              _objects  :: [EPCISObject],
+              _action   :: Action,
+              _btt      :: [BusinessTransactionType]
+            } deriving (Show,Eq,Generic)
+
+
+data EventType = ObjectEvent | AggregationEvent | QuantityEvent |
+  TransactionEvent | TransformationEvent  deriving (Show,Eq,Generic)
+
+type EventID = Int --FIXME
+
+data Action = Add | Observe | Delete  deriving (Show,Eq,Generic)
+
+data Event = Event {
+  _type :: EventType,
+  _id   :: EventID,
+  _what :: What,
+  _when :: When,
+  _why :: Why,
+  _where :: Where
+} deriving (Show,Eq,Generic)
+
+
+objectEvent :: EventID -> [EPCISObject] -> Action -> [BusinessTransactionType] ->
+    Maybe ILMD ->When -> Why -> Where -> Event
+objectEvent id objects action btt ilmd when why whre =
+  Event ObjectEvent id (ObjectWhat objects action btt ilmd) when why whre
+
+--TODO: check parent is present when needed (based on action)
+aggregationEvent :: EventID -> Maybe EPCISObject -> [EPCISObject] -> Action ->
+  [BusinessTransactionType] -> When -> Why -> Where -> Event
+aggregationEvent id parent objects action btt when why whre =
+  Event AggregationEvent id (AggregationWhat parent objects action btt) when why whre
+
+--TODO: check that all EPCISObjects are class objects with quantities.
+quantityEvent :: EventID -> [EPCISObject] -> [BusinessTransactionType] ->
+  When -> Why -> Where -> Event
+quantityEvent id objects btt when why whre=
+  Event QuantityEvent id (QuantityWhat objects btt) when why whre
+
+
+
+
+
+data Why = Why  {
+  _businessStep :: (Maybe BusinessStep),
+  _disposition  :: (Maybe Disposition),
+  _businessTransactionList :: [BusinessTransactionIdentifier]
+} deriving (Show,Eq,Generic)
+
 -- The why smart constructor
 -- Have to make sure the disposition is valid for that particular business
 -- step.
-why :: BusinessStep -> Disposition -> [BusinessTransactionReference] -> [SrcDestReference] -> Why
-why step disp trans srcdsts =
-    if dispositionValidFor step disp
-    then Why step disp trans srcdsts
-    else error $ "Disposition not valid for business step. " ++
-                  " Valid BusinessSteps for " ++ show disp ++ "include: " ++
-                  show (dispositionValidList disp)
+-- FIXME: do we care if the businessStep and disposition match if one of them is Nothing?
+why :: Maybe BusinessStep -> Maybe Disposition ->
+  [BusinessTransactionIdentifier]  -> Why
+why step disp trans
+    |isJust step && isJust disp =
+      if dispositionValidFor (fromJust step) (fromJust disp)
+      then (Why step disp trans )
+      else error $ "Disposition not valid for business step. " ++
+        " Valid BusinessSteps for " ++ show (fromJust disp) ++ "include: " ++
+                      show (dispositionValidList (fromJust disp))
+    |otherwise = (Why step disp trans)
 
 
---}
 
 {--
 == Object Event ==
@@ -156,7 +229,7 @@ why step disp trans srcdsts =
 
 {--
 == Transaction Events ==
-- Fields -
+ - Fields -
  When - EventTime/RecordTime/EventTimeOffset
  What -
         [BusinessTransactionType]
@@ -175,12 +248,13 @@ why step disp trans srcdsts =
 
 {--
 == Transformation Events ==
-- Fields -
+ - Fields -
  When - EventTime/RecordTime/EventTimeOffset
  What - [InputEPC]*, [OutputQuantity]*
         [OutputEPC]*, [OutputQuantity]*
         TransformationID*
         [BusinessTransactionType]
+        ILMD*
  Why  -
         BusinessStep*
         Disposition*
@@ -188,17 +262,5 @@ why step disp trans srcdsts =
         ReadPoint*
         BusinessLocation*
         [SrcDestType]*
-        ILMD*
 --}
-
-
-
-
-
-
-
-
-
-
-
 
