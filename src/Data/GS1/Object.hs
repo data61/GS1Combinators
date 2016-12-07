@@ -12,14 +12,17 @@ type Uom = String
 
 -- |Simple quantity representation
 data QuantityElement = QuantityElement EpcClass Quantity Uom
+  deriving (Show, Eq)
+
 
 -- |EPCIS 1.0
 data Object = PhysicalObject { _id :: ObjectID } | DigitalObject { _id :: ObjectID }
+  deriving (Show, Eq)
 
 -- |EPCIS 7.3.6
 -- Not sure if it is right way
 -- ILMD is data that describes a specific instance of a physical or digital
--- object, or a specific batch/lot of objects that are produced in batches/lot. 
+-- object, or a specific batch/lot of objects that are produced in batches/lot.
 type Ilmd = [String]
 
 -- |The ObjectID
@@ -36,7 +39,7 @@ data ObjectID = InstanceLevelID {
                  _epcClass :: EpcClass
                , _quantity :: QuantityElement
                , _ilmd     :: Ilmd
-               }
+                              } deriving (Show, Eq)
 
 -- |Any identifiable object will be identified by ObjectID
 class Identify a where
