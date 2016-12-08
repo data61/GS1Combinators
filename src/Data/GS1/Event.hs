@@ -1,12 +1,14 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Data.GS1.Event where
-import           GHC.Generics
 import           Data.GS1.Location
 import           Data.GS1.Object
+import           Data.GS1.URI
+import           Data.List
 import           Data.Maybe
 import           Data.Time.Clock
 import           Data.Time.LocalTime
+import           GHC.Generics
 
 
 {-
@@ -16,19 +18,96 @@ import           Data.Time.LocalTime
 -}
 type EPCISTime = UniversalTime
 
-data BusinessStep = Accepting | Arriving | Assembling | Collecting
-    | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
-    | Decommissioning | Departing | Destroying | Disassembling | Dispensing | Encoding
-    | Entering_Exiting | Holding | Inspecting | Installing | Killing | Loading | Other
-    | Packing | Picking | Receiving | Removing | Repackaging | Repairing | Replacing
-    | Reserving | Retail_Selling | Shipping | Staging_Outbound | Stock_Taking | Stocking
-    | Storing | Transporting | Unloading | Void_Shipping
+data BusinessStep = Accepting
+                  | Arriving
+                  | Assembling
+                  | Collecting
+                  | Commissioning
+                  | Consigning
+                  | CreatingClassInstance
+                  | CycleCounting
+                  | Decommissioning
+                  | Departing
+                  | Destroying
+                  | Disassembling
+                  | Dispensing
+                  | Encoding
+                  | EnteringExiting
+                  | Holding
+                  | Inspecting
+                  | Installing
+                  | Killing
+                  | Loading
+                  | Other
+                  | Packing
+                  | Picking
+                  | Receiving
+                  | Removing
+                  | Repackaging
+                  | Repairing
+                  | Replacing
+                  | Reserving
+                  | RetailSelling
+                  | Shipping
+                  | StagingOutbound
+                  | StockTaking
+                  | Stocking
+                  | Storing
+                  | Transporting
+                  | Unloading
+                  | VoidShipping
     deriving (Show,Eq,Generic)
 
-data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed | Encoded
-    | Expired | In_Progress | In_Transit | Inactive | No_Pedgree_Match | Non_Sellable_Other
-    | Partially_Dispensed | Recalled | Reserved | Retail_Sold | Returned | Sellable_Accessible
-    | Sellable_Not_Accessible | Stolen | Unknown
+ppBusinessStep :: BusinessStep -> String
+ppBusinessStep bizStep = case bizStep of
+                           Accepting             -> "accepting"
+                           Arriving              -> "arriving"
+                           Assembling            -> "assembling"
+                           Collecting            -> "collecting"
+                           Commissioning         -> "commissioning"
+                           Consigning            -> "consigning"
+                           CreatingClassInstance -> "creating_class_instance"
+                           CycleCounting         -> "cycle_counting"
+                           Decommissioning       -> "decommissioning"
+                           Departing             -> "departing"
+                           Destroying            -> "destroying"
+                           Disassembling         -> "disassembling"
+                           Dispensing            -> "dispensing"
+                           Encoding              -> "encoding"
+                           EnteringExiting       -> "entering_exiting"
+                           Holding               -> "holding"
+                           Inspecting            -> "inspecting"
+                           Installing            -> "installing"
+                           Killing               -> "killing"
+                           Loading               -> "loading"
+                           Other                 -> "other"
+                           Packing               -> "packing"
+                           Receiving             -> "receiving"
+                           Removing              -> "removing"
+                           Repackaging           -> "repackaging"
+                           Repairing             -> "repairing"
+                           Replacing             -> "replacing"
+                           Reserving             -> "reserving"
+                           RetailSelling         -> "retail_selling"
+                           Shipping              -> "shipping"
+                           StagingOutbound       -> "staging_outbound"
+                           StockTaking           -> "stock_taking"
+                           Stocking              -> "stocking"
+                           Storing               -> "storing"
+                           Transporting          -> "transporting"
+                           Unloading             -> "unloading"
+                           VoidShipping          -> "void_shipping"
+
+instance URI BusinessStep where
+  ppURI bizStep      = intercalate ":" ["urn:epcglobal:cbv", "bizstep", ppBusinessStep bizStep]
+  uriPrefix _        = "urn:epcglobal:cbv"
+  uriQuantifier _    = "bizstep"
+  uriPayload bizStep = ppBusinessStep bizStep
+
+data Disposition = Active | ContainerClosed | Damaged | Destroyed | Dispensed | Encoded
+    | Expired | InProgress | InTransit | Inactive | NoPedgreeMatch | NonSellableOther
+    | PartiallyDispensed | Recalled | Reserved | RetailSold | Returned | SellableAccessible
+    | SellableNotAccessible | Stolen | Unknown
     deriving (Show,Eq,Generic)
 
 type BusinessTransactionIdentifier = Maybe String --FIXME - user defined element
@@ -48,24 +127,24 @@ data BusinessTransactionType = Bol BusinessTransactionIdentifier
 -- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BusinessStep]
 dispositionValidList Active           =  [Commissioning]
-dispositionValidList Container_Closed =  [Staging_Outbound]
+dispositionValidList ContainerClosed =  [StagingOutbound]
 dispositionValidList Damaged          =  [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
 dispositionValidList Destroyed  =  [Destroying]
 dispositionValidList Dispensed  =  [] -- nothing defined - page 25 of spec
 dispositionValidList Encoded    =  [Encoding]
-dispositionValidList Expired    =  [Holding, Staging_Outbound, Storing]
-dispositionValidList In_Progress=  [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping]
-dispositionValidList In_Transit =  [Shipping, Departing]
+dispositionValidList Expired    =  [Holding, StagingOutbound, Storing]
+dispositionValidList InProgress=  [Receiving, Picking, Loading, Accepting, StagingOutbound, Arriving, VoidShipping]
+dispositionValidList InTransit =  [Shipping, Departing]
 dispositionValidList Inactive   =  [Decommissioning]
-dispositionValidList No_Pedgree_Match   =  [Holding, Staging_Outbound, Storing]
-dispositionValidList Non_Sellable_Other =  [Holding, Inspecting, Staging_Outbound, Storing]
-dispositionValidList Partially_Dispensed=  []  -- nothing defined - page 25 of spec
-dispositionValidList Recalled   =  [Holding, Staging_Outbound, Storing]
+dispositionValidList NoPedgreeMatch   =  [Holding, StagingOutbound, Storing]
+dispositionValidList NonSellableOther =  [Holding, Inspecting, StagingOutbound, Storing]
+dispositionValidList PartiallyDispensed=  []  -- nothing defined - page 25 of spec
+dispositionValidList Recalled   =  [Holding, StagingOutbound, Storing]
 dispositionValidList Reserved   =  [Reserving]
-dispositionValidList Retail_Sold=  [Retail_Selling]
+dispositionValidList RetailSold=  [RetailSelling]
 dispositionValidList Returned   =  [Receiving, Holding, Shipping]
-dispositionValidList Sellable_Accessible     =  [Stocking, Receiving]
-dispositionValidList Sellable_Not_Accessible =  [Receiving, Storing, Loading, Holding, Inspecting]
+dispositionValidList SellableAccessible     =  [Stocking, Receiving]
+dispositionValidList SellableNotAccessible =  [Receiving, Storing, Loading, Holding, Inspecting]
 dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
 dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 
@@ -79,46 +158,46 @@ data SrcDestType = OwningParty SrcDestID | PossessingParty SrcDestID
 
 
 data When = When {
-    _eventTime :: EPCISTime,
-    _recordTime :: EPCISTime,
-    _timeZone :: TimeZone
+    eventTime  :: EPCISTime,
+    recordTime :: EPCISTime,
+    timeZone   :: TimeZone
                  } deriving (Show,Eq,Generic)
 
 
 data Where = Where {
-  _readPoint   :: (Maybe ReadPointLocation),
-  _bizLocation :: (Maybe BusinessLocation),
-  _srcDestType :: (Maybe [SrcDestType])
+  readPoint   :: (Maybe ReadPointLocation),
+  bizLocation :: (Maybe BusinessLocation),
+  srcDestType :: (Maybe [SrcDestType])
 } deriving (Show,Eq,Generic)
 
 data What = ObjectWhat {
-              _objects :: [ObjectID],
-              _action  :: Action,
-              _btt     :: [BusinessTransactionType],
-              _ilmd    :: Maybe Ilmd
+              objects :: [ObjectID],
+              action  :: Action,
+              btt     :: [BusinessTransactionType],
+              ilmd    :: Maybe Ilmd
             }
           | AggregationWhat {
-              _parentID :: Maybe ObjectID,
-              _objects  :: [ObjectID],
-              _action   :: Action,
-              _btt      :: [BusinessTransactionType]
+              parentID :: Maybe ObjectID,
+              objects  :: [ObjectID],
+              action   :: Action,
+              btt      :: [BusinessTransactionType]
             }
           | QuantityWhat {
-              _objects  :: [ObjectID],
-              _btt      :: [BusinessTransactionType]
+              objects :: [ObjectID],
+              btt     :: [BusinessTransactionType]
             }
           | TransformationWhat {
-              _input    :: [ObjectID],
-              _output   :: [ObjectID],
-              _transformationID :: TransformationID,
-              _btt      :: [BusinessTransactionType],
-              _ilmd    :: Maybe Ilmd
+              input            :: [ObjectID],
+              output           :: [ObjectID],
+              transformationID :: TransformationID,
+              btt              :: [BusinessTransactionType],
+              ilmd             :: Maybe Ilmd
              }
           | TransactionWhat {
-              _parentID :: Maybe ObjectID,
-              _objects  :: [ObjectID],
-              _action   :: Action,
-              _btt      :: [BusinessTransactionType]
+              parentID :: Maybe ObjectID,
+              objects  :: [ObjectID],
+              action   :: Action,
+              btt      :: [BusinessTransactionType]
             } deriving (Show,Eq,Generic)
 
 
@@ -130,11 +209,11 @@ type EventID = Int --FIXME - user defined element
 data Action = Add | Observe | Delete  deriving (Show,Eq,Generic)
 
 data Event = Event {
-  _type :: EventType,
-  _id   :: EventID,
-  _what :: What,
-  _when :: When,
-  _why :: Why,
+  _type  :: EventType,
+  _id    :: EventID,
+  _what  :: What,
+  _when  :: When,
+  _why   :: Why,
   _where :: Where
 } deriving (Show,Eq,Generic)
 
@@ -169,8 +248,8 @@ transactionEvent id parentID objects action btt when why whre =
   Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
 
 data Why = Why  {
-  _businessStep :: (Maybe BusinessStep),
-  _disposition  :: (Maybe Disposition)
+  businessStep :: (Maybe BusinessStep),
+  disposition  :: (Maybe Disposition)
 } deriving (Show,Eq,Generic)
 
 -- The why smart constructor

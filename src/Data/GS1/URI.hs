@@ -2,12 +2,10 @@
 
 module Data.GS1.URI where
 
-import GHC.Generics
-import Data.List
-import Data.GS1.EPC
-import Data.GS1.Location
+import           Data.List
+import           GHC.Generics
 
---TODO more restrictions
+-- TDS 1.9
 type URIPrefix = String
 
 type URIQuantifier = String
@@ -17,7 +15,7 @@ type URIPayload = String
 -- |GS1URI specs
 -- Ref: CBV 6
 -- TODO reserved URI prefix
-data GS1URI = 
+data GS1URI =
   GS1URI {
            _prefix     :: URIPrefix
          , _quantifier :: URIQuantifier
@@ -40,9 +38,3 @@ instance URI GS1URI where
   uriPrefix (GS1URI _pref _ _)   = _pref
   uriQuantifier (GS1URI _ _qt _) = _qt
   uriPayload (GS1URI _ _ _pl)     = _pl
-
-instance URI Location where
-  ppURI (Location _gln)      = intercalate ":" ["urn:epc:id", "sgln", (ppGLN _gln)]
-  uriPrefix _                = "urn:epc:id"
-  uriQuantifier _            = "sgln"
-  uriPayload (Location _gln) = ppGLN _gln
