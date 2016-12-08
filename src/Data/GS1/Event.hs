@@ -104,11 +104,60 @@ instance URI BusinessStep where
   uriQuantifier _    = "bizstep"
   uriPayload bizStep = ppBusinessStep bizStep
 
-data Disposition = Active | ContainerClosed | Damaged | Destroyed | Dispensed | Encoded
-    | Expired | InProgress | InTransit | Inactive | NoPedgreeMatch | NonSellableOther
-    | PartiallyDispensed | Recalled | Reserved | RetailSold | Returned | SellableAccessible
-    | SellableNotAccessible | Stolen | Unknown
+data Disposition = Active
+                 | ContainerClosed
+                 | Damaged
+                 | Destroyed
+                 | Dispensed
+                 | Disposed
+                 | Encoded
+                 | Expired
+                 | InProgress
+                 | InTransit
+                 | Inactive
+                 | NoPedigreeMatch
+                 | NonSellableOther
+                 | PartiallyDispensed
+                 | Recalled
+                 | Reserved
+                 | RetailSold
+                 | Returned
+                 | SellableAccessible
+                 | SellableNotAccessible
+                 | Stolen
+                 | Unknown
     deriving (Show,Eq,Generic)
+
+ppDisposition :: Disposition -> String
+ppDisposition disp = case disp of
+                       Active                -> "active"
+                       ContainerClosed       -> "container_closed"
+                       Damaged               -> "damaged"
+                       Destroyed             -> "destroyed"
+                       Dispensed             -> "dispensed"
+                       Disposed              -> "disposed"
+                       Encoded               -> "encoded"
+                       Expired               -> "expired"
+                       InProgress            -> "in_progress"
+                       InTransit             -> "in_transit"
+                       Inactive              -> "inactive"
+                       NoPedigreeMatch       -> "no_pedigree_match"
+                       NonSellableOther      -> "non_sellable_other"
+                       PartiallyDispensed    -> "partially_dispensed"
+                       Recalled              -> "recalled"
+                       Reserved              -> "reserved"
+                       RetailSold            -> "retail_sold"
+                       Returned              -> "returned"
+                       SellableAccessible    -> "sellable_accessible"
+                       SellableNotAccessible -> "sellable_not_accessible"
+                       Stolen                -> "stolen"
+                       Unknown               -> "unknown"
+
+instance URI Disposition where
+  ppURI disp      = intercalate ":" ["urn:epcglobal:cbv", "disp", ppDisposition disp]
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "disp"
+  uriPayload disp = ppDisposition disp
 
 type BusinessTransactionIdentifier = Maybe String --FIXME - user defined element
 data BusinessTransactionType = Bol BusinessTransactionIdentifier
@@ -136,7 +185,7 @@ dispositionValidList Expired    =  [Holding, StagingOutbound, Storing]
 dispositionValidList InProgress=  [Receiving, Picking, Loading, Accepting, StagingOutbound, Arriving, VoidShipping]
 dispositionValidList InTransit =  [Shipping, Departing]
 dispositionValidList Inactive   =  [Decommissioning]
-dispositionValidList NoPedgreeMatch   =  [Holding, StagingOutbound, Storing]
+dispositionValidList NoPedigreeMatch   =  [Holding, StagingOutbound, Storing]
 dispositionValidList NonSellableOther =  [Holding, Inspecting, StagingOutbound, Storing]
 dispositionValidList PartiallyDispensed=  []  -- nothing defined - page 25 of spec
 dispositionValidList Recalled   =  [Holding, StagingOutbound, Storing]
