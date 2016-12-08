@@ -1,15 +1,16 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.EPC where
 
-import Control.Lens.TH
-import Control.Monad.Error.Lens
-import Control.Monad.Except (MonadError)
-import Data.Char
-import Data.List
-import GHC.Generics
-import Text.Read
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except     (MonadError)
+import           Data.Char
+import           Data.List
+import           GHC.Generics
+import           Text.Read
 
 -- |TODO TEMP EpcClass is a String
 type EpcClass = String
@@ -58,7 +59,7 @@ calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
 wellFormatGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
 wellFormatGLN pref ref cd = _concat pref ref == 12 && length cd == 1 && _isNum pref ref cd
   where _concat a b = length (concat [a, b])
-        _isNum a b c = 
+        _isNum a b c =
           let mint = readMaybe (concat [a, b, c]) :: Maybe Integer in
           case mint of
             Just _  -> True
@@ -75,4 +76,3 @@ gln pref ref cd
   | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
   | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
   | otherwise                       = pure (GLN pref ref cd)
-
