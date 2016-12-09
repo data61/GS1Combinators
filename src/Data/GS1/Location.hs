@@ -18,7 +18,7 @@ data Location = Location EPC
 type ReadPointLocation = Location
 
 -- |Location synonym
-type BusinessLocation = Location
+type BizLocation = Location
 
 -- |Latitude is Double
 type Latitude = Double
