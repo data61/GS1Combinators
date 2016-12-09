@@ -44,6 +44,7 @@ test-suite GS1Combinators-test
                      , Data.GS1.Location
                      , Data.GS1.URI
                      , Tests.Location
+                     , Tests.Event
   build-depends:       base
                      , GS1Combinators
                      , hspec
