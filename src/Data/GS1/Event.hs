@@ -112,7 +112,6 @@ ppBizStep bizStep = case bizStep of
                            VoidShipping          -> "void_shipping"
 
 instance URI BizStep where
-  ppURI a            = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _        = "urn:epcglobal:cbv"
   uriQuantifier _    = "bizstep"
   uriPayload bizStep = ppBizStep bizStep
@@ -167,7 +166,6 @@ ppDisposition disp = case disp of
                        Unknown               -> "unknown"
 
 instance URI Disposition where
-  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "disp"
   uriPayload disp = ppDisposition disp
@@ -222,7 +220,6 @@ data BizTransactionID = BTIGDTI String
                       | BTIGLN String
 
 instance URI BizTransactionID where
-  ppURI a     = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix a = case a of
                   BTIGDTI _ -> "urn:epc:id"
                   BTIGSRN _ -> "urn:epc:id"
@@ -260,7 +257,6 @@ ppBizTransactionType _btt = case _btt of
                              Rma       -> "rma"
 
 instance URI BizTransactionType where
-  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "btt"
   uriPayload a    = ppBizTransactionType a
@@ -271,7 +267,6 @@ data SourceDestID = SourceDestID String
   deriving (Show, Eq, Generic)
 
 instance URI SourceDestID where
-  ppURI a                     = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _                 = "urn:epc:id"
   uriQuantifier _             = "sgln"
   uriPayload (SourceDestID s) = s
@@ -282,7 +277,6 @@ data SourceDestType = SDOwningParty
   deriving (Show, Eq, Generic)
 
 instance URI SourceDestType where
-  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "sdt"
   uriPayload a    = case a of
@@ -295,6 +289,25 @@ data Source = Source SourceDestType SourceDestID
 
 data Destination = Destination SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
+
+-- |EPCIS 1.2 section 7.5
+-- FIXME example should be found to verify the implementation is correct
+data ErrorReasonID = DidNotOccur
+                   | IncorrectData
+                   deriving (Show, Eq, Generic)
+
+ppErrorReasonID :: ErrorReasonID -> String
+ppErrorReasonID e = case e of
+                      DidNotOccur   -> "did_not_occur"
+                      IncorrectData -> "incorrect_data"
+
+data ErrorDeclaration = ErrorDeclaration ErrorReasonID
+  deriving (Show, Eq, Generic)
+
+instance URI ErrorDeclaration where
+  uriPrefix _                     = "urn:epcglobal:cbv"
+  uriQuantifier _                 = "er"
+  uriPayload (ErrorDeclaration r) = ppErrorReasonID r
 
 --TODO
 type TransformationID = String -- FIXME user defined element

@@ -38,7 +38,6 @@ instance Show GeoLocation where
   show = ppGeoLocation
 
 instance URI Location where
-  ppURI (Location _gln)      = intercalate ":" ["urn:epc:id", "sgln", (ppGLN _gln)]
   uriPrefix _                = "urn:epc:id"
   uriQuantifier _            = "sgln"
   uriPayload (Location _gln) = ppGLN _gln
