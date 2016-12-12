@@ -1,6 +1,12 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.Event where
+
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except     (MonadError)
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.URI
@@ -10,6 +16,13 @@ import           Data.Time.Clock
 import           Data.Time.LocalTime
 import           GHC.Generics
 
+
+
+data BizStepError = InvalidDisposition
+                  | OtherBizStepError
+                  deriving (Show, Eq, Generic)
+
+makeClassyPrisms ''BizStepError
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
@@ -209,7 +222,6 @@ data BizTransactionID = BTIGDTI String
                       | BTIGSRN String
                       | BTIGLN String
 
-
 instance URI BizTransactionID where
   ppURI a = intercalate ":" [uriPrefix a, uriQuantifier a, uriPayload a]
   uriPrefix a = case a of
@@ -253,6 +265,10 @@ instance URI BizTransactionType where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "btt"
   uriPayload a    = ppBizTransactionType a
+
+data SourceDestType = SourceDestType
+
+data Source = Source
 
 type TransformationID = String -- FIXME user defined element
 type SrcDestID = String -- FIXME user defined element
@@ -350,26 +366,30 @@ transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
 transactionEvent id parentID objects action btt when why whre =
   Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
 
-data Why = Why  {
-  businessStep :: (Maybe BizStep),
-  disposition  :: (Maybe Disposition)
-} deriving (Show,Eq,Generic)
+data Why = Why (Maybe BizStep) (Maybe Disposition)
+  deriving (Show, Eq, Generic)
 
--- The why smart constructor
--- Have to make sure the disposition is valid for that particular business
--- step.
--- FIXME: do we care if the businessStep and disposition match if one of them is Nothing?
-why :: Maybe BizStep -> Maybe Disposition -> Why
+why :: (AsBizStepError e, MonadError e m)
+     => Maybe BizStep -> Maybe Disposition -> m Why
 why step disp
-    |isJust step && isJust disp =
-      if dispositionValidFor (fromJust step) (fromJust disp)
-      then (Why step disp)
-      else error $ "Disposition not valid for business step. " ++
-        " Valid BizSteps for " ++ show (fromJust disp) ++ "include: " ++
-                      show (dispositionValidList (fromJust disp))
-    |otherwise = (Why step disp)
+  | isNothing step || isNothing disp = pure (Why step disp)  -- TODO: verify when encounter Nothing
+  | otherwise                        = let v = dispositionValidFor (fromJust step) (fromJust disp) in
+                                           case v of
+                                             True -> pure (Why step disp)
+                                             _    -> throwing _InvalidDisposition ()
 
+data WhyCBVCompliant = WhyCBVCompliant BizStep (Maybe Disposition)
+  deriving (Show, Eq, Generic)
 
+whyCBVCompliant :: (AsBizStepError e, MonadError e m)
+     => BizStep -> Maybe Disposition -> m WhyCBVCompliant
+whyCBVCompliant step disp = case disp of
+                              -- TODO can we verify validity better when disposition is Nothing?
+                              Nothing -> pure (WhyCBVCompliant step Nothing)
+                              Just d  -> let v = dispositionValidFor step d in
+                                           case v of
+                                             True -> pure (WhyCBVCompliant step (Just d))
+                                             _    -> throwing _InvalidDisposition ()
 
 {--
 == Object Event ==
