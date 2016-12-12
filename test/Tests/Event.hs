@@ -10,7 +10,6 @@ testBizStep = do
     it "produces correct URI" $
       ppURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
   
-
 testDisposition :: Spec
 testDisposition = do
   describe "Disposition" $ do
@@ -23,10 +22,11 @@ testBizTransaction = do
     it "produces correct GDTI URI" $
       ppURI (BTIGDTI "dummyid") `shouldBe` "urn:epc:id:gdti:dummyid"
 
-  describe "BizTransaction Id GSRN" $
+  describe "BizTransaction Id GSRN" $ do
     it "produces correct GSRN URI" $
       ppURI (BTIGSRN "dummyid") `shouldBe` "urn:epc:id:gsrn:dummyid"
 
-  describe "BizTransaction Id GLN" $
+  describe "BizTransaction Id GLN" $ do
     it "produces correct legacy GLN URI" $
       ppURI (BTIGLN "dummyid") `shouldBe` "urn:epcglobal:cbv:bt:gln:dummyid"
+
