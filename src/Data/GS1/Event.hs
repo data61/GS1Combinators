@@ -17,7 +17,6 @@ import           Data.Time.LocalTime
 import           GHC.Generics
 
 
-
 data BizStepError = InvalidDisposition
                   | OtherBizStepError
                   deriving (Show, Eq, Generic)
@@ -113,7 +112,7 @@ ppBizStep bizStep = case bizStep of
                            VoidShipping          -> "void_shipping"
 
 instance URI BizStep where
-  ppURI bizStep      = intercalate ":" ["urn:epcglobal:cbv", "bizstep", ppBizStep bizStep]
+  ppURI a            = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _        = "urn:epcglobal:cbv"
   uriQuantifier _    = "bizstep"
   uriPayload bizStep = ppBizStep bizStep
@@ -168,7 +167,7 @@ ppDisposition disp = case disp of
                        Unknown               -> "unknown"
 
 instance URI Disposition where
-  ppURI disp      = intercalate ":" ["urn:epcglobal:cbv", "disp", ppDisposition disp]
+  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "disp"
   uriPayload disp = ppDisposition disp
@@ -223,7 +222,7 @@ data BizTransactionID = BTIGDTI String
                       | BTIGLN String
 
 instance URI BizTransactionID where
-  ppURI a = intercalate ":" [uriPrefix a, uriQuantifier a, uriPayload a]
+  ppURI a     = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix a = case a of
                   BTIGDTI _ -> "urn:epc:id"
                   BTIGSRN _ -> "urn:epc:id"
@@ -261,20 +260,44 @@ ppBizTransactionType _btt = case _btt of
                              Rma       -> "rma"
 
 instance URI BizTransactionType where
-  ppURI a         = intercalate ":" ["urn:epcglobal:cbv", "btt", ppBizTransactionType a]
+  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "btt"
   uriPayload a    = ppBizTransactionType a
 
-data SourceDestType = SourceDestType
+-- EPCIS 1.2 section 7.3.5.4 line 1150
+-- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]
+data SourceDestID = SourceDestID String
+  deriving (Show, Eq, Generic)
 
-data Source = Source
+instance URI SourceDestID where
+  ppURI a                     = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
+  uriPrefix _                 = "urn:epc:id"
+  uriQuantifier _             = "sgln"
+  uriPayload (SourceDestID s) = s
 
+data SourceDestType = SDOwningParty
+                    | SDProcessingParty
+                    | SDLocation
+  deriving (Show, Eq, Generic)
+
+instance URI SourceDestType where
+  ppURI a         = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "sdt"
+  uriPayload a    = case a of
+                      SDOwningParty     -> "owning_party"
+                      SDProcessingParty -> "processing_party"
+                      SDLocation        -> "location"
+
+data Source = Source SourceDestType SourceDestID
+  deriving (Show, Eq, Generic)
+
+data Destination = Destination SourceDestType SourceDestID
+  deriving (Show, Eq, Generic)
+
+--TODO
 type TransformationID = String -- FIXME user defined element
-type SrcDestID = String -- FIXME user defined element
-data SrcDestType = OwningParty SrcDestID | PossessingParty SrcDestID
-  deriving (Show,Eq,Generic)
-
 
 data When = When {
     eventTime  :: EPCISTime,
@@ -286,7 +309,7 @@ data When = When {
 data Where = Where {
   readPoint   :: (Maybe ReadPointLocation),
   bizLocation :: (Maybe BizLocation),
-  srcDestType :: (Maybe [SrcDestType])
+  srcDestType :: (Maybe [SourceDestType])
 } deriving (Show,Eq,Generic)
 
 data What = ObjectWhat {
