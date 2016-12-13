@@ -72,7 +72,7 @@ data BizStep = Accepting
     deriving (Show,Eq,Generic)
 
 ppBizStep :: BizStep -> String
-ppBizStep b = revertCamelCase $ show b
+ppBizStep = revertCamelCase . show
 
 instance URI BizStep where
   uriPrefix _        = "urn:epcglobal:cbv"
@@ -104,12 +104,12 @@ data Disposition = Active
     deriving (Show,Eq,Generic)
 
 ppDisposition :: Disposition -> String
-ppDisposition d = revertCamelCase $ show d
+ppDisposition = revertCamelCase . show
 
 instance URI Disposition where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "disp"
-  uriPayload disp = ppDisposition disp
+  uriPayload      = ppDisposition
 
 -- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BizStep]
@@ -190,12 +190,12 @@ data BizTransactionType = Bol       -- Bill of Lading
                         deriving (Show, Eq, Generic)
 
 ppBizTransactionType :: BizTransactionType -> String
-ppBizTransactionType b = revertCamelCase $ show b
+ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "btt"
-  uriPayload a    = ppBizTransactionType a
+  uriPayload      = ppBizTransactionType
 
 -- EPCIS 1.2 section 7.3.5.4 line 1150
 -- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]
