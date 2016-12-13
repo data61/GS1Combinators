@@ -9,13 +9,12 @@ import Data.Char
 insertUs' :: String -> String
 insertUs' [] = []
 insertUs' (x:xs)
-  | isUpper x = '_':(toLower x):(insertUs' xs)
-  | otherwise = x:(insertUs' xs)
+  | isUpper x = '_' : toLower x : insertUs' xs
+  | otherwise = x : insertUs' xs
                            
 revertCamelCase :: String -> String
 revertCamelCase [] = []
-revertCamelCase str = let r = insertUs' str
-                          h = head r in
-                          case h of
-                            '_' -> tail r
-                            _   -> r
+revertCamelCase str = let r = insertUs' str in
+                          case r of
+                            '_':t -> t
+                            _     -> r
