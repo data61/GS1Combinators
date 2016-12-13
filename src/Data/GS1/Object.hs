@@ -1,8 +1,8 @@
 module Data.GS1.Object where
 
 --import Control.Lens.TH
-import Data.GS1.EPC
-import Data.GS1.URI
+import           Data.GS1.EPC
+import           Data.GS1.URI
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
@@ -48,4 +48,4 @@ class Identify a where
 -- |Object is an instance of Identify
 instance Identify Object where
   ident (PhysicalObject id) = id
-  ident (DigitalObject id) = id
+  ident (DigitalObject id)  = id
