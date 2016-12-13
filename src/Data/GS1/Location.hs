@@ -4,9 +4,11 @@
 
 module Data.GS1.Location where
 
-import Data.GS1.EPC
-import GHC.Generics
-import Text.Printf
+import           Data.GS1.EPC
+import           Data.GS1.URI
+import           Data.List
+import           GHC.Generics
+import           Text.Printf
 
 -- |Location takes a GLN as its argument
 data Location = Location EPC
@@ -16,7 +18,7 @@ data Location = Location EPC
 type ReadPointLocation = Location
 
 -- |Location synonym
-type BusinessLocation = Location
+type BizLocation = Location
 
 -- |Latitude is Double
 type Latitude = Double
@@ -34,3 +36,8 @@ ppGeoLocation (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
 
 instance Show GeoLocation where
   show = ppGeoLocation
+
+instance URI Location where
+  uriPrefix _                = "urn:epc:id"
+  uriQuantifier _            = "sgln"
+  uriPayload (Location _gln) = ppGLN _gln

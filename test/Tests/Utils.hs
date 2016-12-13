@@ -1,0 +1,25 @@
+module Tests.Utils where
+
+import Test.Hspec
+import Data.GS1.Utils
+
+testRevertCamelCase :: Spec
+testRevertCamelCase = do
+  describe "revert camel case to underscore separated" $ do
+    it "reverts camel case string starting with upperase char" $
+      revertCamelCase "HelloWorld" `shouldBe` "hello_world"
+     
+    it "reverts camel case string starting with lowercase char" $
+      revertCamelCase "helloWorld" `shouldBe` "hello_world"
+
+    it "does nothing on a string with all lower case char" $
+      revertCamelCase "helloworld" `shouldBe` "helloworld"
+
+    it "does nothing on an empty string" $
+      revertCamelCase "" `shouldBe` ""
+
+    it "does not insert underscore to a single string starting with upper case char" $
+      revertCamelCase "Hello" `shouldBe` "hello"
+
+    it "seperates every char of a string with all uppercase chars" $
+      revertCamelCase "HELLO" `shouldBe` "h_e_l_l_o"

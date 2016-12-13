@@ -1,13 +1,28 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.Event where
-import           GHC.Generics
+
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except     (MonadError)
 import           Data.GS1.Location
 import           Data.GS1.Object
+import           Data.GS1.URI
+import           Data.GS1.Utils
+import           Data.List
 import           Data.Maybe
 import           Data.Time.Clock
 import           Data.Time.LocalTime
+import           GHC.Generics
 
+
+data BizStepError = InvalidDisposition
+                  | OtherBizStepError
+                  deriving (Show, Eq, Generic)
+
+makeClassyPrisms ''BizStepError
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
@@ -16,111 +31,266 @@ import           Data.Time.LocalTime
 -}
 type EPCISTime = UniversalTime
 
-data BusinessStep = Accepting | Arriving | Assembling | Collecting
-    | Commissioning | Consigning | Creating_Class_Instance | Cycle_Counting
-    | Decommissioning | Departing | Destroying | Disassembling | Dispensing | Encoding
-    | Entering_Exiting | Holding | Inspecting | Installing | Killing | Loading | Other
-    | Packing | Picking | Receiving | Removing | Repackaging | Repairing | Replacing
-    | Reserving | Retail_Selling | Shipping | Staging_Outbound | Stock_Taking | Stocking
-    | Storing | Transporting | Unloading | Void_Shipping
+data BizStep = Accepting
+                  | Arriving
+                  | Assembling
+                  | Collecting
+                  | Commissioning
+                  | Consigning
+                  | CreatingClassInstance
+                  | CycleCounting
+                  | Decommissioning
+                  | Departing
+                  | Destroying
+                  | Disassembling
+                  | Dispensing
+                  | Encoding
+                  | EnteringExiting
+                  | Holding
+                  | Inspecting
+                  | Installing
+                  | Killing
+                  | Loading
+                  | Other
+                  | Packing
+                  | Picking
+                  | Receiving
+                  | Removing
+                  | Repackaging
+                  | Repairing
+                  | Replacing
+                  | Reserving
+                  | RetailSelling
+                  | Shipping
+                  | StagingOutbound
+                  | StockTaking
+                  | Stocking
+                  | Storing
+                  | Transporting
+                  | Unloading
+                  | VoidShipping
     deriving (Show,Eq,Generic)
 
-data Disposition = Active | Container_Closed | Damaged | Destroyed | Dispensed | Encoded
-    | Expired | In_Progress | In_Transit | Inactive | No_Pedgree_Match | Non_Sellable_Other
-    | Partially_Dispensed | Recalled | Reserved | Retail_Sold | Returned | Sellable_Accessible
-    | Sellable_Not_Accessible | Stolen | Unknown
+ppBizStep :: BizStep -> String
+ppBizStep = revertCamelCase . show
+
+instance URI BizStep where
+  uriPrefix _        = "urn:epcglobal:cbv"
+  uriQuantifier _    = "bizstep"
+  uriPayload bizStep = ppBizStep bizStep
+
+data Disposition = Active
+                 | ContainerClosed
+                 | Damaged
+                 | Destroyed
+                 | Dispensed
+                 | Disposed
+                 | Encoded
+                 | Expired
+                 | InProgress
+                 | InTransit
+                 | Inactive
+                 | NoPedigreeMatch
+                 | NonSellableOther
+                 | PartiallyDispensed
+                 | Recalled
+                 | Reserved
+                 | RetailSold
+                 | Returned
+                 | SellableAccessible
+                 | SellableNotAccessible
+                 | Stolen
+                 | Unknown
     deriving (Show,Eq,Generic)
 
-type BusinessTransactionIdentifier = Maybe String --FIXME - user defined element
-data BusinessTransactionType = Bol BusinessTransactionIdentifier
-                             | Desadv BusinessTransactionIdentifier
-                             | Inv BusinessTransactionIdentifier
-                             | Pedigree BusinessTransactionIdentifier
-                             | Po BusinessTransactionIdentifier
-                             | Poc BusinessTransactionIdentifier
-                             | Prodorder BusinessTransactionIdentifier
-                             | Recadv BusinessTransactionIdentifier
-                             | Rma BusinessTransactionIdentifier
-    deriving (Show,Eq,Generic)
+ppDisposition :: Disposition -> String
+ppDisposition = revertCamelCase . show
 
-
+instance URI Disposition where
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "disp"
+  uriPayload      = ppDisposition
 
 -- Valid Dispositions, defined in section CBV 7.2
-dispositionValidList :: Disposition -> [BusinessStep]
-dispositionValidList Active           =  [Commissioning]
-dispositionValidList Container_Closed =  [Staging_Outbound]
-dispositionValidList Damaged          =  [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
-dispositionValidList Destroyed  =  [Destroying]
-dispositionValidList Dispensed  =  [] -- nothing defined - page 25 of spec
-dispositionValidList Encoded    =  [Encoding]
-dispositionValidList Expired    =  [Holding, Staging_Outbound, Storing]
-dispositionValidList In_Progress=  [Receiving, Picking, Loading, Accepting, Staging_Outbound, Arriving, Void_Shipping]
-dispositionValidList In_Transit =  [Shipping, Departing]
-dispositionValidList Inactive   =  [Decommissioning]
-dispositionValidList No_Pedgree_Match   =  [Holding, Staging_Outbound, Storing]
-dispositionValidList Non_Sellable_Other =  [Holding, Inspecting, Staging_Outbound, Storing]
-dispositionValidList Partially_Dispensed=  []  -- nothing defined - page 25 of spec
-dispositionValidList Recalled   =  [Holding, Staging_Outbound, Storing]
-dispositionValidList Reserved   =  [Reserving]
-dispositionValidList Retail_Sold=  [Retail_Selling]
-dispositionValidList Returned   =  [Receiving, Holding, Shipping]
-dispositionValidList Sellable_Accessible     =  [Stocking, Receiving]
-dispositionValidList Sellable_Not_Accessible =  [Receiving, Storing, Loading, Holding, Inspecting]
-dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
-dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
+dispositionValidList :: Disposition -> [BizStep]
+dispositionValidList Active                =  [Commissioning]
+dispositionValidList ContainerClosed       =  [StagingOutbound]
+dispositionValidList Damaged               =  [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
+dispositionValidList Destroyed             =  [Destroying]
+dispositionValidList Dispensed             =  [] -- nothing defined - page 25 of spec
+dispositionValidList Encoded               =  [Encoding]
+dispositionValidList Expired               =  [Holding, StagingOutbound, Storing]
+dispositionValidList InProgress            =  [Receiving, Picking, Loading, Accepting, StagingOutbound, Arriving, VoidShipping]
+dispositionValidList InTransit             =  [Shipping, Departing]
+dispositionValidList Inactive              =  [Decommissioning]
+dispositionValidList NoPedigreeMatch       =  [Holding, StagingOutbound, Storing]
+dispositionValidList NonSellableOther      =  [Holding, Inspecting, StagingOutbound, Storing]
+dispositionValidList PartiallyDispensed    =  []  -- nothing defined - page 25 of spec
+dispositionValidList Recalled              =  [Holding, StagingOutbound, Storing]
+dispositionValidList Reserved              =  [Reserving]
+dispositionValidList RetailSold            =  [RetailSelling]
+dispositionValidList Returned              =  [Receiving, Holding, Shipping]
+dispositionValidList SellableAccessible    =  [Stocking, Receiving]
+dispositionValidList SellableNotAccessible =  [Receiving, Storing, Loading, Holding, Inspecting]
+dispositionValidList Stolen                =  [] -- nothing defined - page 25 of spec
+dispositionValidList Unknown               =  [] -- nothing defined - page 25 of spec
 
-dispositionValidFor :: BusinessStep -> Disposition -> Bool
-dispositionValidFor bs disp = bs `elem` dispositionValidList disp
+dispositionValidFor :: BizStep -> Disposition -> Bool
+dispositionValidFor b d = b `elem` dispositionValidList d
 
+{-
+type BizTransactionIdentifier = Maybe String --FIXME - user defined element
+data BizTransactionType = Bol BizTransactionIdentifier
+                             | Desadv BizTransactionIdentifier
+                             | Inv BizTransactionIdentifier
+                             | Pedigree BizTransactionIdentifier
+                             | Po BizTransactionIdentifier
+                             | Poc BizTransactionIdentifier
+                             | Prodorder BizTransactionIdentifier
+                             | Recadv BizTransactionIdentifier
+                             | Rma BizTransactionIdentifier
+    deriving (Show,Eq,Generic)
+-}
+
+-- |BizTransaction CBV Section 7.3 and Section 8.5
+-- BTI stands for Business Transaction Identifier
+-- BTT stands for Business Transaction Type
+-- GDTI stands for Global Document Type Identifier
+-- GSRN stands for Global Service Relation Number
+-- MAY contain one or more BizTransactionType means [0..*]
+data BizTransaction = BizTransactionID [BizTransactionType]
+
+data BizTransactionID = BTIGDTI String
+                      | BTIGSRN String
+                      | BTIGLN String
+
+instance URI BizTransactionID where
+  uriPrefix a = case a of
+                  BTIGDTI _ -> "urn:epc:id"
+                  BTIGSRN _ -> "urn:epc:id"
+                  BTIGLN _  -> "urn:epcglobal:cbv:bt"
+  uriQuantifier a = case a of
+                      BTIGDTI _ -> "gdti"
+                      BTIGSRN _ -> "gsrn"
+                      BTIGLN  _ -> "gln"
+  uriPayload a = case a of
+                   BTIGDTI b -> b
+                   BTIGSRN b -> b
+                   BTIGLN b  -> b
+
+data BizTransactionType = Bol       -- Bill of Lading
+                        | Desadv    -- Dispatch Advice
+                        | Inv       -- Invoice
+                        | Pedigree  -- Pedigree
+                        | Po        -- Purchase Order
+                        | Poc       -- Purchase Order Confirmation
+                        | Prodorder -- Production Order
+                        | Recadv    -- Receiving Advice
+                        | Rma       -- Return Mechandise Authorisation
+                        deriving (Show, Eq, Generic)
+
+ppBizTransactionType :: BizTransactionType -> String
+ppBizTransactionType = revertCamelCase . show
+
+instance URI BizTransactionType where
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "btt"
+  uriPayload      = ppBizTransactionType
+
+-- EPCIS 1.2 section 7.3.5.4 line 1150
+-- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]
+data SourceDestID = SourceDestID String
+  deriving (Show, Eq, Generic)
+
+instance URI SourceDestID where
+  uriPrefix _                 = "urn:epc:id"
+  uriQuantifier _             = "sgln"
+  uriPayload (SourceDestID s) = s
+
+data SourceDestType = SDOwningParty
+                    | SDProcessingParty
+                    | SDLocation
+  deriving (Show, Eq, Generic)
+
+instance URI SourceDestType where
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "sdt"
+  uriPayload a    = case a of
+                      SDOwningParty     -> "owning_party"
+                      SDProcessingParty -> "processing_party"
+                      SDLocation        -> "location"
+
+data Source = Source SourceDestType SourceDestID
+  deriving (Show, Eq, Generic)
+
+data Destination = Destination SourceDestType SourceDestID
+  deriving (Show, Eq, Generic)
+
+-- |EPCIS 1.2 section 7.5
+-- FIXME example should be found to verify the implementation is correct
+data ErrorReasonID = DidNotOccur
+                   | IncorrectData
+                   deriving (Show, Eq, Generic)
+
+ppErrorReasonID :: ErrorReasonID -> String
+ppErrorReasonID e = case e of
+                      DidNotOccur   -> "did_not_occur"
+                      IncorrectData -> "incorrect_data"
+
+data ErrorDeclaration = ErrorDeclaration ErrorReasonID
+  deriving (Show, Eq, Generic)
+
+instance URI ErrorDeclaration where
+  uriPrefix _                     = "urn:epcglobal:cbv"
+  uriQuantifier _                 = "er"
+  uriPayload (ErrorDeclaration r) = ppErrorReasonID r
+
+--TODO
 type TransformationID = String -- FIXME user defined element
-type SrcDestID = String -- FIXME user defined element
-data SrcDestType = OwningParty SrcDestID | PossessingParty SrcDestID
-  deriving (Show,Eq,Generic)
-
 
 data When = When {
-    _eventTime :: EPCISTime,
-    _recordTime :: EPCISTime,
-    _timeZone :: TimeZone
-                 } deriving (Show,Eq,Generic)
+  _eventTime  :: EPCISTime
+, _recordTime :: EPCISTime
+, _timeZone   :: TimeZone
+} deriving (Show, Eq, Generic)
 
 
 data Where = Where {
-  _readPoint   :: (Maybe ReadPointLocation),
-  _bizLocation :: (Maybe BusinessLocation),
-  _srcDestType :: (Maybe [SrcDestType])
-} deriving (Show,Eq,Generic)
+  _readPoint   :: (Maybe ReadPointLocation)
+, _bizLocation :: (Maybe BizLocation)
+, _srcDestType :: (Maybe [SourceDestType])
+} deriving (Show, Eq, Generic)
 
 data What = ObjectWhat {
               _objects :: [ObjectID],
               _action  :: Action,
-              _btt     :: [BusinessTransactionType],
+              _btt     :: [BizTransactionType],
               _ilmd    :: Maybe Ilmd
             }
           | AggregationWhat {
               _parentID :: Maybe ObjectID,
               _objects  :: [ObjectID],
               _action   :: Action,
-              _btt      :: [BusinessTransactionType]
+              _btt      :: [BizTransactionType]
             }
           | QuantityWhat {
-              _objects  :: [ObjectID],
-              _btt      :: [BusinessTransactionType]
+              _objects :: [ObjectID],
+              _btt     :: [BizTransactionType]
             }
           | TransformationWhat {
-              _input    :: [ObjectID],
-              _output   :: [ObjectID],
+              _input            :: [ObjectID],
+              _output           :: [ObjectID],
               _transformationID :: TransformationID,
-              _btt      :: [BusinessTransactionType],
-              _ilmd    :: Maybe Ilmd
-             }
+              _btt              :: [BizTransactionType],
+              _ilmd             :: Maybe Ilmd
+            }
           | TransactionWhat {
               _parentID :: Maybe ObjectID,
               _objects  :: [ObjectID],
               _action   :: Action,
-              _btt      :: [BusinessTransactionType]
-            } deriving (Show,Eq,Generic)
-
+              _btt      :: [BizTransactionType]
+            }
+  deriving (Show, Eq, Generic)
 
 data EventType = ObjectEvent | AggregationEvent | QuantityEvent |
   TransactionEvent | TransformationEvent  deriving (Show,Eq,Generic)
@@ -130,64 +300,69 @@ type EventID = Int --FIXME - user defined element
 data Action = Add | Observe | Delete  deriving (Show,Eq,Generic)
 
 data Event = Event {
-  _type :: EventType,
-  _id   :: EventID,
-  _what :: What,
-  _when :: When,
-  _why :: Why,
-  _where :: Where
-} deriving (Show,Eq,Generic)
+  _type  :: EventType
+, _id    :: EventID
+, _what  :: What
+, _when  :: When
+, _why   :: Why
+, _where :: Where
+} deriving (Show, Eq, Generic)
 
 
-objectEvent :: EventID -> [ObjectID] -> Action -> [BusinessTransactionType] ->
+objectEvent :: EventID -> [ObjectID] -> Action -> [BizTransactionType] ->
     Maybe Ilmd ->When -> Why -> Where -> Event
 objectEvent id objects action btt ilmd when why whre =
   Event ObjectEvent id (ObjectWhat objects action btt ilmd) when why whre
 
 --TODO: check parent is present when needed (based on action)
 aggregationEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
-  [BusinessTransactionType] -> When -> Why -> Where -> Event
+  [BizTransactionType] -> When -> Why -> Where -> Event
 aggregationEvent id parent objects action btt when why whre =
   Event AggregationEvent id (AggregationWhat parent objects action btt) when why whre
 
 --TODO: check that all ObjectIDs are class objects with quantities.
-quantityEvent :: EventID -> [ObjectID] -> [BusinessTransactionType] ->
+quantityEvent :: EventID -> [ObjectID] -> [BizTransactionType] ->
   When -> Why -> Where -> Event
 quantityEvent id objects btt when why whre=
   Event QuantityEvent id (QuantityWhat objects btt) when why whre
 
 transformationEvent :: EventID -> [ObjectID] -> [ObjectID] -> TransformationID
-                    -> [BusinessTransactionType] -> Maybe Ilmd -> When -> Why ->
+                    -> [BizTransactionType] -> Maybe Ilmd -> When -> Why ->
                       Where -> Event
 transformationEvent id inputs outputs transformID btt  ilmd when why whre =
   Event TransformationEvent id (TransformationWhat inputs outputs transformID btt ilmd)
     when why whre
 
 transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
-  [BusinessTransactionType] -> When -> Why -> Where -> Event
+  [BizTransactionType] -> When -> Why -> Where -> Event
 transactionEvent id parentID objects action btt when why whre =
   Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
 
-data Why = Why  {
-  _businessStep :: (Maybe BusinessStep),
-  _disposition  :: (Maybe Disposition)
-} deriving (Show,Eq,Generic)
+data Why = Why {_bizStep :: Maybe BizStep , _disposition :: Maybe Disposition}
+  deriving (Show, Eq, Generic)
 
--- The why smart constructor
--- Have to make sure the disposition is valid for that particular business
--- step.
--- FIXME: do we care if the businessStep and disposition match if one of them is Nothing?
-why :: Maybe BusinessStep -> Maybe Disposition -> Why
+-- TODO Why derive lens
+--makeClassy ''Why
+
+why :: (AsBizStepError e, MonadError e m)
+     => Maybe BizStep -> Maybe Disposition -> m Why
 why step disp
-    |isJust step && isJust disp =
-      if dispositionValidFor (fromJust step) (fromJust disp)
-      then (Why step disp)
-      else error $ "Disposition not valid for business step. " ++
-        " Valid BusinessSteps for " ++ show (fromJust disp) ++ "include: " ++
-                      show (dispositionValidList (fromJust disp))
-    |otherwise = (Why step disp)
+  | isNothing step || isNothing disp = pure (Why step disp)  -- TODO: verify when encounter Nothing
+  | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
+                                          then pure (Why step disp)
+                                          else throwing _InvalidDisposition ()
 
+data WhyCBVCompliant = WhyCBVCompliant BizStep (Maybe Disposition)
+  deriving (Show, Eq, Generic)
 
+-- TODO can we verify validity better when disposition is Nothing?
+whyCBVCompliant :: (AsBizStepError e, MonadError e m)
+     => BizStep -> Maybe Disposition -> m WhyCBVCompliant
+whyCBVCompliant step disp = case disp of
+                              Nothing -> pure (WhyCBVCompliant step Nothing)
+                              Just d -> if dispositionValidFor step d
+                                           then pure (WhyCBVCompliant step (Just d))
+                                           else throwing _InvalidDisposition ()
 
 {--
 == Object Event ==
@@ -199,14 +374,14 @@ why step disp
  What - EpcList* quantityList* (an ObjectEvent shall contain a non-empty epcList or a non-empty quantityList or both)
         Action
         Ilmd
-        [BusinessTransactionType]*
+        [BizTransactionType]*
  Why -
-        BusinessStep*
+        BizStep*
         Disposition*
 
  Where -
         ReadPoint*
-        BusinessLocation*
+        BizLocation*
         [SrcDestType]*
 --}
 
@@ -220,13 +395,13 @@ why step disp
         [ChildEPC]* (An AggregationEvent SHALL contain either a non-empty [childEPCs] a non-empty [childQuantity], or both, except that both may be empty if Action==Delete)
         [ChildQuantity]*
         Action
-        [BusinessTransactionType]
+        [BizTransactionType]
  Why -
-        BusinessStep*
+        BizStep*
         Disposition*
  Where -
         ReadPoint*
-        BusinessLocation*
+        BizLocation*
         [SrcDestType]
 --}
 
@@ -236,13 +411,13 @@ why step disp
  When - EventTime/RecordTime/EventTimeOffset
  What -
         EPCClass, Quantity
-        [BusinessTransactionType]
+        [BizTransactionType]
  Why -
-        BusinessStep*
+        BizStep*
         Disposition*
  Where -
         ReadPoint*
-        BusinessLocation*
+        BizLocation*
 --}
 
 {--
@@ -250,17 +425,17 @@ why step disp
  - Fields -
  When - EventTime/RecordTime/EventTimeOffset
  What -
-        [BusinessTransactionType]
+        [BizTransactionType]
         ParentID*
         EPCList, Quantity List
         Action
  Why -
-        BusinessStep
+        BizStep
         Disposition
 
  Where -
         ReadPoint
-        BusinessLocation
+        BizLocation
         [SrcDestType]
 --}
 
@@ -271,14 +446,14 @@ why step disp
  What - [InputEPC]*, [OutputQuantity]*
         [OutputEPC]*, [OutputQuantity]*
         TransformationID*
-        [BusinessTransactionType]
+        [BizTransactionType]
         Ilmd*
  Why  -
-        BusinessStep*
+        BizStep*
         Disposition*
  Where -
         ReadPoint*
-        BusinessLocation*
+        BizLocation*
         [SrcDestType]*
 --}
 
