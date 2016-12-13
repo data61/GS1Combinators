@@ -10,6 +10,7 @@ import           Control.Monad.Except     (MonadError)
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.URI
+import           Data.GS1.Utils
 import           Data.List
 import           Data.Maybe
 import           Data.Time.Clock
@@ -71,45 +72,7 @@ data BizStep = Accepting
     deriving (Show,Eq,Generic)
 
 ppBizStep :: BizStep -> String
-ppBizStep bizStep = case bizStep of
-                           Accepting             -> "accepting"
-                           Arriving              -> "arriving"
-                           Assembling            -> "assembling"
-                           Collecting            -> "collecting"
-                           Commissioning         -> "commissioning"
-                           Consigning            -> "consigning"
-                           CreatingClassInstance -> "creating_class_instance"
-                           CycleCounting         -> "cycle_counting"
-                           Decommissioning       -> "decommissioning"
-                           Departing             -> "departing"
-                           Destroying            -> "destroying"
-                           Disassembling         -> "disassembling"
-                           Dispensing            -> "dispensing"
-                           Encoding              -> "encoding"
-                           EnteringExiting       -> "entering_exiting"
-                           Holding               -> "holding"
-                           Inspecting            -> "inspecting"
-                           Installing            -> "installing"
-                           Killing               -> "killing"
-                           Loading               -> "loading"
-                           Other                 -> "other"
-                           Packing               -> "packing"
-                           Picking               -> "picking"
-                           Receiving             -> "receiving"
-                           Removing              -> "removing"
-                           Repackaging           -> "repackaging"
-                           Repairing             -> "repairing"
-                           Replacing             -> "replacing"
-                           Reserving             -> "reserving"
-                           RetailSelling         -> "retail_selling"
-                           Shipping              -> "shipping"
-                           StagingOutbound       -> "staging_outbound"
-                           StockTaking           -> "stock_taking"
-                           Stocking              -> "stocking"
-                           Storing               -> "storing"
-                           Transporting          -> "transporting"
-                           Unloading             -> "unloading"
-                           VoidShipping          -> "void_shipping"
+ppBizStep bizStep = revertCamelCase $ show bizStep
 
 instance URI BizStep where
   uriPrefix _        = "urn:epcglobal:cbv"
@@ -141,29 +104,7 @@ data Disposition = Active
     deriving (Show,Eq,Generic)
 
 ppDisposition :: Disposition -> String
-ppDisposition disp = case disp of
-                       Active                -> "active"
-                       ContainerClosed       -> "container_closed"
-                       Damaged               -> "damaged"
-                       Destroyed             -> "destroyed"
-                       Dispensed             -> "dispensed"
-                       Disposed              -> "disposed"
-                       Encoded               -> "encoded"
-                       Expired               -> "expired"
-                       InProgress            -> "in_progress"
-                       InTransit             -> "in_transit"
-                       Inactive              -> "inactive"
-                       NoPedigreeMatch       -> "no_pedigree_match"
-                       NonSellableOther      -> "non_sellable_other"
-                       PartiallyDispensed    -> "partially_dispensed"
-                       Recalled              -> "recalled"
-                       Reserved              -> "reserved"
-                       RetailSold            -> "retail_sold"
-                       Returned              -> "returned"
-                       SellableAccessible    -> "sellable_accessible"
-                       SellableNotAccessible -> "sellable_not_accessible"
-                       Stolen                -> "stolen"
-                       Unknown               -> "unknown"
+ppDisposition _disp = revertCamelCase $ show _disp
 
 instance URI Disposition where
   uriPrefix _     = "urn:epcglobal:cbv"
@@ -212,6 +153,10 @@ data BizTransactionType = Bol BizTransactionIdentifier
 -}
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
+-- BTI stands for Business Transaction Identifier
+-- BTT stands for Business Transaction Type
+-- GDTI stands for Global Document Type Identifier
+-- GSRN stands for Global Service Relation Number
 -- MAY contain one or more BizTransactionType means [0..*]
 data BizTransaction = BizTransactionID [BizTransactionType]
 
@@ -245,16 +190,7 @@ data BizTransactionType = Bol       -- Bill of Lading
                         deriving (Show, Eq, Generic)
 
 ppBizTransactionType :: BizTransactionType -> String
-ppBizTransactionType _btt = case _btt of
-                             Bol       -> "bol"
-                             Desadv    -> "desadv"
-                             Inv       -> "inv"
-                             Pedigree  -> "pedigree"
-                             Po        -> "po"
-                             Poc       -> "poc"
-                             Prodorder -> "prodorder"
-                             Recadv    -> "recadv"
-                             Rma       -> "rma"
+ppBizTransactionType _btt = revertCamelCase $ show _btt
 
 instance URI BizTransactionType where
   uriPrefix _     = "urn:epcglobal:cbv"
