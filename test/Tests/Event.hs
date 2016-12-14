@@ -1,15 +1,18 @@
 module Tests.Event where
 
-import Test.Hspec
-import Data.GS1.Event
-import Data.GS1.URI
+import           Data.GS1.BizStep
+import           Data.GS1.BizTransaction
+import           Data.GS1.Disposition
+import           Data.GS1.Event
+import           Data.GS1.URI
+import           Test.Hspec
 
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
     it "produces correct URI" $
       ppURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
-  
+
 testDisposition :: Spec
 testDisposition = do
   describe "Disposition" $ do
