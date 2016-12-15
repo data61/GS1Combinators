@@ -4,6 +4,7 @@
 
 module Data.GS1.Event where
 
+import           Control.Lens
 import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
@@ -11,23 +12,19 @@ import           Control.Monad.Except     (MonadError)
 import           Data.GS1.BizStep
 import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
+import           Data.GS1.EPCISTime
+import           Data.GS1.EventID
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.SourceDest
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.GS1.Why
 import           Data.List
 import           Data.Maybe
 import           Data.Time.Clock
 import           Data.Time.LocalTime
 import           GHC.Generics
-
-{-
-   A timestamp, giving the date and time in a time zone-independent manner.
-   For bindings in which fields of this type are represented textually,
-   an ISO-8601 compliant representation SHOULD be used.
--}
-type EPCISTime = UniversalTime
 
 --TODO
 type TransformationID = String -- FIXME user defined element
@@ -39,7 +36,6 @@ data When = When
   , _timeZone   :: TimeZone
   }
   deriving (Show, Eq, Generic)
-
 
 data Where = Where 
   {
@@ -92,7 +88,7 @@ data EventType = ObjectEvent
                | TransformationEvent
                deriving (Show, Eq, Generic)
 
-type EventID = Int --FIXME - user defined element
+--type EventID = Int --FIXME - user defined element
 
 data Action = Add
             | Observe
@@ -109,6 +105,12 @@ data Event = Event
   , _where :: Where
   }
   deriving (Show, Eq, Generic)
+
+instance HasWhy Event where
+  why = 
+    lens
+    (\(Event _ _ _ _ w _) -> w)
+    (\(Event t i w1 w2 _ w4) w3 -> Event t i w1 w2 w3 w4)
 
 objectEvent :: EventID -> [ObjectID] -> Action -> [BizTransactionType] ->
     Maybe Ilmd ->When -> Why -> Where -> Event
@@ -138,36 +140,6 @@ transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
   [BizTransactionType] -> When -> Why -> Where -> Event
 transactionEvent id parentID objects action btt when why whre =
   Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
-
-data Why = Why 
-  {
-    _bizStep     :: Maybe BizStep
-  , _disposition :: Maybe Disposition
-  }
-  deriving (Show, Eq, Generic)
-
--- TODO Why derive lens
---makeClassy ''Why
-
-why :: (AsDispositionError e, MonadError e m)
-     => Maybe BizStep -> Maybe Disposition -> m Why
-why step disp
-  | isNothing step || isNothing disp = pure (Why step disp)  -- TODO: verify when encounter Nothing
-  | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
-                                          then pure (Why step disp)
-                                          else throwing _InvalidDisposition ()
-
-data WhyCBVCompliant = WhyCBVCompliant BizStep (Maybe Disposition)
-  deriving (Show, Eq, Generic)
-
--- TODO can we verify validity better when disposition is Nothing?
-whyCBVCompliant :: (AsDispositionError e, MonadError e m)
-     => BizStep -> Maybe Disposition -> m WhyCBVCompliant
-whyCBVCompliant step disp = case disp of
-                              Nothing -> pure (WhyCBVCompliant step Nothing)
-                              Just d -> if dispositionValidFor step d
-                                           then pure (WhyCBVCompliant step (Just d))
-                                           else throwing _InvalidDisposition ()
 
 {--
 == Object Event ==
