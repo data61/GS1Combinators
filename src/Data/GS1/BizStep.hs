@@ -48,12 +48,12 @@ data BizStep = Accepting
                   | VoidShipping
                   deriving (Show, Eq, Generic)
 
-makeClassyPrisms ''BizStep
+makeClassy ''BizStep
 
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
 instance URI BizStep where
-  uriPrefix _        = "urn:epcglobal:cbv"
-  uriQuantifier _    = "bizstep"
-  uriPayload bizStep = ppBizStep bizStep
+  uriPrefix _     = "urn:epcglobal:cbv"
+  uriQuantifier _ = "bizstep"
+  uriPayload b    = ppBizStep b
