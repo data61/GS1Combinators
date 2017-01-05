@@ -1,6 +1,6 @@
 module Main where
 
-import Tests.Event
+--import Tests.Event
 import Tests.Location
 import Tests.Utils
 
@@ -10,8 +10,8 @@ main :: IO ()
 main = do
   hspec testPassGLN
 
-  hspec testBizStep
-  hspec testDisposition
-  hspec testBizTransaction
+  --hspec testBizStep
+  --hspec testDisposition
+  --hspec testBizTransaction
 
   hspec testRevertCamelCase

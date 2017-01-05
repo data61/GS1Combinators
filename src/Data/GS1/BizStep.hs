@@ -56,4 +56,4 @@ ppBizStep = revertCamelCase . show
 instance URI BizStep where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "bizstep"
-  uriPayload b    = ppBizStep b
+  uriPayload      = ppBizStep

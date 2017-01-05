@@ -15,3 +15,4 @@ data EPCISEvent = EPCISEvent
   , _eventID             :: Maybe EventID
   , _errorDeclaration    :: ErrorDeclaration
   }
+  deriving (Show, Eq, Generic)

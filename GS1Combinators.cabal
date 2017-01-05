@@ -22,7 +22,7 @@ library
                      , Data.GS1.EPC
                      , Data.GS1.EPCISTime
                      , Data.GS1.ErrorDeclaration
-                     , Data.GS1.Event
+                     , Data.GS1.EventB
                      , Data.GS1.EventID
                      , Data.GS1.Location
                      , Data.GS1.Namespace
@@ -30,7 +30,7 @@ library
                      , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
-                     , Data.GS1.Why
+                     , Data.GS1.DWhy
   build-depends:       base >= 4.7 && < 5
                      , mtl
                      , time
@@ -55,16 +55,16 @@ test-suite GS1Combinators-test
                      , Data.GS1.Disposition
                      , Data.GS1.EPC
                      , Data.GS1.ErrorDeclaration
-                     , Data.GS1.Event
+                     , Data.GS1.EventB
                      , Data.GS1.Location
                      , Data.GS1.Namespace
                      , Data.GS1.Object
                      , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
-                     , Data.GS1.Why
+                     , Data.GS1.DWhy
                      , Tests.Location
-                     , Tests.Event
+                     --, Tests.Event
                      , Tests.Utils
   build-depends:       base
                      , GS1Combinators

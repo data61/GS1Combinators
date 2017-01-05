@@ -29,7 +29,7 @@ import           GHC.Generics
 --TODO
 type TransformationID = String -- FIXME user defined element
 
-data When = When 
+data When = When
   {
     _eventTime  :: EPCISTime
   , _recordTime :: EPCISTime
@@ -37,22 +37,29 @@ data When = When
   }
   deriving (Show, Eq, Generic)
 
-data Where = Where 
+data Whre = Whre
   {
-    _readPoint   :: (Maybe ReadPointLocation)
-  , _bizLocation :: (Maybe BizLocation)
-  , _srcDestType :: (Maybe [SourceDestType])
+    _readPoint   :: Maybe ReadPointLocation
+  , _bizLocation :: Maybe BizLocation
+  , _srcDestType :: Maybe [SourceDestType]
   }
   deriving (Show, Eq, Generic)
 
-data What = ObjectWhat 
+makeClassy ''Whre
+
+data Action = Add
+            | Observe
+            | Delete
+            deriving (Show, Eq, Generic)
+
+data What = ObjectWhat
   {
     _objects :: [ObjectID]
   , _action  :: Action
   , _btt     :: [BizTransactionType]
   , _ilmd    :: Maybe Ilmd
-  } 
-  | AggregationWhat 
+  }
+  | AggregationWhat
   {
     _parentID :: Maybe ObjectID
   , _objects  :: [ObjectID]
@@ -81,19 +88,16 @@ data What = ObjectWhat
   }
   deriving (Show, Eq, Generic)
 
-data EventType = ObjectEvent
-               | AggregationEvent
-               | QuantityEvent
-               | TransactionEvent
-               | TransformationEvent
+makeClassy ''What
+
+data EventType = ObjectEventT
+               | AggregationEventT
+               | QuantityEventT
+               | TransactionEventT
+               | TransformationEventT
                deriving (Show, Eq, Generic)
 
 --type EventID = Int --FIXME - user defined element
-
-data Action = Add
-            | Observe
-            | Delete
-            deriving (Show, Eq, Generic)
 
 data Event = Event
   {
@@ -107,7 +111,7 @@ data Event = Event
   deriving (Show, Eq, Generic)
 
 instance HasWhy Event where
-  why = 
+  why =
     lens
     (\(Event _ _ _ _ w _) -> w)
     (\(Event t i w1 w2 _ w4) w3 -> Event t i w1 w2 w3 w4)
@@ -115,31 +119,31 @@ instance HasWhy Event where
 objectEvent :: EventID -> [ObjectID] -> Action -> [BizTransactionType] ->
     Maybe Ilmd ->When -> Why -> Where -> Event
 objectEvent id objects action btt ilmd when why whre =
-  Event ObjectEvent id (ObjectWhat objects action btt ilmd) when why whre
+  Event ObjectEventT id (ObjectWhat objects action btt ilmd) when why whre
 
 --TODO: check parent is present when needed (based on action)
 aggregationEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
   [BizTransactionType] -> When -> Why -> Where -> Event
 aggregationEvent id parent objects action btt when why whre =
-  Event AggregationEvent id (AggregationWhat parent objects action btt) when why whre
+  Event AggregationEventT id (AggregationWhat parent objects action btt) when why whre
 
 --TODO: check that all ObjectIDs are class objects with quantities.
 quantityEvent :: EventID -> [ObjectID] -> [BizTransactionType] ->
   When -> Why -> Where -> Event
 quantityEvent id objects btt when why whre=
-  Event QuantityEvent id (QuantityWhat objects btt) when why whre
+  Event QuantityEventT id (QuantityWhat objects btt) when why whre
 
 transformationEvent :: EventID -> [ObjectID] -> [ObjectID] -> TransformationID
                     -> [BizTransactionType] -> Maybe Ilmd -> When -> Why ->
                       Where -> Event
 transformationEvent id inputs outputs transformID btt  ilmd when why whre =
-  Event TransformationEvent id (TransformationWhat inputs outputs transformID btt ilmd)
+  Event TransformationEventT id (TransformationWhat inputs outputs transformID btt ilmd)
     when why whre
 
 transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
   [BizTransactionType] -> When -> Why -> Where -> Event
 transactionEvent id parentID objects action btt when why whre =
-  Event TransactionEvent id (TransactionWhat parentID objects action btt) when why whre
+  Event TransactionEventT id (TransactionWhat parentID objects action btt) when why whre
 
 {--
 == Object Event ==

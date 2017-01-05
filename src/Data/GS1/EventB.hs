@@ -1,0 +1,101 @@
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
+
+module Data.GS1.EventB where
+
+import           Control.Lens
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except     (MonadError)
+
+import           Data.GS1.BizStep
+import           Data.GS1.BizTransaction
+import           Data.GS1.Disposition
+import           Data.GS1.EPCISTime
+import           Data.GS1.EventID
+import           Data.GS1.Location
+import           Data.GS1.Object
+import           Data.GS1.SourceDest
+import           Data.GS1.URI
+import           Data.GS1.Utils
+import           Data.GS1.DWhy
+import           Data.List
+import           Data.Maybe
+import           Data.Time.Clock
+import           Data.Time.LocalTime
+import           GHC.Generics
+
+
+data DWhen = DWhen
+  {
+    _eventTime  :: EPCISTime
+  , _recordTime :: EPCISTime
+  , _timeZone   :: TimeZone
+  }
+  deriving (Show, Eq, Generic)
+
+makeClassy ''DWhen
+
+data DWhere = DWhere
+  {
+    _readPoint   :: Maybe ReadPointLocation
+  , _bizLocation :: Maybe BizLocation
+  , _srcDestType :: Maybe [SourceDestType]
+  }
+  deriving (Show, Eq, Generic)
+
+makeClassy ''DWhere
+
+data Action = Add
+            | Observe
+            | Delete
+            deriving (Show, Eq, Generic)
+
+data DWhat = AggregationDWhat
+           | ObjectDWhat
+           | QuantityDWhat
+           | TransformationDWhat
+           | TransactionDWhat
+           deriving (Show, Eq, Generic)
+
+makeClassy ''DWhat
+
+data EventType = ObjectEventT
+               | AggregationEventT
+               | QuantityEventT
+               | TransactionEventT
+               | TransformationEventT
+               deriving (Show, Eq, Generic)
+
+data Eventish a = Eventish
+  {
+    _type  :: a
+  , _id    :: EventID
+  , _what  :: DWhat
+  , _when  :: DWhen
+  , _why   :: DWhy
+  , _where :: DWhere
+  }
+  deriving (Show, Eq, Generic)
+
+instance HasDWhat (Eventish a) where
+  dWhat =
+    lens
+    (\(Eventish _ _ w _ _ _) -> w)
+    (\(Eventish t i _ w2 w3 w4) w1 -> Eventish t i w1 w2 w3 w4)
+
+newtype Event = Event (Eventish EventType)
+  deriving (Show, Eq, Generic)
+
+event :: EventID -> EventType -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
+event i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
+                            case (t, w1) of
+                              (ObjectEventT, ObjectDWhat)                 -> e
+                              (AggregationEventT, AggregationDWhat)       -> e
+                              (QuantityEventT, QuantityDWhat)             -> e
+                              (TransactionEventT, TransactionDWhat)       -> e
+                              (TransformationEventT, TransformationDWhat) -> e
+                              _            -> Nothing
+
+
