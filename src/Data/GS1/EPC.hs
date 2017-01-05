@@ -24,7 +24,7 @@ data EPC = GLN GS1CompanyPrefix LocationRef CheckDigit
 
 -- |FIXME DEBUG Show
 instance Show EPC where
-  show _gln@(GLN _ _ _) = ppGLN _gln
+  show _gln@GLN {} = ppGLN _gln
 
 -- |Pretty print GLN
 ppGLN :: EPC -> String
@@ -58,7 +58,7 @@ calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
 -- | Check the length and isDigit for all chars
 wellFormatGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
 wellFormatGLN pref ref cd = _concat pref ref == 12 && length cd == 1 && _isNum pref ref cd
-  where _concat a b = length (concat [a, b])
+  where _concat a b = length (a ++ b)
         _isNum a b c =
           let mint = readMaybe (concat [a, b, c]) :: Maybe Integer in
           case mint of

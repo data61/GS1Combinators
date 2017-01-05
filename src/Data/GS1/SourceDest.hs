@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Data.GS1.SourceDest where
 

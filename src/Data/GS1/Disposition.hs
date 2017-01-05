@@ -49,6 +49,7 @@ instance URI Disposition where
   uriQuantifier _ = "disp"
   uriPayload      = ppDisposition
 
+-- FIXME: it could be just an example page 24/64 CBV
 -- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BizStep]
 dispositionValidList Active                = [Commissioning]
@@ -76,5 +77,3 @@ dispositionValidList Unknown               = [] -- nothing defined - page 25 of 
 
 dispositionValidFor :: BizStep -> Disposition -> Bool
 dispositionValidFor b d = b `elem` dispositionValidList d
-
-

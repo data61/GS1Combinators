@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 
-module Data.GS1.Why where
+module Data.GS1.DWhy where
 
 import           Control.Lens
 import           Control.Monad.Error.Lens
@@ -16,39 +16,38 @@ import           Data.GS1.SourceDest
 import           Data.Maybe
 import           GHC.Generics
 
-data Why = Why
+data DWhy = DWhy
   {
     bizStep     :: Maybe BizStep
   , disposition :: Maybe Disposition
   }
   deriving (Show, Eq, Generic)
 
-instance HasBizStep Why where
+instance HasBizStep DWhy where
   bizStep =
     lens
-    (\(Why (Just b) _) -> b)
-    (\(Why _ d) b -> Why (Just b) d)
+    (\(DWhy (Just b) _) -> b)
+    (\(DWhy _ d) b -> DWhy (Just b) d)
 
-makeClassy ''Why
+makeClassy ''DWhy
 
 why2 :: (AsDispositionError e, MonadError e m)
-     => Maybe BizStep -> Maybe Disposition -> m Why
+     => Maybe BizStep -> Maybe Disposition -> m DWhy
 why2 step disp
-  | isNothing step || isNothing disp = pure (Why step disp)  -- TODO: verify when encounter Nothing
+  | isNothing step || isNothing disp = pure (DWhy step disp)  -- TODO: verify when encounter Nothing
   | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
-                                          then pure (Why step disp)
+                                          then pure (DWhy step disp)
                                           else throwing _InvalidDisposition ()
 
-data WhyCBVCompliant = WhyCBVCompliant BizStep (Maybe Disposition)
+data DWhyCBVCompliant = DWhyCBVCompliant BizStep (Maybe Disposition)
   deriving (Show, Eq, Generic)
 
 -- TODO can we verify validity better when disposition is Nothing?
 whyCBVCompliant :: (AsDispositionError e, MonadError e m)
-     => BizStep -> Maybe Disposition -> m WhyCBVCompliant
+     => BizStep -> Maybe Disposition -> m DWhyCBVCompliant
 whyCBVCompliant step disp = case disp of
-                              Nothing -> pure (WhyCBVCompliant step Nothing)
+                              Nothing -> pure (DWhyCBVCompliant step Nothing)
                               Just d -> if dispositionValidFor step d
-                                           then pure (WhyCBVCompliant step (Just d))
+                                           then pure (DWhyCBVCompliant step (Just d))
                                            else throwing _InvalidDisposition ()
-
 
