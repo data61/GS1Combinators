@@ -1,10 +1,10 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Data.GS1.Object where
 
-import           Control.Lens (lens, makeClassy)
+import           Codec.Binary.UTF8.String
+import           Data.Attoparsec.ByteString
+import qualified Data.ByteString.Char8      as C
 import           Data.GS1.EPC
-import           Data.GS1.URI
+import           Network.Parser.Rfc3986
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
@@ -24,22 +24,23 @@ type Ilmd = [String]
 
 -- |The ObjectID
 -- |Ref: CBV 8.2 & 8.3, EPCIS 1.0
-data ObjectID = InstanceLevelID {
-                 _epcList    :: [EPC]
-               , _parentID   :: [ObjectID]
-               , _childEPCs  :: [EPC]
-               , _inputEPCS  :: [EPC]
-               , _outputEPCS :: [EPC]
-               , _ilmd       :: Ilmd
-               }
-                 | ClassLevelID {
-                 _epcClass :: EPCClass
-               , _quantity :: QuantityElement
-               , _ilmd     :: Ilmd
-               }
-               deriving (Show, Eq)
+type ObjectID = String
 
-makeClassy ''ObjectID
+-- CBV 8.2.2
+-- RFC 2141
+-- no suitable 2141 package yet, the urn package is tested with ghc 7.6
+privateObjectID :: String -> Maybe objectID
+privateObjectID = undefined
+
+-- CBV 8.2.3
+-- RFC 3986 segment nz
+-- get the ObjectID from Http link, a colon might be required
+httpObjectID :: String -> Maybe ObjectID
+httpObjectID s = let result = maybeResult $ parse segmentNz (C.pack s) in
+                     case result of
+                       Just wa -> Just $ decode wa
+                       Nothing -> Nothing
+
 
 data IDLevel = InstanceLevelT
              | ClassLevelT
@@ -49,11 +50,6 @@ data IDLevel = InstanceLevelT
 data Object = Object IDLevel ObjectID
   deriving (Eq, Show)
 
-instance HasObjectID Object where
-  objectID =
-    lens (\(Object _ i) -> i)
-         (\(Object t _) i -> let o = Object t i in
-                                 case (t, i) of
-                                   (InstanceLevelT, InstanceLevelID {}) -> o
-                                   (ClassLevelT, InstanceLevelID {})    -> o)
+-- FIXME The Object should be redesigned to aviod confusion
 
+-- TODO ObjectClassID

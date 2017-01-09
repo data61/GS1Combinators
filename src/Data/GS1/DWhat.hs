@@ -8,7 +8,6 @@ import           Data.GS1.BizTransaction
 import           Data.GS1.EPC
 import           Data.GS1.EventID
 import           Data.GS1.Object
-import           Data.GS1.URI
 import           GHC.Generics
 
 type TransformationID = String

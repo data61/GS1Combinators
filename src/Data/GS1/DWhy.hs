@@ -10,9 +10,7 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 
 import           Data.GS1.BizStep
-import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
-import           Data.GS1.SourceDest
 import           Data.Maybe
 import           GHC.Generics
 
