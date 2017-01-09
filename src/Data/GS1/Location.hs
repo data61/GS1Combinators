@@ -6,7 +6,6 @@ module Data.GS1.Location where
 
 import           Data.GS1.EPC
 import           Data.GS1.URI
-import           Data.List
 import           GHC.Generics
 import           Text.Printf
 
