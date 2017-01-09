@@ -31,23 +31,11 @@ instance HasBizStep DWhy where
 
 makeClassy ''DWhy
 
-why2 :: (AsDispositionError e, MonadError e m)
+newWhy :: (AsDispositionError e, MonadError e m)
      => Maybe BizStep -> Maybe Disposition -> m DWhy
-why2 step disp
+newWhy step disp
   | isNothing step || isNothing disp = pure (DWhy step disp)  -- TODO: verify when encounter Nothing
   | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
                                           then pure (DWhy step disp)
                                           else throwing _InvalidDisposition ()
-
-data DWhyCBVCompliant = DWhyCBVCompliant BizStep (Maybe Disposition)
-  deriving (Show, Eq, Generic)
-
--- TODO can we verify validity better when disposition is Nothing?
-whyCBVCompliant :: (AsDispositionError e, MonadError e m)
-     => BizStep -> Maybe Disposition -> m DWhyCBVCompliant
-whyCBVCompliant step disp = case disp of
-                              Nothing -> pure (DWhyCBVCompliant step Nothing)
-                              Just d -> if dispositionValidFor step d
-                                           then pure (DWhyCBVCompliant step (Just d))
-                                           else throwing _InvalidDisposition ()
 

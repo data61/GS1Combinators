@@ -30,6 +30,7 @@ library
                      , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
+                     , Data.GS1.DWhat
                      , Data.GS1.DWhy
   build-depends:       base >= 4.7 && < 5
                      , mtl
@@ -62,6 +63,7 @@ test-suite GS1Combinators-test
                      , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
+                     , Data.GS1.DWhat
                      , Data.GS1.DWhy
                      , Tests.Location
                      --, Tests.Event

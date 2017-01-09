@@ -13,7 +13,7 @@ type Quantity = Integer
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EpcClass Quantity Uom
+data QuantityElement = QuantityElement EPCClass Quantity Uom
   deriving (Show, Eq)
 
 -- |EPCIS 7.3.6
@@ -33,7 +33,7 @@ data ObjectID = InstanceLevelID {
                , _ilmd       :: Ilmd
                }
                  | ClassLevelID {
-                 _epcClass :: EpcClass
+                 _epcClass :: EPCClass
                , _quantity :: QuantityElement
                , _ilmd     :: Ilmd
                }
@@ -48,10 +48,6 @@ data IDLevel = InstanceLevelT
 -- |EPCIS 1.0
 data Object = Object IDLevel ObjectID
   deriving (Eq, Show)
-
--- |Object is an instance of Identify
-instance Identify Object where
-  ident (Object _ i) = i
 
 instance HasObjectID Object where
   objectID =
