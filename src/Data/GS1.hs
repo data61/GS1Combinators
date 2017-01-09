@@ -3,7 +3,7 @@
 module Data.GS1 where
 
 import           Data.GS1.Location
-import           Data.GS1.EventB
+import           Data.GS1.Event
 import           GHC.Generics
 
 -- TODO implement these

@@ -22,7 +22,7 @@ library
                      , Data.GS1.EPC
                      , Data.GS1.EPCISTime
                      , Data.GS1.ErrorDeclaration
-                     , Data.GS1.EventB
+                     , Data.GS1.Event
                      , Data.GS1.EventID
                      , Data.GS1.Location
                      , Data.GS1.Namespace
@@ -33,10 +33,14 @@ library
                      , Data.GS1.DWhat
                      , Data.GS1.DWhy
   build-depends:       base >= 4.7 && < 5
+                     , bytestring
                      , mtl
                      , time
                      , lens
+                     , utf8-string
                      , uuid
+                     , hweblib
+                     , attoparsec
   default-language:    Haskell2010
 
 executable GS1Combinators-exe
@@ -55,8 +59,10 @@ test-suite GS1Combinators-test
                      , Data.GS1.BizTransaction
                      , Data.GS1.Disposition
                      , Data.GS1.EPC
+                     , Data.GS1.EPCISTime
                      , Data.GS1.ErrorDeclaration
-                     , Data.GS1.EventB
+                     , Data.GS1.Event
+                     , Data.GS1.EventID
                      , Data.GS1.Location
                      , Data.GS1.Namespace
                      , Data.GS1.Object
@@ -66,15 +72,20 @@ test-suite GS1Combinators-test
                      , Data.GS1.DWhat
                      , Data.GS1.DWhy
                      , Tests.Location
-                     --, Tests.Event
+                     , Tests.Event
                      , Tests.Utils
   build-depends:       base
+                     , bytestring
                      , GS1Combinators
                      , hspec
                      , time
                      , lens
                      , mtl
                      , uuid
+                     , utf8-string
+                     , uuid
+                     , hweblib
+                     , attoparsec
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:    Haskell2010
 

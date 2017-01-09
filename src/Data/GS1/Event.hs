@@ -5,31 +5,18 @@
 module Data.GS1.Event where
 
 import           Control.Lens
-import           Control.Lens.TH
-import           Control.Monad.Error.Lens
-import           Control.Monad.Except     (MonadError)
 
-import           Data.GS1.BizStep
-import           Data.GS1.BizTransaction
-import           Data.GS1.Disposition
 import           Data.GS1.EPCISTime
 import           Data.GS1.EventID
 import           Data.GS1.Location
-import           Data.GS1.Object
 import           Data.GS1.SourceDest
-import           Data.GS1.URI
-import           Data.GS1.Utils
-import           Data.GS1.Why
-import           Data.List
-import           Data.Maybe
-import           Data.Time.Clock
+import           Data.GS1.DWhat
+import           Data.GS1.DWhy
 import           Data.Time.LocalTime
 import           GHC.Generics
 
---TODO
-type TransformationID = String -- FIXME user defined element
 
-data When = When
+data DWhen = DWhen
   {
     _eventTime  :: EPCISTime
   , _recordTime :: EPCISTime
@@ -37,7 +24,9 @@ data When = When
   }
   deriving (Show, Eq, Generic)
 
-data Whre = Whre
+makeClassy ''DWhen
+
+data DWhere = DWhere
   {
     _readPoint   :: Maybe ReadPointLocation
   , _bizLocation :: Maybe BizLocation
@@ -45,50 +34,24 @@ data Whre = Whre
   }
   deriving (Show, Eq, Generic)
 
-makeClassy ''Whre
+makeClassy ''DWhere
 
+{-
 data Action = Add
             | Observe
             | Delete
             deriving (Show, Eq, Generic)
 
-data What = ObjectWhat
-  {
-    _objects :: [ObjectID]
-  , _action  :: Action
-  , _btt     :: [BizTransactionType]
-  , _ilmd    :: Maybe Ilmd
-  }
-  | AggregationWhat
-  {
-    _parentID :: Maybe ObjectID
-  , _objects  :: [ObjectID]
-  , _action   :: Action
-  , _btt      :: [BizTransactionType]
-  }
-  | QuantityWhat
-  {
-    _objects :: [ObjectID]
-  , _btt     :: [BizTransactionType]
-  }
-  | TransformationWhat
-  {
-    _input            :: [ObjectID]
-  , _output           :: [ObjectID]
-  , _transformationID :: TransformationID
-  , _btt              :: [BizTransactionType]
-  , _ilmd             :: Maybe Ilmd
-  }
-  | TransactionWhat
-  {
-    _parentID :: Maybe ObjectID
-  , _objects  :: [ObjectID]
-  , _action   :: Action
-  , _btt      :: [BizTransactionType]
-  }
-  deriving (Show, Eq, Generic)
+--FIXME make the DWhat more concrete
+data DWhat = AggregationDWhat
+           | ObjectDWhat
+           | QuantityDWhat
+           | TransformationDWhat
+           | TransactionDWhat
+           deriving (Show, Eq, Generic)
 
-makeClassy ''What
+makeClassy ''DWhat
+-}
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -97,144 +60,57 @@ data EventType = ObjectEventT
                | TransformationEventT
                deriving (Show, Eq, Generic)
 
---type EventID = Int --FIXME - user defined element
-
-data Event = Event
+data Eventish a = Eventish
   {
-    _type  :: EventType
-  , _id    :: EventID
-  , _what  :: What
-  , _when  :: When
-  , _why   :: Why
-  , _where :: Where
+    _type  :: a
+  , _eid   :: EventID
+  , _what  :: DWhat
+  , _when  :: DWhen
+  , _why   :: DWhy
+  , _where :: DWhere
   }
   deriving (Show, Eq, Generic)
 
-instance HasWhy Event where
-  why =
+instance HasEventID (Eventish a) where
+  eventID =
     lens
-    (\(Event _ _ _ _ w _) -> w)
-    (\(Event t i w1 w2 _ w4) w3 -> Event t i w1 w2 w3 w4)
+    (\(Eventish _ i _ _ _ _) -> i)
+    (\(Eventish t _ w1 w2 w3 w4) i -> Eventish t i w1 w2 w3 w4)
 
-objectEvent :: EventID -> [ObjectID] -> Action -> [BizTransactionType] ->
-    Maybe Ilmd ->When -> Why -> Where -> Event
-objectEvent id objects action btt ilmd when why whre =
-  Event ObjectEventT id (ObjectWhat objects action btt ilmd) when why whre
+instance HasDWhat (Eventish a) where
+  dWhat =
+    lens
+    (\(Eventish _ _ w _ _ _) -> w)
+    (\(Eventish t i _ w2 w3 w4) w1 -> Eventish t i w1 w2 w3 w4)
 
---TODO: check parent is present when needed (based on action)
-aggregationEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
-  [BizTransactionType] -> When -> Why -> Where -> Event
-aggregationEvent id parent objects action btt when why whre =
-  Event AggregationEventT id (AggregationWhat parent objects action btt) when why whre
+instance HasDWhen (Eventish a) where
+  dWhen =
+    lens
+    (\(Eventish _ _ _ w _ _ ) -> w)
+    (\(Eventish t i w1 _ w3 w4) w2 -> Eventish t i w1 w2 w3 w4)
 
---TODO: check that all ObjectIDs are class objects with quantities.
-quantityEvent :: EventID -> [ObjectID] -> [BizTransactionType] ->
-  When -> Why -> Where -> Event
-quantityEvent id objects btt when why whre=
-  Event QuantityEventT id (QuantityWhat objects btt) when why whre
+instance HasDWhy (Eventish a) where
+  dWhy =
+    lens
+    (\(Eventish _ _ _ _ w _) -> w)
+    (\(Eventish t i w1 w2 _ w4) w3 -> Eventish t i w1 w2 w3 w4)
 
-transformationEvent :: EventID -> [ObjectID] -> [ObjectID] -> TransformationID
-                    -> [BizTransactionType] -> Maybe Ilmd -> When -> Why ->
-                      Where -> Event
-transformationEvent id inputs outputs transformID btt  ilmd when why whre =
-  Event TransformationEventT id (TransformationWhat inputs outputs transformID btt ilmd)
-    when why whre
+instance HasDWhere (Eventish a) where
+  dWhere =
+    lens
+    (\(Eventish _ _ _ _ _ w) -> w)
+    (\(Eventish t i w1 w2 w3 _) w4 -> Eventish t i w1 w2 w3 w4)
 
-transactionEvent :: EventID -> Maybe ObjectID -> [ObjectID] -> Action ->
-  [BizTransactionType] -> When -> Why -> Where -> Event
-transactionEvent id parentID objects action btt when why whre =
-  Event TransactionEventT id (TransactionWhat parentID objects action btt) when why whre
+newtype Event = Event (Eventish EventType)
+  deriving (Show, Eq, Generic)
 
-{--
-== Object Event ==
- An ObjectEvent Captures information about an event pertaining to one or more physical or digital objects identified by instance-level (EPC) or class-level (EPC Class) identifiers.
- While more than one EPC and/or EPC Class may appear in an ObjectEvent, no relationship or association between those objects i implied other than the coincidence of having experienced identical events in the real world
-*denotes optional field
- - Fields -
- When - EventTime/RecordTime/EventTimeOffset
- What - EpcList* quantityList* (an ObjectEvent shall contain a non-empty epcList or a non-empty quantityList or both)
-        Action
-        Ilmd
-        [BizTransactionType]*
- Why -
-        BizStep*
-        Disposition*
-
- Where -
-        ReadPoint*
-        BizLocation*
-        [SrcDestType]*
---}
-
-{--
-== Aggregation Event ==
-
- - Fields -
- When - EventTime/RecordTime/EventTimeOffset
- What -
-        ParentID** (Optional when Action == Observe, required otherwise)
-        [ChildEPC]* (An AggregationEvent SHALL contain either a non-empty [childEPCs] a non-empty [childQuantity], or both, except that both may be empty if Action==Delete)
-        [ChildQuantity]*
-        Action
-        [BizTransactionType]
- Why -
-        BizStep*
-        Disposition*
- Where -
-        ReadPoint*
-        BizLocation*
-        [SrcDestType]
---}
-
-{--
-== Quantity Event ==
- - Fields -
- When - EventTime/RecordTime/EventTimeOffset
- What -
-        EPCClass, Quantity
-        [BizTransactionType]
- Why -
-        BizStep*
-        Disposition*
- Where -
-        ReadPoint*
-        BizLocation*
---}
-
-{--
-== Transaction Events ==
- - Fields -
- When - EventTime/RecordTime/EventTimeOffset
- What -
-        [BizTransactionType]
-        ParentID*
-        EPCList, Quantity List
-        Action
- Why -
-        BizStep
-        Disposition
-
- Where -
-        ReadPoint
-        BizLocation
-        [SrcDestType]
---}
-
-{--
-== Transformation Events ==
- - Fields -
- When - EventTime/RecordTime/EventTimeOffset
- What - [InputEPC]*, [OutputQuantity]*
-        [OutputEPC]*, [OutputQuantity]*
-        TransformationID*
-        [BizTransactionType]
-        Ilmd*
- Why  -
-        BizStep*
-        Disposition*
- Where -
-        ReadPoint*
-        BizLocation*
-        [SrcDestType]*
---}
+newEvent :: EventID -> EventType -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
+newEvent i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
+                               case (t, w1) of
+                                 (ObjectEventT, ObjectDWhat{})                 -> e
+                                 (AggregationEventT, AggregationDWhat{})       -> e
+                                 (QuantityEventT, QuantityDWhat{})             -> e
+                                 (TransactionEventT, TransactionDWhat{})       -> e
+                                 (TransformationEventT, TransformationDWhat{}) -> e
+                                 _                                             -> Nothing
 
