@@ -73,6 +73,7 @@ test-suite GS1Combinators-test
                      , Data.GS1.DWhy
                      , Tests.Location
                      , Tests.Event
+                     , Tests.Object
                      , Tests.Utils
   build-depends:       base
                      , bytestring
