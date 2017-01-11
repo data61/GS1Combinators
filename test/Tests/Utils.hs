@@ -1,14 +1,14 @@
 module Tests.Utils where
 
-import Test.Hspec
-import Data.GS1.Utils
+import           Data.GS1.Utils
+import           Test.Hspec
 
 testRevertCamelCase :: Spec
-testRevertCamelCase = do
+testRevertCamelCase =
   describe "revert camel case to underscore separated" $ do
     it "reverts camel case string starting with upperase char" $
       revertCamelCase "HelloWorld" `shouldBe` "hello_world"
-     
+
     it "reverts camel case string starting with lowercase char" $
       revertCamelCase "helloWorld" `shouldBe` "hello_world"
 

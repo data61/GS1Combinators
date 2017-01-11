@@ -15,7 +15,7 @@ type URIPayload = String
 
 -- |Anything that could be converted into URI
 class URI a where
-  ppURI :: a -> String
+  ppURI         :: a -> String
   ppURI a = intercalate ":" (fmap ($ a) [uriPrefix, uriQuantifier, uriPayload])
   uriPrefix     :: a -> URIPrefix
   uriQuantifier :: a -> URIQuantifier
