@@ -27,6 +27,8 @@ instance HasBizStep DWhy where
     (\(DWhy (Just b) _) -> b)
     (\(DWhy _ d) b -> DWhy (Just b) d)
 
+-- FIXME The usage of lens should be reconsidered
+-- Nothing is the cause
 makeClassy ''DWhy
 
 newWhy :: (AsDispositionError e, MonadError e m)

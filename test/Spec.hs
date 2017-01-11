@@ -17,4 +17,4 @@ main = do
 
   hspec testRevertCamelCase
 
-  hspec testHttpObjectID
+  hspec testObjectID
