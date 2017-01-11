@@ -1,10 +1,11 @@
 module Main where
 
-import Tests.Event
-import Tests.Location
-import Tests.Utils
+import           Tests.Event
+import           Tests.Location
+import           Tests.Object
+import           Tests.Utils
 
-import Test.Hspec (hspec)
+import           Test.Hspec     (hspec)
 
 main :: IO ()
 main = do
@@ -15,3 +16,5 @@ main = do
   hspec testBizTransaction
 
   hspec testRevertCamelCase
+
+  hspec testObjectID
