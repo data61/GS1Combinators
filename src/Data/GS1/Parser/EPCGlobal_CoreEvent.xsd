@@ -73,7 +73,7 @@ maxOccurs="unbounded"/>
     </xsd:sequence>
     <xsd:anyAttribute processContents="lax"/>
   </xsd:complexType>
-  <xsd:complexType
+  <xsd:complexType>
     <xsd:sequence>
       <xsd:element
 minOccurs="0"/>
@@ -161,9 +161,9 @@ maxOccurs="unbounded"/>
     <xsd:anyAttribute processContents="lax"/>
 in the same
 -->
-<xsd:complexType
+<xsd:complexType>
   <xsd:sequence>
-    <xsd:element
+    <xsd:element>
 way as if the <children> element were omitted altogether.
 name="VocabularyElementType">
 name="attribute" type="epcis:AttributeType" minOccurs="0"
@@ -238,10 +238,10 @@ maxOccurs="unbounded"/>
   <xsd:simpleType name="ActionType">
     <xsd:restriction base="xsd:string">
 <xsd:enumeration
-<xsd:enumeration
-<xsd:enumeration
 value="ADD"/>
+<xsd:enumeration
 value="OBSERVE"/>
+<xsd:enumeration
 value="DELETE"/>
     </xsd:restriction>
   </xsd:simpleType>
