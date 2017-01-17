@@ -10,9 +10,10 @@
       <ObjectEvent>
         <eventTime>2005-04-03T20:33:31.116-06:00</eventTime>
         <eventTimeZoneOffset>-06:00</eventTimeZoneOffset>
-<xsd:complexContent>
+        <!--<xsd:complexContent>
   <xsd:extension base="epcis:EPCISEventType">
-<epcList>
+  -->
+        <epcList>
           <epc>urn:epc:id:sgtin:0614141.107346.2017</epc>
           <epc>urn:epc:id:sgtin:0614141.107346.2018</epc>
         </epcList>
@@ -23,9 +24,8 @@
            <id>urn:epc:id:sgln:0614141.07346.1234</id>
         </readPoint>
         <bizTransactionList>
-            <bizTransaction
-type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678</bizTransact
-ion>
+          <bizTransaction type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678
+          </bizTransaction>
         </bizTransactionList>
       </ObjectEvent>
       <ObjectEvent>
@@ -44,12 +44,8 @@ ion>
            <id>urn:epc:id:sgln:0012345.11111.0</id>
         </bizLocation>
         <bizTransactionList>
-            <bizTransaction
-type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678</bizTransact
-ion>
-            <bizTransaction
-type="urn:epcglobal:cbv:btt:desadv">urn:epcglobal:cbv:bt:0614141073467:1152</bizTran
-saction>
+            <bizTransaction type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678</bizTransaction>
+            <bizTransaction type="urn:epcglobal:cbv:btt:desadv">urn:epcglobal:cbv:bt:0614141073467:1152</bizTransaction>
         </bizTransactionList>
         <example:myField>Example of a vendor/user extension</example:myField>
       </ObjectEvent>
