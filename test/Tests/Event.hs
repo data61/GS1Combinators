@@ -4,8 +4,11 @@ import           Data.GS1.BizStep
 import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
 import           Data.GS1.Event
+import Data.GS1.EPC
+import Data.GS1.DWhat
 import           Data.GS1.URI
 import           Test.Hspec
+import Control.Exception
 
 testBizStep :: Spec
 testBizStep =
@@ -33,3 +36,13 @@ testBizTransaction = do
     it "produces correct legacy GLN URI" $
       ppURI (BTIGLN "dummyid") `shouldBe` "urn:epcglobal:cbv:bt:gln:dummyid"
 
+testCreateDWhat :: Spec
+testCreateDWhat = do
+  describe "create valid ObjectDWhat" $
+    it "creates DWhat from valid input" $
+      ppDWhat (ObjectDWhat Observe [GLN "urn:epc:id:sgtin:0614141" "107346" "2017", GLN "urn:epc:id:sgtin:0614141" "107346" "2018"] []) `shouldBe` "OBJECT WHAT\nObserve\n[urn:epc:id:sgtin:0614141.107346.2017,urn:epc:id:sgtin:0614141.107346.2018]\n[]"
+  describe "create from empty epcs" $
+    it "creates DWhat from empty epc list" $
+      ppDWhat (ObjectDWhat Add [][]) `shouldBe` "OBJECT WHAT\nAdd\n[]\n[]"
+
+  -- TODO test create other DWhat too
