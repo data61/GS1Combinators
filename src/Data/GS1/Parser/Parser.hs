@@ -3,8 +3,10 @@
 
 module Data.GS1.Parser.Parser where
 import           Prelude         hiding (readFile, writeFile)
+import Data.Time
+import Data.Time.Format
+
 import qualified Data.Map        as M
---import           Text.Hamlet.XML
 import           Text.XML
 import Data.GS1.Event
 
@@ -23,12 +25,14 @@ parse eventList filename = do
     print "eventList: --------------------"
     print eventList
     print "endEventList: ------------"
-    let timeZoneOffset = searchElement "eventTimeZoneOffset" (head eventList)
+    let timeZoneOffset = searchElement "eventTime" (head eventList)
     print "timezoneoffset: -------------"
     print timeZoneOffset
     print "------------------"
-    let names = getNames (head eventList)
-    print names
+    let when = makeWhen (head eventList)
+    print when
+    --let names = getNames (head eventList)
+    --print names
 
 
 
@@ -44,9 +48,23 @@ isElement :: Node -> Bool
 isElement (NodeElement e) = True
 isElement _ = False
 
+--makeWhen :: Node -> (Text, Text)
+makeWhen node  = (timeString, tzString)
+  where
+    timeElements = searchElement "eventTime" node
+    timeZoneElements = searchElement "eventTimeZoneOffset" node
+    (Element _ _ tzNode) = head timeZoneElements
+    (NodeContent tzString) = head tzNode --eg: "+02:00"
+    (Element _ _ timeNode) = head timeElements
+    (NodeContent timeString) = head timeNode --eg: "2013-06-08T14:58:56.591Z"
+    time = Data.Time.parseTime defaultTimeLocale
+      "%Y-%m-%dT%H:%M:%S %z" ((take 19 (show timeString))++" "++
+        (show tzString)) :: Maybe UTCTime
+
+
 
 -- search the node's children for a node with a particular Name
-searchElement :: Name -> Node -> [Element]
+-- searchElement :: Name -> Node -> [Element]
 searchElement term (NodeElement e) =
   if name==term then e:rest else rest
   where
@@ -58,11 +76,16 @@ searchElement _ (NodeComment _) = []
 searchElement _ (NodeInstruction _) = []
 
 
+
+
+
 getNames :: Node -> [Name]
 getNames (NodeElement (Element name _ nodes)) = name:(concat $ map getNames nodes)
 getNames (NodeContent t) = []
 getNames (NodeComment _) = []
 getNames (NodeInstruction _) = []
+
+
 {-
 createAggregationEvent :: Node -> Event
 createAggregationEvent NodeElement e =
