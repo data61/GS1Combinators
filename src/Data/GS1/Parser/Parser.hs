@@ -1,8 +1,7 @@
-module Data.GS1.Parser.Parser where
-
-
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
+
+module Data.GS1.Parser.Parser where
 import           Prelude         hiding (readFile, writeFile)
 import qualified Data.Map        as M
 --import           Text.Hamlet.XML
@@ -24,8 +23,12 @@ parse eventList filename = do
     print "eventList: --------------------"
     print eventList
     print "endEventList: ------------"
-
-
+    let timeZoneOffset = searchElement "eventTimeZoneOffset" (head eventList)
+    print "timezoneoffset: -------------"
+    print timeZoneOffset
+    print "------------------"
+    let names = getNames (head eventList)
+    print names
 
 
 
@@ -41,5 +44,35 @@ isElement :: Node -> Bool
 isElement (NodeElement e) = True
 isElement _ = False
 
+
+-- search the node's children for a node with a particular Name
+searchElement :: Name -> Node -> [Element]
+searchElement term (NodeElement e) =
+  if name==term then e:rest else rest
+  where
+    (Element name _ nodes) = e
+    rest = (concat $ map (searchElement term) nodes)
+
+searchElement _ (NodeContent t) = []
+searchElement _ (NodeComment _) = []
+searchElement _ (NodeInstruction _) = []
+
+
+getNames :: Node -> [Name]
+getNames (NodeElement (Element name _ nodes)) = name:(concat $ map getNames nodes)
+getNames (NodeContent t) = []
+getNames (NodeComment _) = []
+getNames (NodeInstruction _) = []
+{-
+createAggregationEvent :: Node -> Event
+createAggregationEvent NodeElement e =
+  newEvent eventID AggregationEventT what when why whre
+    where
+      when = getWhen e
+
+getWhen :: Node -> DWhen
+getWhen NodeElement e =
+  searchElement "eventTime"
+-}
 
 
