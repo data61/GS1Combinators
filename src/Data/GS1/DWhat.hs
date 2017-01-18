@@ -31,4 +31,14 @@ data DWhat = -- ObjectDWhat action epcList quantityList
            | TransformationDWhat (Maybe TransformationID) [EPC] [QuantityElement] [EPC] [QuantityElement]
            deriving (Show, Eq, Generic)
 
+ppDWhat :: DWhat -> String
+ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs
+ppDWhat (AggregationDWhat eid epcs qs) = "AGGREGATION WHAT\n" ++ x ++ "\n" ++ show epcs ++ "\n" ++ show qs
+  where x = case eid of
+              Just d  -> show d
+              Nothing -> ""
+ppDWhat (QuantityDWhat c i) = "QUANTITY WHAT\n" ++ show c ++ "\n" ++ show i
+ppDWhat (TransactionDWhat a s bizT epcs qs) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n" ++ show qs
+ppDWhat (TransformationDWhat tid iepcs iqs oepcs oqs) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show iepcs ++ "\n" ++ show iqs ++ "\n" ++ show oepcs ++ "\n" ++ show oqs
+
 makeClassy ''DWhat
