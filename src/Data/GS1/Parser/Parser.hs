@@ -25,16 +25,14 @@ parse eventList filename = do
     print eventList
     print "endEventList: ------------"
 
---getEPCISBody :: Node -> [Node]
---getEPCISBody (NodeElement (Element n a nodes)) = nodes
-getEPCISBody (Element _ _ nodes) = head(filter isElement nodes)
+
+
 
 
 getEventList :: Element -> [Node]
 getEventList (Element _ _ nodes) = filter isElement events
   where
     (NodeElement (Element _ _ bodyNodes)) = head(filter isElement nodes)
-    --contents = head(filter isElement bodyNodes)
     (NodeElement (Element _ _ events))= head(filter isElement bodyNodes)
 
 
