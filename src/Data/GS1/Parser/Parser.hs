@@ -28,13 +28,14 @@ parse eventList filename = do
     print "eventList: --------------------"
     print eventList
     print "endEventList: ------------"
-    let timeZoneOffset = fromJust $ searchElement "readPoint" (head eventList)
+    let timeZoneOffset = fromJust $ searchElement "disposition" (head eventList)
     print "timezoneoffset: -------------"
     print timeZoneOffset
     print "------------------"
     let when = makeWhen (head eventList)
     print when
-    let readPoint = getBizLocation (head eventList)
+    print "getBizStep"
+    let readPoint = getDisposition (head eventList)
     print readPoint
     --let names = getNames (head eventList)
     --print names
@@ -53,6 +54,40 @@ isElement :: Node -> Bool
 isElement (NodeElement e) = True
 isElement _ = False
 
+
+
+----------------------------
+-- Why -------------------
+-- -------------------------
+
+--getBizStep :: Node -> Maybe BizStep
+--returns Just "urn:epcglobal:cbv:bizstep:receiving"
+getBizStep node = if (isNothing bizStepNodes || bizNode == [] )
+                     then Nothing else Just bizStepStr
+  where
+    bizStepNodes = searchElement "bizStep" node
+    (Element _ _ bizNode) = head $ fromJust $ bizStepNodes
+    (NodeContent bizStepStr) = head bizNode
+    -- TODO: parse bizStepStr, and return that instead.
+
+
+--getDisposition :: Node -> Maybe Disposition
+--returns Just "urn:epcglobal:cbv:disp:in_progress"
+getDisposition node = if (isNothing dispNodes || dispNode == [] )
+                     then Nothing else Just dispStr
+  where
+    dispNodes = searchElement "disposition" node
+    (Element _ _ dispNode) = head $ fromJust $ dispNodes
+    (NodeContent dispStr) = head dispNode
+    -- TODO: parse disposition, and return that instead.
+
+
+----------------------------
+-- When -------------------
+-- -------------------------
+
+
+
 --makeWhen :: Node -> (Text, Text)
 --FIXME: the parsing doesn't work, and the compiler says it's
 --deprecated. Work out what to do! :)
@@ -67,6 +102,10 @@ makeWhen node  = (timeString, tzString)
     time = Data.Time.parseTime defaultTimeLocale
       "%Y-%m-%dT%H:%M:%S %z" ((take 19 (show timeString))++" "++
         (show tzString)) :: Maybe UTCTime
+
+----------------------------
+-- Where -------------------
+-- -------------------------
 
 {-
 makeWhere node = DWhere readPoint bizLocation srcTypes destTypes
@@ -104,6 +143,12 @@ getSrcTypes = error "Implement me"
 getDestTypes :: Node -> Maybe [SourceDestType]
 getDestTypes = error "Implement me"
 
+
+----------------------------
+-- Utilities ---------------
+----------------------------
+
+
 -- search the node's children for a node with a particular Name
 -- searchElement :: Name -> Node -> [Element]
 searchElement term node = if result==[] then Nothing else Just result
@@ -125,8 +170,6 @@ searchElements term nodes = if result==[] then Nothing else Just result
     result = searchElements' term nodes
 
 searchElements' term nodes = (concat $ map (searchElement' term) nodes)
-
-
 
 
 getNames :: Node -> [Name]
