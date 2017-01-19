@@ -30,28 +30,12 @@ data DWhere = DWhere
   {
     _readPoint   :: Maybe ReadPointLocation
   , _bizLocation :: Maybe BizLocation
-  , _srcDestType :: Maybe [SourceDestType]
+  , _srcType     :: [SourceDestType]
+  , _destType    :: [SourceDestType]
   }
   deriving (Show, Eq, Generic)
 
 makeClassy ''DWhere
-
-{-
-data Action = Add
-            | Observe
-            | Delete
-            deriving (Show, Eq, Generic)
-
---FIXME make the DWhat more concrete
-data DWhat = AggregationDWhat
-           | ObjectDWhat
-           | QuantityDWhat
-           | TransformationDWhat
-           | TransactionDWhat
-           deriving (Show, Eq, Generic)
-
-makeClassy ''DWhat
--}
 
 data EventType = ObjectEventT
                | AggregationEventT
