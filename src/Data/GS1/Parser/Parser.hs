@@ -9,6 +9,9 @@ import Data.Time.Format
 import qualified Data.Map        as M
 import           Text.XML
 import Data.GS1.Event
+import Data.GS1.Location
+import Data.GS1.SourceDest
+import Data.Maybe
 
 --parse IO :: ()
 --"/Users/fal05c/work/gs1combinators/src/Data/GS1/Parser/ObjectEvent.xml"
@@ -25,12 +28,14 @@ parse eventList filename = do
     print "eventList: --------------------"
     print eventList
     print "endEventList: ------------"
-    let timeZoneOffset = searchElement "eventTime" (head eventList)
+    let timeZoneOffset = fromJust $ searchElement "readPoint" (head eventList)
     print "timezoneoffset: -------------"
     print timeZoneOffset
     print "------------------"
     let when = makeWhen (head eventList)
     print when
+    let readPoint = getBizLocation (head eventList)
+    print readPoint
     --let names = getNames (head eventList)
     --print names
 
@@ -49,10 +54,12 @@ isElement (NodeElement e) = True
 isElement _ = False
 
 --makeWhen :: Node -> (Text, Text)
+--FIXME: the parsing doesn't work, and the compiler says it's
+--deprecated. Work out what to do! :)
 makeWhen node  = (timeString, tzString)
   where
-    timeElements = searchElement "eventTime" node
-    timeZoneElements = searchElement "eventTimeZoneOffset" node
+    timeElements = fromJust $ searchElement "eventTime" node
+    timeZoneElements = fromJust $ searchElement "eventTimeZoneOffset" node
     (Element _ _ tzNode) = head timeZoneElements
     (NodeContent tzString) = head tzNode --eg: "+02:00"
     (Element _ _ timeNode) = head timeElements
@@ -61,20 +68,64 @@ makeWhen node  = (timeString, tzString)
       "%Y-%m-%dT%H:%M:%S %z" ((take 19 (show timeString))++" "++
         (show tzString)) :: Maybe UTCTime
 
+{-
+makeWhere node = DWhere readPoint bizLocation srcDestType
+  where
+    readPoint = getReadPoint node
+    bizLocation = getBizLocation node
+    srcDestType = getSrcDestTypes node
+-}
+
+--returns (Just "urn:epc:id:sgln:0614141.00777.0")
+getReadPoint node = if (isNothing readPointNode) || (isNothing ids)
+                       then Nothing else Just id
+  where
+    readPointNode = searchElement "readPoint" node
+    (Element _ _ rpNode) = head $ fromJust $ readPointNode
+    ids = searchElements "id" rpNode
+    (Element _ _ idNodes) = head $ fromJust $ ids
+    (NodeContent id) = head idNodes
+
+--getBizLocation :: Node -> Maybe BizLocation
+--returns (Just "urn:epc:id:sgln:0614141.00888.0")
+getBizLocation node = if isNothing $ bizLocationNode
+                         then Nothing else Just id
+  where
+    bizLocationNode = searchElement "bizLocation" node
+    (Element _ _ bizNode) = head $ fromJust $ bizLocationNode
+    ids = searchElements "id" bizNode
+    (Element _ _ idNodes) = head $ fromJust $ ids
+    (NodeContent id) = head idNodes
+
+
+
+
+
+getSrcDestTypes :: Node -> Maybe [SourceDestType]
+getSrcDestTypes = error "Implement me"
 
 
 -- search the node's children for a node with a particular Name
 -- searchElement :: Name -> Node -> [Element]
-searchElement term (NodeElement e) =
+searchElement term node = if result==[] then Nothing else Just result
+  where
+    result = searchElement' term node
+
+searchElement' term (NodeElement e) =
   if name==term then e:rest else rest
   where
     (Element name _ nodes) = e
-    rest = (concat $ map (searchElement term) nodes)
+    rest = searchElements' term nodes
 
-searchElement _ (NodeContent t) = []
-searchElement _ (NodeComment _) = []
-searchElement _ (NodeInstruction _) = []
+searchElement' _ (NodeContent t) = []
+searchElement' _ (NodeComment _) = []
+searchElement' _ (NodeInstruction _) = []
 
+searchElements term nodes = if result==[] then Nothing else Just result
+  where
+    result = searchElements' term nodes
+
+searchElements' term nodes = (concat $ map (searchElement' term) nodes)
 
 
 
