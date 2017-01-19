@@ -29,9 +29,5 @@ mkCamelCaseWord (x:xs) = case x of
                               (y:ys) -> (toUpper y:ys):mkCamelCaseWord xs
                               _      -> mkCamelCaseWord xs
 
-wrapStrip' :: String -> String
-wrapStrip' [] = []
-wrapStrip' (x:xs) = if x == ' ' then wrapStrip' xs else x:wrapStrip' xs
-
 mkCamelCase :: String -> String
-mkCamelCase =  wrapStrip' . unwords . mkCamelCaseWord . splitOn "_"
+mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"
