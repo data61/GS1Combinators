@@ -69,7 +69,7 @@ makeWhen node  = (timeString, tzString)
         (show tzString)) :: Maybe UTCTime
 
 {-
-makeWhere node = DWhere readPoint bizLocation srcDestType
+makeWhere node = DWhere readPoint bizLocation srcTypes destTypes
   where
     readPoint = getReadPoint node
     bizLocation = getBizLocation node
@@ -98,12 +98,11 @@ getBizLocation node = if isNothing $ bizLocationNode
     (NodeContent id) = head idNodes
 
 
+getSrcTypes :: Node -> Maybe [SourceDestType]
+getSrcTypes = error "Implement me"
 
-
-
-getSrcDestTypes :: Node -> Maybe [SourceDestType]
-getSrcDestTypes = error "Implement me"
-
+getDestTypes :: Node -> Maybe [SourceDestType]
+getDestTypes = error "Implement me"
 
 -- search the node's children for a node with a particular Name
 -- searchElement :: Name -> Node -> [Element]
