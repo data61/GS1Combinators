@@ -46,6 +46,7 @@ library
                      , split
                      , text
                      , either
+                     , containers
   default-language:    Haskell2010
 
 executable GS1Combinators-exe
