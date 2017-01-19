@@ -6,7 +6,9 @@ module Data.GS1.BizStep where
 import           Control.Lens.TH
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.List.Split
 import           GHC.Generics
+import           Text.Read       (readMaybe)
 
 data BizStep = Accepting
                   | Arriving
@@ -46,14 +48,24 @@ data BizStep = Accepting
                   | Transporting
                   | Unloading
                   | VoidShipping
-                  deriving (Show, Eq, Generic)
+                  deriving (Show, Eq, Generic, Read)
 
 makeClassy ''BizStep
 
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
+mkBizStep :: String -> Maybe BizStep
+mkBizStep s = readMaybe (mkCamelCase s) :: Maybe BizStep
+
 instance URI BizStep where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "bizstep"
   uriPayload      = ppBizStep
+
+
+parseBizStep :: String -> Maybe BizStep
+parseBizStep s = let ws = splitOn ":" s in
+                     case ws of
+                       ["urn", "epcglobal", "cbv", "bizstep", s'] -> mkBizStep s'
+                       _                                         -> Nothing

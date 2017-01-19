@@ -49,6 +49,7 @@ instance URI Disposition where
   uriQuantifier _ = "disp"
   uriPayload      = ppDisposition
 
+
 -- FIXME: it could be just an example page 24/64 CBV
 -- Valid Dispositions, defined in section CBV 7.2
 dispositionValidList :: Disposition -> [BizStep]

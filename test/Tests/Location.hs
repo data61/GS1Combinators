@@ -31,11 +31,29 @@ testPassGLN =
     it "PrettyPrint Location as URI" $
       ppURI (Location (GLN "0614141" "18133" "9")) `shouldBe` "urn:epc:id:sgln:0614141.18133.9"
 
-    it "Returns the proper URI prefix)" $
+    it "Returns the proper URI prefix" $
       uriPrefix (Location (GLN "0614141" "18133" "9")) `shouldBe` "urn:epc:id"
 
-    it "Returns the proper URI quantifier)" $
+    it "Returns the proper URI quantifier" $
       uriQuantifier (Location (GLN "0614141" "18133" "9")) `shouldBe` "sgln"
 
-    it "Returns the proper URI quantifier)" $
+    it "Returns the proper URI quantifier" $
       uriPayload (Location (GLN "0614141" "18133" "9")) `shouldBe` "0614141.18133.9"
+
+testMkEPC :: Spec
+testMkEPC =
+  describe "EPC" $ do
+    it "make a GLN from valid string" $
+      mkEPC "GLN" "0532132.14112.7" `shouldBe` Just (GLN "0532132" "14112" "7")
+
+    it "make a GLN from valid string" $
+      mkEPC "GLN" "0614141.18133.9" `shouldBe` Just (GLN "0614141" "18133" "9")
+
+    it "make Nothing from invalid string" $
+      mkEPC "GLN" "0614141.18133.5" `shouldBe` Nothing
+
+    it "make Nothing from invalid string" $
+      mkEPC "GLN" "0614141.18133.5121" `shouldBe` Nothing
+    
+    it "make Nothing from invalid string" $
+      mkEPC "GLN" "really bad input" `shouldBe` Nothing
