@@ -8,6 +8,9 @@ import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Data.Char
+import           Data.List.Split
+import           Data.Either
+import           Data.Either.Combinators  (fromLeft', fromRight')
 import           Data.List
 import           GHC.Generics
 import           Text.Read
@@ -18,7 +21,7 @@ type EPCClass = String
 -- |Elctronic Product Code
 -- It could represented by many standards
 -- For example GLN (GTIN13) is one of them
--- Currently it has one method to convert the meaningful EPC to a consecutive string
+-- TODO: Currently it has one method to convert the meaningful EPC to a consecutive string
 data EPC = GLN GS1CompanyPrefix LocationRef CheckDigit
   deriving (Eq)
 
@@ -76,3 +79,14 @@ gln pref ref cd
   | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
   | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
   | otherwise                       = pure (GLN pref ref cd)
+
+-- |type -> payload -> Maybe EPC
+-- TODO: add more types
+mkEPC :: String -> String -> Maybe EPC
+mkEPC t p = case t of
+              "GLN" -> case splitOn "." p of
+                         [a, b, c] -> let x = gln a b c :: Either LocationError EPC in
+                                          if isRight x then Just (fromRight' x) else Nothing
+                         _         -> Nothing
+              _     -> Nothing
+
