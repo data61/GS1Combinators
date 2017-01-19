@@ -6,12 +6,12 @@ module Data.GS1.Event where
 
 import           Control.Lens
 
+import           Data.GS1.DWhat
+import           Data.GS1.DWhy
 import           Data.GS1.EPCISTime
 import           Data.GS1.EventID
 import           Data.GS1.Location
 import           Data.GS1.SourceDest
-import           Data.GS1.DWhat
-import           Data.GS1.DWhy
 import           Data.Time.LocalTime
 import           GHC.Generics
 
@@ -113,4 +113,5 @@ newEvent i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
                                  (TransactionEventT, TransactionDWhat{})       -> e
                                  (TransformationEventT, TransformationDWhat{}) -> e
                                  _                                             -> Nothing
+
 

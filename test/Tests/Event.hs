@@ -16,6 +16,22 @@ testBizStep =
     it "produces correct URI" $
       ppURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
 
+
+testParseBizStep :: Spec
+testParseBizStep =
+  describe "parseBizStep" $ do
+    it "parse valid uri to bizstep" $
+      parseBizStep "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
+
+    it "parse valid uri to bizstep" $
+      parseBizStep "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Just Accepting
+
+    it "parse valid uri but invalid step to Nothing" $
+      parseBizStep "urn:epcglobal:cbv:bizstep:s" `shouldBe` Nothing
+
+    it "parse invalid uri to Nothing" $
+      parseBizStep "urn:invalidns:cbv:bizstep:void_shipping" `shouldBe` Nothing
+
 testDisposition :: Spec
 testDisposition =
   describe "Disposition" $
@@ -46,3 +62,4 @@ testCreateDWhat = do
       ppDWhat (ObjectDWhat Add [][]) `shouldBe` "OBJECT WHAT\nAdd\n[]\n[]"
 
   -- TODO test create other DWhat too
+
