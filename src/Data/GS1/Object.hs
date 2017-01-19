@@ -14,8 +14,11 @@ type Quantity = Integer
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EPCClass Quantity Uom
-  deriving (Show, Eq)
+data QuantityElement = QuantityElement EPCClass [(Quantity, Uom)]
+  deriving (Eq, Show)
+
+-- |Alias of QuantityList
+type QuantityList = [QuantityElement]
 
 -- |EPCIS 7.3.6
 -- Not sure if it is right way

@@ -23,3 +23,13 @@ testRevertCamelCase =
 
     it "seperates every char of a string with all uppercase chars" $
       revertCamelCase "HELLO" `shouldBe` "h_e_l_l_o"
+
+testMkCamelCase :: Spec
+testMkCamelCase =
+  describe "make camel case from underscore separated string" $ do
+    it "make camel case string" $
+      mkCamelCase "hello_world" `shouldBe` "HelloWorld"
+
+    it "make camel case strign with string containing upper case char" $
+      mkCamelCase "hello_World" `shouldBe` "HelloWorld"
+
