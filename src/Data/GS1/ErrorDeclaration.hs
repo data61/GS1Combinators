@@ -23,7 +23,7 @@ data ErrorDeclaration = ErrorDeclaration
   , _reason             :: Maybe ErrorReasonID
   , _correctiveEventIDs :: Maybe [EventID]
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Generic)
 
 instance URI ErrorDeclaration where
   uriPrefix _                         = "urn:epcglobal:cbv"

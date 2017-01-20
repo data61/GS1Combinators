@@ -9,6 +9,7 @@ import           Test.Hspec     (hspec)
 
 main :: IO ()
 main = do
+
   hspec testPassGLN
   hspec testMkEPC
 
@@ -19,5 +20,6 @@ main = do
 
   hspec testRevertCamelCase
   hspec testMkCamelCase
+  hspec testParseTime
 
   hspec testObjectID
