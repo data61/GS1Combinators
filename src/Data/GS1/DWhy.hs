@@ -30,9 +30,9 @@ instance HasBizStep DWhy where
 -- Nothing is the cause
 makeClassy ''DWhy
 
-newWhy :: (AsDispositionError e, MonadError e m)
+mkWhy :: (AsDispositionError e, MonadError e m)
      => Maybe BizStep -> Maybe Disposition -> m DWhy
-newWhy step disp
+mkWhy step disp
   | isNothing step || isNothing disp = pure (DWhy step disp)  -- TODO: verify when encounter Nothing
   | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
                                           then pure (DWhy step disp)

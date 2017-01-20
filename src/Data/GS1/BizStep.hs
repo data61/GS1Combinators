@@ -63,7 +63,6 @@ instance URI BizStep where
   uriQuantifier _ = "bizstep"
   uriPayload      = ppBizStep
 
-
 parseBizStep :: String -> Maybe BizStep
 parseBizStep s = let ws = splitOn ":" s in
                      case ws of

@@ -8,10 +8,10 @@ import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Data.Char
-import           Data.List.Split
 import           Data.Either
 import           Data.Either.Combinators  (fromLeft', fromRight')
 import           Data.List
+import           Data.List.Split
 import           GHC.Generics
 import           Text.Read
 
