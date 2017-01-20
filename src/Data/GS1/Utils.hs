@@ -1,12 +1,14 @@
 module Data.GS1.Utils (
   revertCamelCase
 , mkCamelCase
+, parseStr2Time
+, parseStr2TimeZone
 ) where
 
 import           Data.Char
+import           Data.GS1.EPCISTime
 import           Data.List.Split
-import           Data.String
-import qualified Data.Text as T
+import           Data.Time
 
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
@@ -24,7 +26,7 @@ revertCamelCase str = let r = insertUs' str in
                             _     -> r
 
 camelCase' :: String -> String
-camelCase' [] = []
+camelCase' []     = []
 camelCase' (x:xs) = toUpper x : xs
 
 mkCamelCaseWord :: [String] -> [String]
@@ -32,3 +34,15 @@ mkCamelCaseWord sl = camelCase' <$> sl
 
 mkCamelCase :: String -> String
 mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"
+
+-- example format: 2005-04-03T20:33:31.116-06:00
+-- |parse the string to UTC time, the time zone information will be merged into the time
+parseStr2Time :: String -> Maybe EPCISTime
+parseStr2Time s = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
+
+-- |parse the string and obtain TimeZone, 
+parseStr2TimeZone :: String -> Maybe TimeZone
+parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe ZonedTime in
+                      case parsed of
+                        Just t -> Just (zonedTimeZone t :: TimeZone)
+                        _      -> Nothing
