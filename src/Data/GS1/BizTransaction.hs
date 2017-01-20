@@ -1,21 +1,26 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-
+  Example:
+
+  <bizTransactionList>
+    <bizTransaction type="urn:epcglobal:cbv:btt:po">
+      http://transaction.acme.com/po/12345678
+    </bizTransaction>
+  </bizTransactionList>
+ -}
+
 module Data.GS1.BizTransaction where
 
 import           Control.Lens.TH
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.List.Split
 import           GHC.Generics
+import           Text.Read       (readMaybe)
 
--- BTI stands for Business Transaction Identifier
--- BTT stands for Business Transaction Type
--- GDTI stands for Global Document Type Identifier
--- GSRN stands for Global Service Relation Number
-data BizTransactionID = BTIGDTI String
-                      | BTIGSRN String
-                      | BTIGLN String
-                      deriving (Show, Eq, Generic)
+type BizTransactionID = String
 
 data BizTransactionType = Bol       -- Bill of Lading
                         | Desadv    -- Dispatch Advice
@@ -26,7 +31,7 @@ data BizTransactionType = Bol       -- Bill of Lading
                         | Prodorder -- Production Order
                         | Recadv    -- Receiving Advice
                         | Rma       -- Return Mechandise Authorisation
-                        deriving (Show, Eq, Generic)
+                        deriving (Show, Eq, Generic, Read)
 
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
@@ -36,27 +41,23 @@ instance URI BizTransactionType where
   uriQuantifier _ = "btt"
   uriPayload      = ppBizTransactionType
 
+mkBizTransactionType :: String -> Maybe BizTransactionType
+mkBizTransactionType s = readMaybe (mkCamelCase s) :: Maybe BizTransactionType
+
+parseBizTransactionType :: String -> Maybe BizTransactionType
+parseBizTransactionType s = let ws = splitOn ":" s in
+                                case ws of
+                                  ["urn", "epcglobal", "cbv", "btt", s'] -> mkBizTransactionType s'
+                                  _                                       -> Nothing
+
 -- |BizTransaction CBV Section 7.3 and Section 8.5
--- MAY contain one or more BizTransactionType means [0..*]
 data BizTransaction = BizTransaction
   {
-    _btid     :: BizTransactionID
-  , _typeList :: [BizTransactionType]
+    _btid :: BizTransactionID
+  , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
 
 makeClassy ''BizTransaction
 
-instance URI BizTransactionID where
-  uriPrefix a = case a of
-                  BTIGDTI _ -> "urn:epc:id"
-                  BTIGSRN _ -> "urn:epc:id"
-                  BTIGLN _  -> "urn:epcglobal:cbv:bt"
-  uriQuantifier a = case a of
-                      BTIGDTI _ -> "gdti"
-                      BTIGSRN _ -> "gsrn"
-                      BTIGLN  _ -> "gln"
-  uriPayload a = case a of
-                   BTIGDTI b -> b
-                   BTIGSRN b -> b
-                   BTIGLN b  -> b
+type BizTransactionList = [BizTransaction]

@@ -1,12 +1,10 @@
 module Tests.Event where
 
-import           Control.Exception
 import           Data.GS1.BizStep
 import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
-import           Data.GS1.Event
 import           Data.GS1.URI
 import           Test.Hspec
 
@@ -46,18 +44,14 @@ testDisposition = do
       parseDisposition "" `shouldBe` Nothing
 
 testBizTransaction :: Spec
-testBizTransaction = do
-  describe "BizTransaction Id GDTI" $
-    it "produces correct GDTI URI" $
-      ppURI (BTIGDTI "dummyid") `shouldBe` "urn:epc:id:gdti:dummyid"
-
-  describe "BizTransaction Id GSRN" $
-    it "produces correct GSRN URI" $
-      ppURI (BTIGSRN "dummyid") `shouldBe` "urn:epc:id:gsrn:dummyid"
-
-  describe "BizTransaction Id GLN" $
-    it "produces correct legacy GLN URI" $
-      ppURI (BTIGLN "dummyid") `shouldBe` "urn:epcglobal:cbv:bt:gln:dummyid"
+testBizTransaction =
+  describe "Parse BizTransactionID" $ do
+    it "parse the valid uri to BizTransactionID" $
+      parseBizTransactionType "urn:epcglobal:cbv:btt:po" `shouldBe` Just Po
+    it "parse the invalid uri to Nothing" $
+      parseBizTransactionType "urn:epcglobal:cbv:btt:somethingelse" `shouldBe` Nothing
+    it "parse the empty uri to Nothing" $
+      parseBizTransactionType "" `shouldBe` Nothing
 
 testCreateDWhat :: Spec
 testCreateDWhat = do
