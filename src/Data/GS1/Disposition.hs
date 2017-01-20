@@ -7,7 +7,9 @@ import           Control.Lens.TH
 import           Data.GS1.BizStep
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.List.Split
 import           GHC.Generics
+import           Text.Read        (readMaybe)
 
 data DispositionError = InvalidDisposition
                       | OtherDispositionError
@@ -37,7 +39,7 @@ data Disposition = Active
                  | SellableNotAccessible
                  | Stolen
                  | Unknown
-                 deriving (Show, Eq, Generic)
+                 deriving (Show, Eq, Generic, Read)
 
 makeClassyPrisms ''Disposition
 
@@ -49,6 +51,14 @@ instance URI Disposition where
   uriQuantifier _ = "disp"
   uriPayload      = ppDisposition
 
+mkDisposition :: String -> Maybe Disposition
+mkDisposition s = readMaybe (mkCamelCase s) :: Maybe Disposition
+
+parseDisposition :: String -> Maybe Disposition
+parseDisposition s = let ws = splitOn ":" s in
+                         case ws of
+                           ["urn", "epcglobal", "cbv", "disp", s'] -> mkDisposition s'
+                           _                                       -> Nothing
 
 -- FIXME: it could be just an example page 24/64 CBV
 -- Valid Dispositions, defined in section CBV 7.2

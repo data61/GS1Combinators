@@ -23,11 +23,12 @@ revertCamelCase str = let r = insertUs' str in
                             '_':t -> t
                             _     -> r
 
+camelCase' :: String -> String
+camelCase' [] = []
+camelCase' (x:xs) = toUpper x : xs
+
 mkCamelCaseWord :: [String] -> [String]
-mkCamelCaseWord [] = []
-mkCamelCaseWord (x:xs) = case x of
-                              (y:ys) -> (toUpper y:ys):mkCamelCaseWord xs
-                              _      -> mkCamelCaseWord xs
+mkCamelCaseWord sl = camelCase' <$> sl
 
 mkCamelCase :: String -> String
 mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"

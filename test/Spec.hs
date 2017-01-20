@@ -13,7 +13,6 @@ main = do
   hspec testMkEPC
 
   hspec testBizStep
-  hspec testParseBizStep
   hspec testDisposition
   hspec testBizTransaction
   hspec testCreateDWhat

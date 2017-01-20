@@ -88,8 +88,8 @@ instance HasDWhere (Eventish a) where
 newtype Event = Event (Eventish EventType)
   deriving (Show, Eq, Generic)
 
-newEvent :: EventID -> EventType -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
-newEvent i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
+mkEvent :: EventID -> EventType -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
+mkEvent i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
                                case (t, w1) of
                                  (ObjectEventT, ObjectDWhat{})                 -> e
                                  (AggregationEventT, AggregationDWhat{})       -> e
