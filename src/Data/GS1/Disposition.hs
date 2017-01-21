@@ -7,9 +7,7 @@ import           Control.Lens.TH
 import           Data.GS1.BizStep
 import           Data.GS1.URI
 import           Data.GS1.Utils
-import           Data.List.Split
 import           GHC.Generics
-import           Text.Read        (readMaybe)
 
 data DispositionError = InvalidDisposition
                       | OtherDispositionError
@@ -52,13 +50,11 @@ instance URI Disposition where
   uriPayload      = ppDisposition
 
 mkDisposition :: String -> Maybe Disposition
-mkDisposition s = readMaybe (mkCamelCase s) :: Maybe Disposition
+mkDisposition = mkByName
 
 parseDisposition :: String -> Maybe Disposition
-parseDisposition s = let ws = splitOn ":" s in
-                         case ws of
-                           ["urn", "epcglobal", "cbv", "disp", s'] -> mkDisposition s'
-                           _                                       -> Nothing
+parseDisposition s = let uri = "urn:epcglobal:cbv:disp" in
+                         parseURI s uri :: Maybe Disposition
 
 -- FIXME: it could be just an example page 24/64 CBV
 -- Valid Dispositions, defined in section CBV 7.2

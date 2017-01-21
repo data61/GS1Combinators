@@ -1,6 +1,8 @@
 module Data.GS1.Utils (
   revertCamelCase
 , mkCamelCase
+, mkByName
+, parseURI
 , parseStr2Time
 , parseStr2TimeZone
 ) where
@@ -8,7 +10,9 @@ module Data.GS1.Utils (
 import           Data.Char
 import           Data.GS1.EPCISTime
 import           Data.List.Split
+import qualified Data.Text          as T
 import           Data.Time
+import           Text.Read
 
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
@@ -40,9 +44,20 @@ mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"
 parseStr2Time :: String -> Maybe EPCISTime
 parseStr2Time s = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
 
--- |parse the string and obtain TimeZone, 
+-- |parse the string and obtain TimeZone,
 parseStr2TimeZone :: String -> Maybe TimeZone
 parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe ZonedTime in
                       case parsed of
                         Just t -> Just (zonedTimeZone t :: TimeZone)
                         _      -> Nothing
+
+mkByName :: Read a => String -> Maybe a
+mkByName s = readMaybe (mkCamelCase s)
+
+parseURI :: Read a => String -> String -> Maybe a
+parseURI s uri = let puri = T.pack uri
+                     ps = T.pack s
+                     ws = T.breakOn puri ps in
+                     case ws of
+                       (_, s') -> if T.unpack s' == s then mkByName . last $ splitOn ":" s
+                                                      else Nothing

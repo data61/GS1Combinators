@@ -16,9 +16,7 @@ module Data.GS1.BizTransaction where
 import           Control.Lens.TH
 import           Data.GS1.URI
 import           Data.GS1.Utils
-import           Data.List.Split
 import           GHC.Generics
-import           Text.Read       (readMaybe)
 
 type BizTransactionID = String
 
@@ -42,13 +40,11 @@ instance URI BizTransactionType where
   uriPayload      = ppBizTransactionType
 
 mkBizTransactionType :: String -> Maybe BizTransactionType
-mkBizTransactionType s = readMaybe (mkCamelCase s) :: Maybe BizTransactionType
+mkBizTransactionType = mkByName
 
 parseBizTransactionType :: String -> Maybe BizTransactionType
-parseBizTransactionType s = let ws = splitOn ":" s in
-                                case ws of
-                                  ["urn", "epcglobal", "cbv", "btt", s'] -> mkBizTransactionType s'
-                                  _                                       -> Nothing
+parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
+                                parseURI s uri :: Maybe BizTransactionType
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
