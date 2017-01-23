@@ -43,7 +43,7 @@ type LocationRef = String
 type CheckDigit = String
 
 data LocationError
-  = IllegalFormat
+  = IllegalGLNFormat
   | InvalidChecksum
   deriving (Show, Eq, Generic)
 
@@ -76,7 +76,7 @@ validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 gln ::(AsLocationError e, MonadError e m)
      => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m EPC
 gln pref ref cd
-  | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
+  | not (wellFormatGLN pref ref cd) = throwing _IllegalGLNFormat ()
   | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
   | otherwise                       = pure (GLN pref ref cd)
 

@@ -7,10 +7,13 @@ module Data.GS1.Utils (
 , parseStr2TimeZone
 ) where
 
+import           Control.Lens.TH
+import           Control.Monad.Error.Lens
+import           Control.Monad.Except     (MonadError)
 import           Data.Char
 import           Data.GS1.EPCISTime
 import           Data.List.Split
-import qualified Data.Text          as T
+import qualified Data.Text                as T
 import           Data.Time
 import           Text.Read
 
@@ -41,15 +44,19 @@ mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"
 
 -- example format: 2005-04-03T20:33:31.116-06:00
 -- |parse the string to UTC time, the time zone information will be merged into the time
-parseStr2Time :: String -> Maybe EPCISTime
-parseStr2Time s = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
+parseStr2Time :: (AsEPCISTimeError e, MonadError e m) => String -> m EPCISTime
+parseStr2Time s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime in
+                      case parsed of
+                        Just et -> pure et
+                        _       -> throwing _IllegalTimeFormat ()
 
 -- |parse the string and obtain TimeZone,
-parseStr2TimeZone :: String -> Maybe TimeZone
+parseStr2TimeZone :: (AsEPCISTimeError e, MonadError e m) => String -> m TimeZone
 parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe ZonedTime in
                       case parsed of
-                        Just t -> Just (zonedTimeZone t :: TimeZone)
-                        _      -> Nothing
+                        Just t -> let tz = zonedTimeZone t :: TimeZone in
+                                      pure tz
+                        _      -> throwing _IllegalTimeFormat ()
 
 mkByName :: Read a => String -> Maybe a
 mkByName s = readMaybe (mkCamelCase s)
@@ -60,3 +67,5 @@ parseURI s uri = let puri = T.pack uri
                      (_, s') = T.breakOn puri ps in
                      if T.unpack s' == s then mkByName . last $ splitOn ":" s
                                                       else Nothing
+
+
