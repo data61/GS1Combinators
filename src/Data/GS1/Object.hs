@@ -92,7 +92,7 @@ validateObjectID s = case s of
                                                                                then (++) <$> Just [x, a, b] <*> oidHelp xxs
                                                                                else Nothing
                                                                _         -> Nothing
-                                                      _   -> if validSegmentNzChar x 
+                                                      _   -> if validSegmentNzChar x
                                                                  then (:) <$> Just x <*> oidHelp xs
                                                                  else Nothing
 

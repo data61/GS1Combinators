@@ -8,6 +8,7 @@ import           Data.GS1.BizTransaction
 import           Data.GS1.EPC
 import           Data.GS1.EventID
 import           Data.GS1.Object
+import           Data.GS1.Utils
 import           GHC.Generics
 
 type TransformationID = String
@@ -15,7 +16,10 @@ type TransformationID = String
 data Action = Add
             | Observe
             | Delete
-            deriving (Show, Eq, Generic)
+            deriving (Show, Eq, Generic, Read)
+
+mkAction :: String -> Maybe Action
+mkAction = mkByName
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event

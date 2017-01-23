@@ -57,7 +57,6 @@ mkByName s = readMaybe (mkCamelCase s)
 parseURI :: Read a => String -> String -> Maybe a
 parseURI s uri = let puri = T.pack uri
                      ps = T.pack s
-                     ws = T.breakOn puri ps in
-                     case ws of
-                       (_, s') -> if T.unpack s' == s then mkByName . last $ splitOn ":" s
+                     (_, s') = T.breakOn puri ps in
+                     if T.unpack s' == s then mkByName . last $ splitOn ":" s
                                                       else Nothing
