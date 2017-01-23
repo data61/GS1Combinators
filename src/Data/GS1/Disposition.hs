@@ -37,7 +37,7 @@ data Disposition = Active
                  | SellableNotAccessible
                  | Stolen
                  | Unknown
-                 deriving (Show, Eq, Generic)
+                 deriving (Show, Eq, Generic, Read)
 
 makeClassyPrisms ''Disposition
 
@@ -49,6 +49,12 @@ instance URI Disposition where
   uriQuantifier _ = "disp"
   uriPayload      = ppDisposition
 
+mkDisposition :: String -> Maybe Disposition
+mkDisposition = mkByName
+
+parseDisposition :: String -> Maybe Disposition
+parseDisposition s = let uri = "urn:epcglobal:cbv:disp" in
+                         parseURI s uri :: Maybe Disposition
 
 -- FIXME: it could be just an example page 24/64 CBV
 -- Valid Dispositions, defined in section CBV 7.2
