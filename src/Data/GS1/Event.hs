@@ -12,6 +12,7 @@ import           Data.GS1.EPCISTime
 import           Data.GS1.EventID
 import           Data.GS1.Location
 import           Data.GS1.SourceDest
+import           Data.GS1.Utils
 import           Data.Time.LocalTime
 import           GHC.Generics
 
@@ -19,12 +20,16 @@ import           GHC.Generics
 data DWhen = DWhen
   {
     _eventTime  :: EPCISTime
-  , _recordTime :: EPCISTime
+  , _recordTime :: Maybe EPCISTime -- minOccurs = 0
   , _timeZone   :: TimeZone
   }
   deriving (Show, Eq, Generic)
 
 makeClassy ''DWhen
+
+-- |eventTime, recordTime, the timezone is eventTime's
+--mkDWhen :: (String, String) -> Maybe DWhen
+--mkDwhen = undefined
 
 data DWhere = DWhere
   {
@@ -42,7 +47,10 @@ data EventType = ObjectEventT
                | QuantityEventT
                | TransactionEventT
                | TransformationEventT
-               deriving (Show, Eq, Generic)
+               deriving (Show, Eq, Generic, Read)
+
+mkEventType :: String -> Maybe EventType
+mkEventType = mkByName
 
 data Eventish a = Eventish
   {
