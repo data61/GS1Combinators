@@ -3,9 +3,9 @@
 
 module Data.GS1.EPCISTime where
 
-import           Control.Lens.TH
 import           Data.Time
 import           GHC.Generics
+import           Control.Lens.TH
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.

@@ -17,13 +17,13 @@ testPassGLN =
       (gln "0532132" "14112" "7" :: EitherLE) `shouldBe` Right (GLN "0532132" "14112" "7")
 
     it "IllegalFormat: Invalid length" $
-      (gln "0614141" "1813392322222222222" "2" :: EitherLE) `shouldBe` Left IllegalFormat
+      (gln "0614141" "1813392322222222222" "2" :: EitherLE) `shouldBe` Left IllegalGLNFormat
 
     it "IllegalFormat: Invalid length" $
-      (gln "" "" "" :: EitherLE) `shouldBe` Left IllegalFormat
+      (gln "" "" "" :: EitherLE) `shouldBe` Left IllegalGLNFormat
 
     it "IllegalFormat: Invalid character" $
-      (gln "0614141" "181ab" "9" :: EitherLE) `shouldBe` Left IllegalFormat
+      (gln "0614141" "181ab" "9" :: EitherLE) `shouldBe` Left IllegalGLNFormat
 
     it "InvalidChecksum"  $
       (gln "0614141" "18133" "5" :: EitherLE) `shouldBe` Left InvalidChecksum
