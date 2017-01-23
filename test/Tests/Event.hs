@@ -3,22 +3,17 @@ module Tests.Event where
 import           Data.GS1.BizStep
 import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
-import           Data.GS1.Event
-import Data.GS1.EPC
-import Data.GS1.DWhat
+import           Data.GS1.DWhat
+import           Data.GS1.EPC
 import           Data.GS1.URI
 import           Test.Hspec
-import Control.Exception
 
 testBizStep :: Spec
-testBizStep =
+testBizStep = do
   describe "BusinessStep" $
     it "produces correct URI" $
       ppURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
 
-
-testParseBizStep :: Spec
-testParseBizStep =
   describe "parseBizStep" $ do
     it "parse valid uri to bizstep" $
       parseBizStep "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
@@ -33,24 +28,30 @@ testParseBizStep =
       parseBizStep "urn:invalidns:cbv:bizstep:void_shipping" `shouldBe` Nothing
 
 testDisposition :: Spec
-testDisposition =
+testDisposition = do
   describe "Disposition" $
     it "produces correct URI" $
       ppURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
 
+  describe "parse Disposition" $ do
+    it "parse the valid uri to disposition" $
+      parseDisposition "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
+    it "parses the invalid uri to Nothing" $
+      parseDisposition "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
+    it "parse invalid string to Nothing" $
+      parseDisposition "somerandomstring" `shouldBe` Nothing
+    it "parse invalid string to Nothing" $
+      parseDisposition "" `shouldBe` Nothing
+
 testBizTransaction :: Spec
-testBizTransaction = do
-  describe "BizTransaction Id GDTI" $
-    it "produces correct GDTI URI" $
-      ppURI (BTIGDTI "dummyid") `shouldBe` "urn:epc:id:gdti:dummyid"
-
-  describe "BizTransaction Id GSRN" $
-    it "produces correct GSRN URI" $
-      ppURI (BTIGSRN "dummyid") `shouldBe` "urn:epc:id:gsrn:dummyid"
-
-  describe "BizTransaction Id GLN" $
-    it "produces correct legacy GLN URI" $
-      ppURI (BTIGLN "dummyid") `shouldBe` "urn:epcglobal:cbv:bt:gln:dummyid"
+testBizTransaction =
+  describe "Parse BizTransactionID" $ do
+    it "parse the valid uri to BizTransactionID" $
+      parseBizTransactionType "urn:epcglobal:cbv:btt:po" `shouldBe` Just Po
+    it "parse the invalid uri to Nothing" $
+      parseBizTransactionType "urn:epcglobal:cbv:btt:somethingelse" `shouldBe` Nothing
+    it "parse the empty uri to Nothing" $
+      parseBizTransactionType "" `shouldBe` Nothing
 
 testCreateDWhat :: Spec
 testCreateDWhat = do
