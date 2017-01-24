@@ -7,7 +7,6 @@ module Data.GS1.Utils (
 , parseStr2TimeZone
 ) where
 
-import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Data.Char
