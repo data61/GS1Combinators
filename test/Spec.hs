@@ -16,7 +16,8 @@ main = do
   hspec testBizStep
   hspec testDisposition
   hspec testBizTransaction
-  hspec testCreateDWhat
+  hspec testMkDWhat
+  hspec testMkDWhen
 
   hspec testRevertCamelCase
   hspec testMkCamelCase
