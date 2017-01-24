@@ -3,13 +3,13 @@ module Main where
 import           Tests.Event
 import           Tests.Location
 import           Tests.Object
+import           Tests.Parser
 import           Tests.Utils
 
 import           Test.Hspec     (hspec)
 
 main :: IO ()
 main = do
-
   hspec testPassGLN
   hspec testMkEPC
 
@@ -24,3 +24,5 @@ main = do
   hspec testParseTime
 
   hspec testObjectID
+
+  hspec testParseDWhen

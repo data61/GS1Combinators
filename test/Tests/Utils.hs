@@ -1,12 +1,10 @@
 module Tests.Utils where
 
-import           Data.Either
 import           Data.Either.Combinators
 import           Data.GS1.EPCISTime
 import           Data.GS1.Utils
-import           Data.Maybe
+import           Data.Time
 import           Test.Hspec
-import Data.Time
 
 testRevertCamelCase :: Spec
 testRevertCamelCase =
