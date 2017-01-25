@@ -4,6 +4,7 @@
 module Data.GS1.DWhat where
 
 import           Control.Lens
+import           Data.Char
 import           Data.GS1.BizTransaction
 import           Data.GS1.EPC
 import           Data.GS1.EventID
@@ -19,7 +20,7 @@ data Action = Add
             deriving (Show, Eq, Generic, Read)
 
 mkAction :: String -> Maybe Action
-mkAction = mkByName
+mkAction s = mkByName . camelCase' $ toLower <$> s
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event

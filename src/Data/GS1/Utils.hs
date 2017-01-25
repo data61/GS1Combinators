@@ -1,5 +1,8 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Data.GS1.Utils (
-  revertCamelCase
+  camelCase'
+, revertCamelCase
 , mkCamelCase
 , mkByName
 , parseURI

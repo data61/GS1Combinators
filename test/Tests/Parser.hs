@@ -2,6 +2,7 @@
 
 module Tests.Parser where
 
+import           Data.GS1.DWhat
 import           Data.GS1.Event
 import           Text.XML
 import           Text.XML.Cursor
@@ -10,7 +11,7 @@ import           XML.Parser
 import           Test.Hspec
 
 testParseDWhen :: Spec
-testParseDWhen =
+testParseDWhen = do
   describe "parse XML to obtain DWhen" $ do
     it "creates DWhen from valid XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -21,9 +22,22 @@ testParseDWhen =
       let et1 = "2005-04-04T20:33:31.116-06:00"
       parseDWhen <$> oeCursors `shouldBe` [mkDWhen' et, mkDWhen et1 ""]
 
-    it "creates Nothing from invalid XML when there is no Event Time" $ do
+    it "creates Nothing from Single ObjectEvent XML without Event Time" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhen <$> oeCursors `shouldBe` [Nothing]
 
+  describe "parse XML to obtain Action" $
+    it "finds action from Single ObjectEvent XML" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
+      let cursor = fromDocument doc
+      let actions = cursor $// element "action" &/ content
+      parseAction actions `shouldBe` Just Observe
+    
+  describe "parse XML to obtain EPC List" $
+    it "finds all epcs" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
+      let cursor = fromDocument doc
+      let epcs = cursor $// element "epc" &/ content
+      show <$> parseEPCList epcs `shouldBe` ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
