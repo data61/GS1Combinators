@@ -2,6 +2,8 @@
 
 module XML.Parser where
 
+import           Data.GS1.DWhat
+import           Data.GS1.EPC
 import           Data.GS1.EPCISTime
 import           Data.GS1.Event
 import           Data.GS1.Utils
@@ -12,6 +14,10 @@ import           Data.Time.LocalTime
 import           Data.XML.Types
 import           Text.Read
 import           Text.XML.Cursor
+
+-- |Get all the cursors with the given name below the current cursor
+getCursorsByName :: Name -> Cursor -> [Cursor]
+getCursorsByName n c = c $// element n
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
@@ -56,6 +62,10 @@ parseDWhen c = do
     Just et' -> Just (DWhen et' rt (fromJust tz))
     _        -> Nothing
 
--- |Get all the cursors with the given name below the current cursor
-getCursorsByName :: Name -> Cursor -> [Cursor]
-getCursorsByName n c = c $// element n
+parseAction :: [T.Text] -> Maybe Action
+parseAction t = case t of
+                  (x:_) -> mkAction . T.unpack $ x
+                  _     -> Nothing
+
+parseEPCList :: [T.Text] -> [EPC]
+parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
