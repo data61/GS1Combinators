@@ -51,8 +51,8 @@ mkDWhen' s = let t = parseStr2Time s :: Either EPCISTimeError EPCISTime
 
 data DWhere = DWhere
   {
-    _readPoint   :: Maybe ReadPointLocation
-  , _bizLocation :: Maybe BizLocation
+    _readPoint   :: [ReadPointLocation]
+  , _bizLocation :: [BizLocation]
   , _srcType     :: [SourceDestType]
   , _destType    :: [SourceDestType]
   }

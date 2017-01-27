@@ -10,8 +10,14 @@ import           GHC.Generics
 import           Text.Printf
 
 -- |Location takes a GLN as its argument
-data Location = Location EPC
-  deriving (Show, Eq, Generic)
+newtype Location = Location EPC
+  deriving (Eq, Generic)
+
+instance Show Location where
+  show (Location e) = show e
+
+mkLocation :: String -> Location
+mkLocation s = Location $ EPC s
 
 -- |Location synonym
 type ReadPointLocation = Location

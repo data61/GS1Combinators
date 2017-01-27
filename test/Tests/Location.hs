@@ -16,6 +16,13 @@ testPassGLN =
     it "GLN is verified correctly" $
       (gln "0532132" "14112" "7" :: EitherLE) `shouldBe` Right (GLN "0532132" "14112" "7")
 
+    it "GLN is verified correctly from 20141216 onesteel" $
+      (gln "9348585" "01002" "3" :: EitherLE) `shouldBe` Right (GLN "9348585" "01002" "3")
+
+    -- the GLN is incorrect on the spreadsheet as it contains 12 digits only
+    it "GLN is verified correctly from 20141216 onesteel" $
+      (gln "9348585" "08001" "9" :: EitherLE) `shouldBe` Right (GLN "9348585" "08001" "9")
+
     it "IllegalFormat: Invalid length" $
       (gln "0614141" "1813392322222222222" "2" :: EitherLE) `shouldBe` Left IllegalGLNFormat
 
