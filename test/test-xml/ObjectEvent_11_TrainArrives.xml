@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+     This object event adapts the one from one steel.
+     However there are some private schema, and it cannot be converted to standard EPCIS doc plainly.
+  -->
+<epcis:EPCISDocument
+    xmlns:epcis="urn:epcglobal:epcis:xsd:1"
+    xmlns:example="http://ns.example.com/epcis"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    schemaVersion="1.2">
+  <EPCISBody>
+    <EventList>
+      <ObjectEvent>
+        <action>OBSERVE</action>
+        <bizStep>
+          urn:epcglobal:cbv:bizstep:arriving
+        </bizStep>
+        <disposition>
+          urn:epcglobal:cbv:bizstep:in_progress
+        </disposition>
+        <readPoint>
+          <id>urn:epc:id:sgln:934858501.002.TERMINAL_ENTRANCE</id>
+        </readPoint>
+        <bizLocation>
+          <id>urn:epc:id:sgln:934858501.002.TERMINAL</id>
+        </bizLocation>
+      </ObjectEvent>
+    </EventList>
+  </EPCISBody>
+</epcis:EPCISDocument>

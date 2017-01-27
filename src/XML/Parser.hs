@@ -6,6 +6,7 @@ import           Data.GS1.DWhat
 import           Data.GS1.EPC
 import           Data.GS1.EPCISTime
 import           Data.GS1.Event
+import           Data.GS1.Location
 import           Data.GS1.Utils
 import           Data.List.Split
 import           Data.Maybe
@@ -69,3 +70,16 @@ parseAction t = case t of
 
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
+
+-- |TODO: due to lack of data, source destination type might not be implemented for now
+-- there could be multiple readpoints and bizlocations
+-- and there could be no srcDest Type involved
+-- the sgln could be irregular
+-- |TODO: there must be some more modification on it
+parseDWhere :: Cursor -> Maybe DWhere
+parseDWhere c = do
+  let rp = c $/ element "readPoint" &/ element "id" &/ content
+  let bl = c $/ element "bizLocation" &/ element "id" &/ content
+  let rps = (mkLocation . T.unpack) <$> rp
+  let bls = (mkLocation . T.unpack) <$> bl
+  Just $ DWhere rps bls [] []
