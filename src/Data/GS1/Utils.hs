@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Data.GS1.Utils (
-  camelCase'
+  camelCase
 , revertCamelCase
 , mkCamelCase
 , mkByName
@@ -34,12 +34,12 @@ revertCamelCase str = let r = insertUs' str in
                             '_':t -> t
                             _     -> r
 
-camelCase' :: String -> String
-camelCase' []     = []
-camelCase' (x:xs) = toUpper x : xs
+camelCase :: String -> String
+camelCase []     = []
+camelCase (x:xs) = toUpper x : xs
 
 mkCamelCaseWord :: [String] -> [String]
-mkCamelCaseWord sl = camelCase' <$> sl
+mkCamelCaseWord sl = camelCase <$> sl
 
 mkCamelCase :: String -> String
 mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord . splitOn "_"

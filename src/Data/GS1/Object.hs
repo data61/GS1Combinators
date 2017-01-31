@@ -74,10 +74,7 @@ subdelims :: String
 subdelims = "!$&'()*+,;="
 
 validSegmentNzChar :: Char -> Bool
-validSegmentNzChar c
-  | c `elem` unreserved || c `elem` subdelims = True
-  | c == '@' || c == ':'                      = True
-  | otherwise                                 = False
+validSegmentNzChar c = c `elem` ['@', ':'] ++ unreserved ++ subdelims 
 
 validateObjectID :: String -> Maybe ObjectID
 validateObjectID s = case s of
