@@ -2,11 +2,12 @@
 
 module Tests.Parser where
 
-import           Control.Monad
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Location
+import           Data.GS1.Object
+import           Data.Maybe
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
@@ -50,4 +51,29 @@ testParseDWhen = do
       let cursor = fromDocument doc2
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       --mapM_ print $ parseDWhere <$> oeCursors
-      parseDWhere <$> oeCursors `shouldBe` [Just DWhere {_readPoint = [Location $ EPC "urn:epc:id:sgln:0614141.07346.1234"], _bizLocation = [], _srcType = [], _destType = []}, Just DWhere {_readPoint = [Location $ EPC "urn:epc:id:sgln:0012345.11111.400"], _bizLocation = [Location $ EPC "urn:epc:id:sgln:0012345.11111.0"], _srcType = [], _destType = []}]
+      parseDWhere <$> oeCursors `shouldBe` [Just DWhere {
+                                                   _readPoint = [Location $ EPC "urn:epc:id:sgln:0614141.07346.1234"]
+                                                 , _bizLocation = []
+                                                 , _srcType = []
+                                                 , _destType = []}
+                                          , Just DWhere {
+                                                   _readPoint = [Location $ EPC "urn:epc:id:sgln:0012345.11111.400"]
+                                                 , _bizLocation = [Location $ EPC "urn:epc:id:sgln:0012345.11111.0"]
+                                                 , _srcType = []
+                                                 , _destType = []}]
+
+
+  describe "parse QuantityElement" $
+    it "parses quantity elements" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "quantityElement" cursor
+      parseQuantity <$> oeCursors `shouldBe` [Just $ QuantityElement "urn:epc:class:lgtin:4012345.012345.998877" 200 "KGM"]
+
+  describe "parse object DWhat" $
+    it "produces a valid DWhat" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "ObjectEvent" cursor
+      (fromJust . parseObjectDWhat) <$> oeCursors `shouldBe` [ObjectDWhat Observe [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] [QuantityElement "urn:epc:class:lgtin:4012345.012345.998877" 200 "KGM"]]
+      
