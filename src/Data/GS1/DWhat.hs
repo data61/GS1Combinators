@@ -20,7 +20,7 @@ data Action = Add
             deriving (Show, Eq, Generic, Read)
 
 mkAction :: String -> Maybe Action
-mkAction s = mkByName . camelCase' $ toLower <$> s
+mkAction s = mkByName . camelCase $ toLower <$> s
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
