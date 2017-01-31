@@ -14,7 +14,7 @@ type Quantity = Integer
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EPCClass [(Quantity, Uom)]
+data QuantityElement = QuantityElement EPCClass Quantity Uom
   deriving (Eq, Show)
 
 -- |Alias of QuantityList

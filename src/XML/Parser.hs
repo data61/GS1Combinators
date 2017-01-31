@@ -7,6 +7,7 @@ import           Data.GS1.EPC
 import           Data.GS1.EPCISTime
 import           Data.GS1.Event
 import           Data.GS1.Location
+import           Data.GS1.Object
 import           Data.GS1.Utils
 import           Data.List.Split
 import           Data.Maybe
@@ -71,6 +72,37 @@ parseAction t = case t of
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
 
+parseQuantity :: Cursor -> Maybe QuantityElement
+parseQuantity c = do
+  let ec = c $/ element "epcClass" &/ content
+  let qt = c $/ element "quantity" &/ content
+  let uom = c $/ element "uom" &/ content
+  case ec of
+    []    -> Nothing
+    (e:_) -> case qt of
+               []    -> Nothing
+               (q:_) -> case uom of
+                          []    -> Nothing
+                          (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+                                   Just $ QuantityElement e' (read q' :: Integer) u'
+
+-- | Recusrively construct ObjectDWhat dimension
+parseObjectDWhat :: Cursor -> Maybe DWhat
+parseObjectDWhat c = do
+  -- find action right below ObjectEvent tag
+  let act = c $/ element "action" &/ content
+  -- find all epcs below epcList tag
+  let epc = c $/ element "epcList" &/ element "epc" &/ content
+  -- find all quantityElement, regardless parent tag
+  let qt  = getCursorsByName "quantityElement" c
+
+  -- parse
+  let pact = parseAction act
+  let pepc = parseEPCList epc
+  let pq = fromJust <$> filter isJust (parseQuantity <$> qt)
+
+  if isNothing pact then Nothing else Just $ ObjectDWhat (fromJust pact) pepc pq
+
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -78,8 +110,10 @@ parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
 -- |TODO: there must be some more modification on it
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rp = c $/ element "readPoint" &/ element "id" &/ content
+  let rp = c $/ element "readPoint"   &/ element "id" &/ content
   let bl = c $/ element "bizLocation" &/ element "id" &/ content
   let rps = (mkLocation . T.unpack) <$> rp
   let bls = (mkLocation . T.unpack) <$> bl
   Just $ DWhere rps bls [] []
+
+
