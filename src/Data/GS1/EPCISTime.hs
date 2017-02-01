@@ -1,6 +1,11 @@
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Data.GS1.EPCISTime where
 
-import Data.Time
+import           Data.Time
+import           GHC.Generics
+import           Control.Lens.TH
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
@@ -9,3 +14,7 @@ import Data.Time
 -}
 -- |The TimeZone will be saved independently
 type EPCISTime = UTCTime
+
+data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
+
+makeClassyPrisms ''EPCISTimeError

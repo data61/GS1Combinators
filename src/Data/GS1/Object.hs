@@ -14,7 +14,7 @@ type Quantity = Integer
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EPCClass [(Quantity, Uom)]
+data QuantityElement = QuantityElement EPCClass Quantity Uom
   deriving (Eq, Show)
 
 -- |Alias of QuantityList
@@ -74,10 +74,7 @@ subdelims :: String
 subdelims = "!$&'()*+,;="
 
 validSegmentNzChar :: Char -> Bool
-validSegmentNzChar c
-  | c `elem` unreserved || c `elem` subdelims = True
-  | c == '@' || c == ':'                      = True
-  | otherwise                                 = False
+validSegmentNzChar c = c `elem` ['@', ':'] ++ unreserved ++ subdelims 
 
 validateObjectID :: String -> Maybe ObjectID
 validateObjectID s = case s of
@@ -92,7 +89,7 @@ validateObjectID s = case s of
                                                                                then (++) <$> Just [x, a, b] <*> oidHelp xxs
                                                                                else Nothing
                                                                _         -> Nothing
-                                                      _   -> if validSegmentNzChar x 
+                                                      _   -> if validSegmentNzChar x
                                                                  then (:) <$> Just x <*> oidHelp xs
                                                                  else Nothing
 
