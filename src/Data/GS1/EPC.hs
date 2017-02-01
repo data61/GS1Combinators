@@ -22,12 +22,15 @@ type EPCClass = String
 -- It could represented by many standards
 -- For example GLN (GTIN13) is one of them
 -- TODO: Currently it has one method to convert the meaningful EPC to a consecutive string
-data EPC = GLN GS1CompanyPrefix LocationRef CheckDigit
-  deriving (Eq)
+data EPC = EPC String
+         | GLN GS1CompanyPrefix LocationRef CheckDigit
+         deriving (Eq)
 
 -- |FIXME DEBUG Show
 instance Show EPC where
-  show _gln@GLN {} = ppGLN _gln
+  show e = case e of
+             EPC s  -> s
+             GLN {} -> ppGLN e
 
 -- |Pretty print GLN
 ppGLN :: EPC -> String
@@ -43,7 +46,7 @@ type LocationRef = String
 type CheckDigit = String
 
 data LocationError
-  = IllegalFormat
+  = IllegalGLNFormat
   | InvalidChecksum
   deriving (Show, Eq, Generic)
 
@@ -76,7 +79,7 @@ validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 gln ::(AsLocationError e, MonadError e m)
      => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m EPC
 gln pref ref cd
-  | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
+  | not (wellFormatGLN pref ref cd) = throwing _IllegalGLNFormat ()
   | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
   | otherwise                       = pure (GLN pref ref cd)
 
@@ -84,6 +87,7 @@ gln pref ref cd
 -- TODO: add more types
 mkEPC :: String -> String -> Maybe EPC
 mkEPC t p = case t of
+              "EPC" -> Just $ EPC p
               "GLN" -> case splitOn "." p of
                          [a, b, c] -> let x = gln a b c :: Either LocationError EPC in
                                           if isRight x then Just (fromRight' x) else Nothing

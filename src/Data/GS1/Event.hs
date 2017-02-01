@@ -5,31 +5,54 @@
 module Data.GS1.Event where
 
 import           Control.Lens
-
+import           Data.Either.Combinators
 import           Data.GS1.DWhat
 import           Data.GS1.DWhy
 import           Data.GS1.EPCISTime
 import           Data.GS1.EventID
 import           Data.GS1.Location
 import           Data.GS1.SourceDest
-import           Data.Time.LocalTime
+import           Data.GS1.Utils
+import           Data.Time
 import           GHC.Generics
 
 
 data DWhen = DWhen
   {
     _eventTime  :: EPCISTime
-  , _recordTime :: EPCISTime
+  , _recordTime :: Maybe EPCISTime -- minOccurs = 0
   , _timeZone   :: TimeZone
   }
   deriving (Show, Eq, Generic)
 
 makeClassy ''DWhen
 
+-- |eventTime, recordTime, the timezone is eventTime's
+mkDWhen :: String -> String -> Maybe DWhen
+mkDWhen a b = let et = parseStr2Time a :: Either EPCISTimeError EPCISTime
+                  rt = parseStr2Time b :: Either EPCISTimeError EPCISTime
+                  tz = parseStr2TimeZone a :: Either EPCISTimeError TimeZone in
+                  case et of
+                    Right et' -> case rt of
+                                   Right rt' -> let diff = diffUTCTime et' rt' in
+                                                    if diff < 0
+                                                    then Just $ DWhen et' (Just rt') (fromRight' tz) else Nothing
+                                   _         -> Just $ DWhen et' Nothing (fromRight' tz)
+                    _         -> Nothing
+
+-- |use it when event time and record time are the same
+mkDWhen' :: String -> Maybe DWhen
+mkDWhen' s = let t = parseStr2Time s :: Either EPCISTimeError EPCISTime
+                 tz = parseStr2TimeZone s :: Either EPCISTimeError TimeZone in
+                 case t of
+                   Right t' -> Just $ DWhen t' (Just t') (fromRight' tz)
+                   _        -> Nothing
+
+
 data DWhere = DWhere
   {
-    _readPoint   :: Maybe ReadPointLocation
-  , _bizLocation :: Maybe BizLocation
+    _readPoint   :: [ReadPointLocation]
+  , _bizLocation :: [BizLocation]
   , _srcType     :: [SourceDestType]
   , _destType    :: [SourceDestType]
   }
@@ -42,7 +65,10 @@ data EventType = ObjectEventT
                | QuantityEventT
                | TransactionEventT
                | TransformationEventT
-               deriving (Show, Eq, Generic)
+               deriving (Show, Eq, Generic, Read)
+
+mkEventType :: String -> Maybe EventType
+mkEventType = mkByName
 
 data Eventish a = Eventish
   {
