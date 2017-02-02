@@ -2,7 +2,10 @@
 
 module Tests.Parser where
 
+import           Data.GS1.BizStep
+import           Data.GS1.Disposition
 import           Data.GS1.DWhat
+import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Location
@@ -13,8 +16,8 @@ import           Text.XML
 import           Text.XML.Cursor
 import           XML.Parser
 
-testParseDWhen :: Spec
-testParseDWhen = do
+testParser :: Spec
+testParser = do
   describe "parse XML to obtain DWhen" $ do
     it "creates DWhen from valid XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -45,6 +48,33 @@ testParseDWhen = do
       let epcs = cursor $// element "epc" &/ content
       show <$> parseEPCList epcs `shouldBe` ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
 
+  describe "parse XML to get BizStep" $ do
+    it "find all the BizStep in multiple events XML" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+      let cursor = fromDocument doc
+      let bizStepText = cursor $// element "ObjectEvent" &/ element "bizStep" &/ content
+      parseBizStep bizStepText `shouldBe` Just Shipping
+
+    it "find the first BizStep in single Event XML" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc2
+      let bizStepText = cursor $// element "ObjectEvent" &/ element "bizStep" &/ content
+      parseBizStep bizStepText `shouldBe` Just Shipping
+
+  describe "parse XML to get Disposition" $
+    it "find all the Disposition in single XML" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc2
+      let dispText = cursor $// element "ObjectEvent" &/ element "disposition" &/ content
+      parseDisposition dispText `shouldBe` Just InTransit
+
+  describe "parse DWhy" $
+    it "find the bizStep or disposition and creates a DWhy" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc2
+      let oeCursors = cursor $// element "ObjectEvent"
+      parseDWhy <$> oeCursors `shouldBe` [Just $ DWhy (Just Shipping) (Just InTransit)]
+
   describe "parse XML to obtain DWhere" $
     it "finds all the dwhere" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -62,7 +92,6 @@ testParseDWhen = do
                                                  , _srcType = []
                                                  , _destType = []}]
 
-
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -75,5 +104,13 @@ testParseDWhen = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      (fromJust . parseObjectDWhat) <$> oeCursors `shouldBe` [ObjectDWhat Observe [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] [QuantityElement "urn:epc:class:lgtin:4012345.012345.998877" 200 "KGM"]]
-      
+      parseObjectDWhat <$> oeCursors `shouldBe` [Just $ ObjectDWhat Observe [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] [QuantityElement "urn:epc:class:lgtin:4012345.012345.998877" 200 "KGM"]]
+
+  describe "parse object event" $
+    it "produces a valid object event" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc
+      let parsedEvents = parseObjectEvent cursor
+      length parsedEvents `shouldBe` 1
+      isJust (head parsedEvents) `shouldBe` True
+

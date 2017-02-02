@@ -2,18 +2,25 @@
 
 module XML.Parser where
 
+import           Control.Lens         hiding (element)
+import           Data.GS1.BizStep
+import           Data.GS1.Disposition
 import           Data.GS1.DWhat
+import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.EPCISTime
 import           Data.GS1.Event
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.Utils
+import           Data.List
 import           Data.List.Split
 import           Data.Maybe
-import qualified Data.Text           as T
+import qualified Data.Text            as T
 import           Data.Time.LocalTime
-import           Data.XML.Types
+import           Data.UUID
+import           Data.UUID.V1
+import           Data.XML.Types       hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
 
@@ -72,6 +79,24 @@ parseAction t = case t of
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
 
+parseBizStep :: [T.Text] -> Maybe BizStep
+parseBizStep ts = case ts of
+                    (x:_) -> mkBizStep . T.unpack $ x
+                    _     -> Nothing
+
+parseDisposition :: [T.Text] -> Maybe Disposition
+parseDisposition ts = case ts of
+                        (x:_) -> mkDisposition . T.unpack $ x
+                        _     -> Nothing
+
+parseDWhy :: Cursor -> Maybe DWhy
+parseDWhy c = do
+  let biz = c $/ element "bizStep" &/ content
+  let disp = c $/ element "disposition" &/ content
+  let pbiz = parseBizStep biz
+  let pdisp = parseDisposition disp
+  mkDWhy pbiz pdisp
+
 parseQuantity :: Cursor -> Maybe QuantityElement
 parseQuantity c = do
   let ec = c $/ element "epcClass" &/ content
@@ -96,12 +121,16 @@ parseObjectDWhat c = do
   -- find all quantityElement, regardless parent tag
   let qt  = getCursorsByName "quantityElement" c
 
-  -- parse
+  -- parsed action
   let pact = parseAction act
+  -- parsed epc
   let pepc = parseEPCList epc
+  -- parsed quantity
   let pq = fromJust <$> filter isJust (parseQuantity <$> qt)
 
-  if isNothing pact then Nothing else Just $ ObjectDWhat (fromJust pact) pepc pq
+  case pact of
+    Nothing -> Nothing
+    Just p  -> Just $ ObjectDWhat p pepc pq
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
@@ -116,4 +145,28 @@ parseDWhere c = do
   let bls = (mkLocation . T.unpack) <$> bl
   Just $ DWhere rps bls [] []
 
+parseEventList' :: EventType -> [(Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
+parseEventList' et l = case l of
+                         []     -> []
+                         (x:xs) -> let w1 = x^._1
+                                       w2 = x^._2
+                                       w3 = x^._3
+                                       w4 = x^._4 in
+                                       if isNothing w1 ||
+                                          isNothing w2 ||
+                                          isNothing w3 ||
+                                          isNothing w4 then
+                                          Nothing : parseEventList' et xs      else
+                                          mkEvent et (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
 
+-- | Find all object events
+parseObjectEvent :: Cursor -> [Maybe Event]
+parseObjectEvent c = do
+  let oeCursors = c $// element "ObjectEvent"
+  let dwhat = parseObjectDWhat <$> oeCursors
+  let dwhen = parseDWhen <$> oeCursors
+  let dwhy = parseDWhy <$> oeCursors
+  let dwhere = parseDWhere <$> oeCursors
+  let zipd = zip4 dwhat dwhen dwhy dwhere
+  --fromJust <$> filter isJust (parseEventList' ObjectEventT zipd)
+  parseEventList' ObjectEventT zipd

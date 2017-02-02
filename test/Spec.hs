@@ -25,4 +25,4 @@ main = do
 
   hspec testObjectID
 
-  hspec testParseDWhen
+  hspec testParser

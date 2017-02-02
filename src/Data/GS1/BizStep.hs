@@ -53,14 +53,14 @@ makeClassy ''BizStep
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
-mkBizStep :: String -> Maybe BizStep
-mkBizStep = mkByName
+mkBizStep' :: String -> Maybe BizStep
+mkBizStep' = mkByName
 
 instance URI BizStep where
   uriPrefix _     = "urn:epcglobal:cbv"
   uriQuantifier _ = "bizstep"
   uriPayload      = ppBizStep
 
-parseBizStep :: String -> Maybe BizStep
-parseBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
+mkBizStep :: String -> Maybe BizStep
+mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
                       parseURI s uri :: Maybe BizStep
