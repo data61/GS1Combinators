@@ -9,8 +9,8 @@
   <EPCISBody>
     <EventList>
       <ObjectEvent>
-        <eventTime>2013-06-08T14:58:56.591+10:00</eventTime>
-        <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+        <eventTime>2005-04-03T20:33:31.116-06:00</eventTime>
+        <eventTimeZoneOffset>-06:00</eventTimeZoneOffset>
         <epcList>
           <epc>urn:epc:id:sgtin:0614141.107346.2017</epc>
           <epc>urn:epc:id:sgtin:0614141.107346.2018</epc>

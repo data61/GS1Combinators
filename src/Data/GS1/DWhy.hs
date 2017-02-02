@@ -13,11 +13,7 @@ import           Data.GS1.Disposition
 import           Data.Maybe
 import           GHC.Generics
 
-data DWhy = DWhy
-  {
-    bizStep     :: Maybe BizStep
-  , disposition :: Maybe Disposition
-  }
+data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
 
 instance HasBizStep DWhy where
@@ -30,11 +26,16 @@ instance HasBizStep DWhy where
 -- Nothing is the cause
 makeClassy ''DWhy
 
-mkWhy :: (AsDispositionError e, MonadError e m)
+-- TODO: Remove the following function with dispositionValidFor
+-- It does not work even with the sample
+mkDWhy' :: (AsDispositionError e, MonadError e m)
      => Maybe BizStep -> Maybe Disposition -> m DWhy
-mkWhy step disp
-  | isNothing step || isNothing disp = pure (DWhy step disp)  -- TODO: verify when encounter Nothing
+mkDWhy' step disp
+  | isNothing step || isNothing disp = pure (DWhy step disp)
   | otherwise                        = if dispositionValidFor (fromJust step) (fromJust disp)
                                           then pure (DWhy step disp)
                                           else throwing _InvalidDisposition ()
 
+mkDWhy :: Maybe BizStep -> Maybe Disposition -> Maybe DWhy
+mkDWhy step disp = if isNothing step || isNothing disp then Nothing
+                     else Just $ DWhy step disp

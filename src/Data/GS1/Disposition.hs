@@ -49,11 +49,11 @@ instance URI Disposition where
   uriQuantifier _ = "disp"
   uriPayload      = ppDisposition
 
-mkDisposition :: String -> Maybe Disposition
-mkDisposition = mkByName
+mkDisposition' :: String -> Maybe Disposition
+mkDisposition' = mkByName
 
-parseDisposition :: String -> Maybe Disposition
-parseDisposition s = let uri = "urn:epcglobal:cbv:disp" in
+mkDisposition :: String -> Maybe Disposition
+mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
                          parseURI s uri :: Maybe Disposition
 
 -- FIXME: it could be just an example page 24/64 CBV
