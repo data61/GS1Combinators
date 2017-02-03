@@ -10,6 +10,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.EPCISTime
 import           Data.GS1.Event
+import           Data.GS1.EventID
 import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.Utils
@@ -132,6 +133,7 @@ parseObjectDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p pepc pq
 
+
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -145,28 +147,60 @@ parseDWhere c = do
   let bls = (mkLocation . T.unpack) <$> bl
   Just $ DWhere rps bls [] []
 
-parseEventList' :: EventType -> [(Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
+parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' et l = case l of
                          []     -> []
-                         (x:xs) -> let w1 = x^._1
-                                       w2 = x^._2
-                                       w3 = x^._3
-                                       w4 = x^._4 in
-                                       if isNothing w1 ||
+                         (x:xs) -> let i  = x^._1
+                                       w1 = x^._2
+                                       w2 = x^._3
+                                       w3 = x^._4
+                                       w4 = x^._5 in
+                                       if isNothing i  ||
+                                          isNothing w1 ||
                                           isNothing w2 ||
                                           isNothing w3 ||
                                           isNothing w4 then
                                           Nothing : parseEventList' et xs      else
-                                          mkEvent et (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
+                                          mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
+
+parseEventID :: Cursor -> Maybe EventID
+parseEventID c = do
+  let eid = c $/ element "eventID" &/ content
+  case eid of
+    []    -> Nothing
+    (x:_) -> let uuid = fromText x in
+                 case uuid of
+                   Nothing -> Nothing
+                   Just u  -> Just $ EventID u
 
 -- | Find all object events
 parseObjectEvent :: Cursor -> [Maybe Event]
 parseObjectEvent c = do
   let oeCursors = c $// element "ObjectEvent"
+  let eventID = parseEventID <$> oeCursors
   let dwhat = parseObjectDWhat <$> oeCursors
   let dwhen = parseDWhen <$> oeCursors
   let dwhy = parseDWhy <$> oeCursors
   let dwhere = parseDWhere <$> oeCursors
-  let zipd = zip4 dwhat dwhen dwhy dwhere
+  let zipd = zip5 eventID dwhat dwhen dwhy dwhere
   --fromJust <$> filter isJust (parseEventList' ObjectEventT zipd)
   parseEventList' ObjectEventT zipd
+
+parseEventByType :: Cursor -> EventType -> [Maybe Event]
+parseEventByType c et = do
+  let tagS = case et of
+               ObjectEventT         -> "ObjectEvent"
+               AggregationEventT    -> "AggregationEvent"
+               QuantityEventT       -> "QuantityEvent"
+               TransactionEventT    -> "TransactionEvent"
+               TransformationEventT -> "TransformationEvent"
+  let eCursors = c $// element tagS
+  -- TODO
+  let eventID = parseEventID <$> eCursors
+  let dwhat = case et of
+                ObjectEventT        -> parseObjectDWhat <$> eCursors
+  let dwhen = parseDWhen <$> eCursors
+  let dwhy = parseDWhy <$> eCursors
+  let dwhere = parseDWhere <$> eCursors
+  let zipd = zip5 eventID dwhat dwhen dwhy dwhere
+  parseEventList' et zipd

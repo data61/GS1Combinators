@@ -9,6 +9,7 @@
   <EPCISBody>
     <EventList>
       <ObjectEvent>
+        <eventID>b1080b06-e9cc-11e6-bf0e-fe55135034f3</eventID>
         <eventTime>2005-04-03T20:33:31.116-06:00</eventTime>
         <eventTimeZoneOffset>-06:00</eventTimeZoneOffset>
         <epcList>
