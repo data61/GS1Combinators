@@ -1,5 +1,6 @@
 module Main where
 
+import           Tests.DWhen
 import           Tests.Event
 import           Tests.Location
 import           Tests.Object
