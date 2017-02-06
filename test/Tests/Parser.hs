@@ -10,11 +10,11 @@ import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Location
 import           Data.GS1.Object
+import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
-import           XML.Parser
 
 testParser :: Spec
 testParser = do
