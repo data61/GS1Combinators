@@ -5,13 +5,15 @@ module Data.GS1.DWhat where
 
 import           Control.Lens
 import           Data.Char
+import           GHC.Generics
+
 import           Data.GS1.BizTransaction
 import           Data.GS1.EPC
 import           Data.GS1.EventID
 import           Data.GS1.Object
 import           Data.GS1.Utils
-import           GHC.Generics
 
+-- | TransformationID
 type TransformationID = String
 
 data Action = Add

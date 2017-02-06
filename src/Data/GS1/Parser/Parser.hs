@@ -13,8 +13,6 @@ import           Data.XML.Types       hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
 
-import           Data.GS1.BizStep
-import           Data.GS1.Disposition
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
