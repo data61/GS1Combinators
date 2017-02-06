@@ -2,19 +2,18 @@
 
 module Tests.Parser where
 
-import           Data.GS1.BizStep
-import           Data.GS1.Disposition
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhy
-import           Data.GS1.DWhere
-import           Data.GS1.EPC
-import           Data.GS1.Object
-import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
+
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EPC
+import           Data.GS1.Object
+import           Data.GS1.Parser.Parser
 
 testParser :: Spec
 testParser = do

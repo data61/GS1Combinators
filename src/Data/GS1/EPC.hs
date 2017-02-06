@@ -9,7 +9,7 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Data.Char
 import           Data.Either
-import           Data.Either.Combinators  (fromLeft', fromRight')
+import           Data.Either.Combinators  (fromRight')
 import           Data.List
 import           Data.List.Split
 import           GHC.Generics
@@ -26,15 +26,15 @@ data EPC = EPC String
          | GLN GS1CompanyPrefix LocationRef CheckDigit
          deriving (Eq)
 
--- |FIXME DEBUG Show
 instance Show EPC where
-  show e = case e of
-             EPC s  -> s
-             GLN {} -> ppGLN e
+  show = ppEPC
 
--- |Pretty print GLN
-ppGLN :: EPC -> String
-ppGLN (GLN pref ref cd) = intercalate "." [pref, ref, cd]
+-- |Pretty print EPC
+ppEPC :: EPC -> String
+ppEPC epc = case epc of
+              GLN pref ref cd -> intercalate "." [pref, ref, cd]
+              EPC s           -> s
+
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -93,4 +93,3 @@ mkEPC t p = case t of
                                           if isRight x then Just (fromRight' x) else Nothing
                          _         -> Nothing
               _     -> Nothing
-

@@ -4,13 +4,13 @@
 
 module Data.GS1.DWhere where
 
-import           Data.GS1.EPC
-import           Data.GS1.URI
-import           Data.GS1.Utils
-
 import           Control.Lens
 import           GHC.Generics
 import           Text.Printf
+
+import           Data.GS1.EPC
+import           Data.GS1.URI
+import           Data.GS1.Utils
 
 -- |Location takes a GLN as its argument
 newtype Location = Location EPC
@@ -46,9 +46,9 @@ instance Show GeoLocation where
   show = ppGeoLocation
 
 instance URI Location where
-  uriPrefix _                = "urn:epc:id"
-  uriQuantifier _            = "sgln"
-  uriPayload (Location _gln) = ppGLN _gln
+  uriPrefix _             = "urn:epc:id"
+  uriQuantifier _         = "sgln"
+  uriPayload (Location g) = ppEPC g
 
 -- EPCIS 1.2 section 7.3.5.4 line 1150
 -- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]

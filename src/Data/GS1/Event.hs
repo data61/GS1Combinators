@@ -8,8 +8,8 @@ import           GHC.Generics
 
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
-import           Data.GS1.DWhy
 import           Data.GS1.DWhere
+import           Data.GS1.DWhy
 import           Data.GS1.EventID
 import           Data.GS1.Utils
 

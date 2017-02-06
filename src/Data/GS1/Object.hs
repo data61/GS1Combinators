@@ -105,8 +105,6 @@ data ObjectType = PhysicalT
 data Object = Object IDLevel ObjectType ObjectID
   deriving (Eq, Show)
 
--- FIXME The Object should be redesigned to aviod confusion
-
 -- TODO ObjectClassID
-
+-- class level identifier
 type ObjectClassID = String
