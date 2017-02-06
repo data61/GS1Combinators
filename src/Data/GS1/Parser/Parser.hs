@@ -6,9 +6,9 @@ import           Control.Lens         hiding (element)
 import           Data.GS1.BizStep
 import           Data.GS1.Disposition
 import           Data.GS1.DWhat
+import           Data.GS1.DWhen
 import           Data.GS1.DWhy
 import           Data.GS1.EPC
-import           Data.GS1.EPCISTime
 import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Location
