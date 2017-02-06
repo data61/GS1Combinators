@@ -17,6 +17,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.GS1
                      , Data.GS1.BizTransaction
+                     , Data.GS1.DWhat
+                     , Data.GS1.DWhy
+                     , Data.GS1.DWhen
+                     , Data.GS1.DWhere
                      , Data.GS1.EPC
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
@@ -24,10 +28,6 @@ library
                      , Data.GS1.Object
                      , Data.GS1.URI
                      , Data.GS1.Utils
-                     , Data.GS1.DWhat
-                     , Data.GS1.DWhy
-                     , Data.GS1.DWhen
-                     , Data.GS1.DWhere
                      , Data.GS1.Parser.Parser
   build-depends:       base >= 4.7 && < 5
                      , bytestring
@@ -59,6 +59,10 @@ test-suite GS1Combinators-test
   hs-source-dirs:      src test
   main-is:             Spec.hs
   other-modules:       Data.GS1.BizTransaction
+                     , Data.GS1.DWhat
+                     , Data.GS1.DWhy
+                     , Data.GS1.DWhen
+                     , Data.GS1.DWhere
                      , Data.GS1.EPC
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
@@ -66,14 +70,11 @@ test-suite GS1Combinators-test
                      , Data.GS1.Object
                      , Data.GS1.URI
                      , Data.GS1.Utils
-                     , Data.GS1.DWhat
-                     , Data.GS1.DWhy
-                     , Data.GS1.DWhen
-                     , Data.GS1.DWhere
                      , Data.GS1.Parser.Parser
+                     , Tests.DWhat
                      , Tests.DWhen
                      , Tests.DWhere
-                     , Tests.Event
+                     , Tests.DWhy
                      , Tests.Object
                      , Tests.Utils
                      , Tests.Parser
