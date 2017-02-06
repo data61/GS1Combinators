@@ -1,17 +1,13 @@
 module Tests.Event where
 
-import           Data.Either.Combinators
+import           Test.Hspec
+
 import           Data.GS1.BizStep
 import           Data.GS1.BizTransaction
 import           Data.GS1.Disposition
 import           Data.GS1.DWhat
-import           Data.GS1.DWhen
 import           Data.GS1.EPC
-import           Data.GS1.Event
 import           Data.GS1.URI
-import           Data.GS1.Utils
-import           Data.Time.LocalTime
-import           Test.Hspec
 
 testBizStep :: Spec
 testBizStep = do
@@ -66,5 +62,3 @@ testMkDWhat = do
   describe "create from empty epcs" $
     it "creates DWhat from empty epc list" $
       ppDWhat (ObjectDWhat Add [][]) `shouldBe` "OBJECT WHAT\nAdd\n[]\n[]"
-
-  -- TODO test create other DWhat too

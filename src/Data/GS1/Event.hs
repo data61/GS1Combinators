@@ -1,31 +1,17 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.Event where
 
 import           Control.Lens
-import           Data.Either.Combinators
+import           GHC.Generics
+
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhy
+import           Data.GS1.DWhere
 import           Data.GS1.EventID
-import           Data.GS1.Location
-import           Data.GS1.SourceDest
 import           Data.GS1.Utils
-import           Data.Time
-import           GHC.Generics
-
-data DWhere = DWhere
-  {
-    _readPoint   :: [ReadPointLocation]
-  , _bizLocation :: [BizLocation]
-  , _srcType     :: [SourceDestType]
-  , _destType    :: [SourceDestType]
-  }
-  deriving (Show, Eq, Generic)
-
-makeClassy ''DWhere
 
 data EventType = ObjectEventT
                | AggregationEventT

@@ -23,14 +23,13 @@ library
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
                      , Data.GS1.EventID
-                     , Data.GS1.Location
                      , Data.GS1.Object
-                     , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
                      , Data.GS1.DWhat
                      , Data.GS1.DWhy
                      , Data.GS1.DWhen
+                     , Data.GS1.DWhere
                      , Data.GS1.Parser.Parser
   build-depends:       base >= 4.7 && < 5
                      , bytestring
@@ -68,15 +67,16 @@ test-suite GS1Combinators-test
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
                      , Data.GS1.EventID
-                     , Data.GS1.Location
                      , Data.GS1.Object
-                     , Data.GS1.SourceDest
                      , Data.GS1.URI
                      , Data.GS1.Utils
                      , Data.GS1.DWhat
                      , Data.GS1.DWhy
                      , Data.GS1.DWhen
-                     , Tests.Location
+                     , Data.GS1.DWhere
+                     , Data.GS1.Parser.Parser
+                     , Tests.DWhen
+                     , Tests.DWhere
                      , Tests.Event
                      , Tests.Object
                      , Tests.Utils

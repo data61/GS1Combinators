@@ -1,8 +1,8 @@
 module Main where
 
 import           Tests.DWhen
+import           Tests.DWhere
 import           Tests.Event
-import           Tests.Location
 import           Tests.Object
 import           Tests.Parser
 import           Tests.Utils
@@ -18,11 +18,12 @@ main = do
   hspec testDisposition
   hspec testBizTransaction
   hspec testMkDWhat
-  hspec testMkDWhen
 
   hspec testRevertCamelCase
   hspec testMkCamelCase
+
   hspec testParseTime
+  hspec testMkDWhen
 
   hspec testObjectID
 

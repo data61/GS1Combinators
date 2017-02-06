@@ -3,27 +3,26 @@
 module Data.GS1.Parser.Parser where
 
 import           Control.Lens         hiding (element)
-import           Data.GS1.BizStep
-import           Data.GS1.Disposition
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhy
-import           Data.GS1.EPC
-import           Data.GS1.Event
-import           Data.GS1.EventID
-import           Data.GS1.Location
-import           Data.GS1.Object
-import           Data.GS1.Utils
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
 import qualified Data.Text            as T
 import           Data.Time.LocalTime
 import           Data.UUID
-import           Data.UUID.V1
 import           Data.XML.Types       hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
+
+import           Data.GS1.BizStep
+import           Data.GS1.Disposition
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EPC
+import           Data.GS1.Event
+import           Data.GS1.EventID
+import           Data.GS1.Object
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -72,24 +71,29 @@ parseDWhen c = do
     Just et' -> Just (DWhen et' rt (fromJust tz))
     _        -> Nothing
 
+-- |Parse Action by Name
 parseAction :: [T.Text] -> Maybe Action
 parseAction t = case t of
                   (x:_) -> mkAction . T.unpack $ x
                   _     -> Nothing
 
+-- |Parse a List of EPCs
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
 
+-- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Maybe BizStep
 parseBizStep ts = case ts of
                     (x:_) -> mkBizStep . T.unpack $ x
                     _     -> Nothing
 
+-- |Parse Disposition by Name
 parseDisposition :: [T.Text] -> Maybe Disposition
 parseDisposition ts = case ts of
                         (x:_) -> mkDisposition . T.unpack $ x
                         _     -> Nothing
 
+-- |Parse DWhy
 parseDWhy :: Cursor -> Maybe DWhy
 parseDWhy c = do
   let biz = c $/ element "bizStep" &/ content
@@ -98,6 +102,7 @@ parseDWhy c = do
   let pdisp = parseDisposition disp
   mkDWhy pbiz pdisp
 
+-- |Parse QuantityElement
 parseQuantity :: Cursor -> Maybe QuantityElement
 parseQuantity c = do
   let ec = c $/ element "epcClass" &/ content
@@ -177,15 +182,16 @@ parseEventID c = do
 parseObjectEvent :: Cursor -> [Maybe Event]
 parseObjectEvent c = do
   let oeCursors = c $// element "ObjectEvent"
-  let eventID = parseEventID <$> oeCursors
+  let eid = parseEventID <$> oeCursors
   let dwhat = parseObjectDWhat <$> oeCursors
   let dwhen = parseDWhen <$> oeCursors
   let dwhy = parseDWhy <$> oeCursors
   let dwhere = parseDWhere <$> oeCursors
-  let zipd = zip5 eventID dwhat dwhen dwhy dwhere
+  let zipd = zip5 eid dwhat dwhen dwhy dwhere
   --fromJust <$> filter isJust (parseEventList' ObjectEventT zipd)
   parseEventList' ObjectEventT zipd
 
+-- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Maybe Event]
 parseEventByType c et = do
   let tagS = case et of
@@ -195,12 +201,13 @@ parseEventByType c et = do
                TransactionEventT    -> "TransactionEvent"
                TransformationEventT -> "TransformationEvent"
   let eCursors = c $// element tagS
-  -- TODO
-  let eventID = parseEventID <$> eCursors
+  let eid = parseEventID <$> eCursors
+  -- TODO Finish the implementation of the other event types
   let dwhat = case et of
-                ObjectEventT        -> parseObjectDWhat <$> eCursors
+                ObjectEventT -> parseObjectDWhat <$> eCursors
+                _            -> const Nothing    <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
   let dwhere = parseDWhere <$> eCursors
-  let zipd = zip5 eventID dwhat dwhen dwhy dwhere
+  let zipd = zip5 eid dwhat dwhen dwhy dwhere
   parseEventList' et zipd
