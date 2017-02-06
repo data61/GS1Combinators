@@ -9,7 +9,7 @@ import           Test.Hspec
 
 import           Data.GS1.DWhen
 
-type EitherET = Either EPCISTimeError EPCISTime
+type EitherET  = Either EPCISTimeError EPCISTime
 type EitherETZ = Either EPCISTimeError TimeZone
 
 testParseTime :: Spec

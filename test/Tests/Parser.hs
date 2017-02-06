@@ -7,9 +7,8 @@ import           Data.GS1.Disposition
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhy
+import           Data.GS1.DWhere
 import           Data.GS1.EPC
-import           Data.GS1.Event
-import           Data.GS1.Location
 import           Data.GS1.Object
 import           Data.GS1.Parser.Parser
 import           Data.Maybe
