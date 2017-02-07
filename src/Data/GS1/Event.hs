@@ -76,4 +76,3 @@ mkEvent t i w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
                                 (TransactionEventT, TransactionDWhat{})       -> e
                                 (TransformationEventT, TransformationDWhat{}) -> e
                                 _                                             -> Nothing
-

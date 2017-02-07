@@ -16,6 +16,9 @@ import           Data.GS1.Utils
 -- | TransformationID
 type TransformationID = String
 
+-- | ParentID
+type ParentID = String
+
 data Action = Add
             | Observe
             | Delete
@@ -28,8 +31,8 @@ mkAction s = mkByName . camelCase $ toLower <$> s
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
            ObjectDWhat Action [EPC] [QuantityElement]
-           -- AggregationDWhat parentID childEPC childQuantityList
-           | AggregationDWhat (Maybe EventID) [EPC] [QuantityElement]
+           -- AggregationDWhat action parentID childEPC childQuantityList
+           | AggregationDWhat Action (Maybe ParentID) [EPC] [QuantityElement]
            -- QuantityDWhat epcClass quantity
            | QuantityDWhat EPCClass Integer
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList quantityList
@@ -40,10 +43,7 @@ data DWhat = -- ObjectDWhat action epcList quantityList
 
 ppDWhat :: DWhat -> String
 ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs
-ppDWhat (AggregationDWhat eid epcs qs) = "AGGREGATION WHAT\n" ++ x ++ "\n" ++ show epcs ++ "\n" ++ show qs
-  where x = case eid of
-              Just d  -> show d
-              Nothing -> ""
+ppDWhat (AggregationDWhat a pid epcs qs) = "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n" ++ show qs
 ppDWhat (QuantityDWhat c i) = "QUANTITY WHAT\n" ++ show c ++ "\n" ++ show i
 ppDWhat (TransactionDWhat a s bizT epcs qs) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n" ++ show qs
 ppDWhat (TransformationDWhat tid iepcs iqs oepcs oqs) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show iepcs ++ "\n" ++ show iqs ++ "\n" ++ show oepcs ++ "\n" ++ show oqs

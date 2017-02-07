@@ -69,16 +69,6 @@ parseDWhen c = do
     Just et' -> Just (DWhen et' rt (fromJust tz))
     _        -> Nothing
 
--- |Parse Action by Name
-parseAction :: [T.Text] -> Maybe Action
-parseAction t = case t of
-                  (x:_) -> mkAction . T.unpack $ x
-                  _     -> Nothing
-
--- |Parse a List of EPCs
-parseEPCList :: [T.Text] -> [EPC]
-parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
-
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Maybe BizStep
 parseBizStep ts = case ts of
@@ -100,6 +90,19 @@ parseDWhy c = do
   let pdisp = parseDisposition disp
   mkDWhy pbiz pdisp
 
+-- |TODO: due to lack of data, source destination type might not be implemented for now
+-- there could be multiple readpoints and bizlocations
+-- and there could be no srcDest Type involved
+-- the sgln could be irregular
+-- |TODO: there must be some more modification on it
+parseDWhere :: Cursor -> Maybe DWhere
+parseDWhere c = do
+  let rp = c $/ element "readPoint"   &/ element "id" &/ content
+  let bl = c $/ element "bizLocation" &/ element "id" &/ content
+  let rps = (mkLocation . T.unpack) <$> rp
+  let bls = (mkLocation . T.unpack) <$> bl
+  Just $ DWhere rps bls [] []
+
 -- |Parse QuantityElement
 parseQuantity :: Cursor -> Maybe QuantityElement
 parseQuantity c = do
@@ -111,11 +114,34 @@ parseQuantity c = do
     (e:_) -> case qt of
                []    -> Nothing
                (q:_) -> case uom of
-                          []    -> Nothing
+                          []    -> let [e', q'] = T.unpack <$> [e, q] in
+                                       Just $ QuantityElement e' (read q' :: Double) Nothing
                           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-                                   Just $ QuantityElement e' (read q' :: Integer) u'
+                                   Just $ QuantityElement e' (read q' :: Double) (Just u')
 
--- | Recusrively construct ObjectDWhat dimension
+-- |Parse Action by Name
+parseAction :: [T.Text] -> Maybe Action
+parseAction t = case t of
+                  (x:_) -> mkAction . T.unpack $ x
+                  _     -> Nothing
+
+-- |Parse a List of EPCs
+-- name="epcList" type="epcis:EPCListType"
+parseEPCList :: [T.Text] -> [EPC]
+parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
+
+-- |Alias to parseEPCList 
+-- name="childEPCs" type="epcis:EPCListType"
+parseChildEPCList :: [T.Text] -> [EPC]
+parseChildEPCList = parseEPCList
+
+-- |parse group of text to obtain ParentID
+parseParentID :: [T.Text] -> Maybe ParentID
+parseParentID t = case t of
+                    (x:_) -> Just $ T.unpack x
+                    _     -> Nothing
+
+-- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
@@ -136,19 +162,22 @@ parseObjectDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p pepc pq
 
+-- |parse and construct AggregationDWhat dimension
+parseAggregationDWhat :: Cursor -> Maybe DWhat
+parseAggregationDWhat c = do
+  let pid = c $/ element "parentID" &/ content
+  let childEPCs = c $/ element "childEPCs" &/ element "epc" &/ content
+  let act = c $/ element "action" &/ content
+  let qt  = getCursorsByName "quantityElement" c
 
--- |TODO: due to lack of data, source destination type might not be implemented for now
--- there could be multiple readpoints and bizlocations
--- and there could be no srcDest Type involved
--- the sgln could be irregular
--- |TODO: there must be some more modification on it
-parseDWhere :: Cursor -> Maybe DWhere
-parseDWhere c = do
-  let rp = c $/ element "readPoint"   &/ element "id" &/ content
-  let bl = c $/ element "bizLocation" &/ element "id" &/ content
-  let rps = (mkLocation . T.unpack) <$> rp
-  let bls = (mkLocation . T.unpack) <$> bl
-  Just $ DWhere rps bls [] []
+  let ppid = parseParentID pid
+  let pchildEPCs = parseChildEPCList childEPCs
+  let pact = parseAction act
+  let pq = fromJust <$> filter isJust (parseQuantity <$> qt)
+
+  case pact of
+    Nothing -> Nothing
+    Just p  -> Just $ AggregationDWhat p ppid pchildEPCs pq
 
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' et l = case l of
@@ -176,19 +205,6 @@ parseEventID c = do
                    Nothing -> Nothing
                    Just u  -> Just $ EventID u
 
--- | Find all object events
-parseObjectEvent :: Cursor -> [Maybe Event]
-parseObjectEvent c = do
-  let oeCursors = c $// element "ObjectEvent"
-  let eid = parseEventID <$> oeCursors
-  let dwhat = parseObjectDWhat <$> oeCursors
-  let dwhen = parseDWhen <$> oeCursors
-  let dwhy = parseDWhy <$> oeCursors
-  let dwhere = parseDWhere <$> oeCursors
-  let zipd = zip5 eid dwhat dwhen dwhy dwhere
-  --fromJust <$> filter isJust (parseEventList' ObjectEventT zipd)
-  parseEventList' ObjectEventT zipd
-
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Maybe Event]
 parseEventByType c et = do
@@ -202,8 +218,9 @@ parseEventByType c et = do
   let eid = parseEventID <$> eCursors
   -- TODO Finish the implementation of the other event types
   let dwhat = case et of
-                ObjectEventT -> parseObjectDWhat <$> eCursors
-                _            -> const Nothing    <$> eCursors
+                ObjectEventT      -> parseObjectDWhat      <$> eCursors
+                AggregationEventT -> parseAggregationDWhat <$> eCursors
+                _                 -> const Nothing         <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
   let dwhere = parseDWhere <$> eCursors
