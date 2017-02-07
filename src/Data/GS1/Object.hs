@@ -9,12 +9,12 @@ import           Network.Parser.Rfc3986     (segmentNz)
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
-type Quantity = Integer
+type Quantity = Double
 
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EPCClass Quantity Uom
+data QuantityElement = QuantityElement EPCClass Quantity (Maybe Uom)
   deriving (Eq, Show)
 
 -- |Alias of QuantityList
