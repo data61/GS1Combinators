@@ -5,7 +5,6 @@ module Tests.DWhat where
 import           Data.Maybe
 import           Test.Hspec
 
-import           Data.GS1.BizTransaction
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
 import           Data.GS1.Object
