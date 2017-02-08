@@ -115,9 +115,9 @@ parseQuantity c = do
                []    -> Nothing
                (q:_) -> case uom of
                           []    -> let [e', q'] = T.unpack <$> [e, q] in
-                                       Just $ QuantityElement e' (read q' :: Double) Nothing
+                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
                           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-                                   Just $ QuantityElement e' (read q' :: Double) (Just u')
+                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 -- |Parse Action by Name
 parseAction :: [T.Text] -> Maybe Action
@@ -129,6 +129,17 @@ parseAction t = case t of
 -- name="epcList" type="epcis:EPCListType"
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
+
+-- |Parse a single EPCClass
+parseEPCClass :: [T.Text] -> Maybe EPCClass
+parseEPCClass ts = case ts of
+                     (x:_) -> Just $ EPCClass $ T.unpack x
+                     _     -> Nothing
+
+parseQuantityValue :: [T.Text] -> Maybe Integer
+parseQuantityValue ts = case ts of
+                          (x:_) -> readMaybe (T.unpack x) :: Maybe Integer
+                          _     -> Nothing
 
 -- |Alias to parseEPCList 
 -- name="childEPCs" type="epcis:EPCListType"
@@ -179,6 +190,18 @@ parseAggregationDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p ppid pchildEPCs pq
 
+-- |parse QuantityDWhat dimension
+parseQuantityDWhat :: Cursor -> Maybe DWhat
+parseQuantityDWhat c = do
+  let ec = c $/ element "epcClass" &/ content
+  let qt = c $/ element "quantity" &/ content
+  let pec = parseEPCClass ec
+  let pqt = parseQuantityValue qt
+
+  if isNothing pec || isNothing pqt
+     then Nothing
+     else Just $ QuantityDWhat (fromJust pec) (fromJust pqt)
+
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' et l = case l of
                          []     -> []
@@ -187,11 +210,7 @@ parseEventList' et l = case l of
                                        w2 = x^._3
                                        w3 = x^._4
                                        w4 = x^._5 in
-                                       if isNothing i  ||
-                                          isNothing w1 ||
-                                          isNothing w2 ||
-                                          isNothing w3 ||
-                                          isNothing w4 then
+                                       if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                           Nothing : parseEventList' et xs      else
                                           mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
 

@@ -16,7 +16,8 @@ import           GHC.Generics
 import           Text.Read
 
 -- |TODO TEMP EPCClass is a String
-type EPCClass = String
+newtype EPCClass = EPCClass String
+  deriving (Eq, Show)
 
 -- |Elctronic Product Code
 -- It could represented by many standards
