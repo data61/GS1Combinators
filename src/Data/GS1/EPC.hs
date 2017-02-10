@@ -19,6 +19,10 @@ import           Text.Read
 newtype EPCClass = EPCClass String
   deriving (Eq, Show)
 
+-- |TODO more restrictions here in the future
+mkEPCClass :: String -> Maybe EPCClass
+mkEPCClass x = Just $ EPCClass x
+
 -- |Elctronic Product Code
 -- It could represented by many standards
 -- For example GLN (GTIN13) is one of them
