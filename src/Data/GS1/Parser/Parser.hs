@@ -2,14 +2,13 @@
 
 module Data.GS1.Parser.Parser where
 
-import           Control.Lens         hiding (element)
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
-import qualified Data.Text            as T
+import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import           Data.UUID
-import           Data.XML.Types       hiding (Event)
+import           Data.XML.Types      hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
 
@@ -26,23 +25,32 @@ import           Data.GS1.Object
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
+-- |Given a list of Text for a given element
+-- Only return the first one
+parseSingleElem' :: (String -> Maybe a) -> [T.Text] -> Maybe a
+parseSingleElem' f t = case t of
+                         (x:_) -> f . T.unpack $ x
+                         _     -> Nothing
+
+-- |Parse a list of Text to a list of type a
+parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
+parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
-parseTimeXML t = case t of
-                   (x:_) -> let pt = parseStr2Time (T.unpack x) :: Either EPCISTimeError EPCISTime in
-                                 case pt of
-                                   Left _  -> Nothing
-                                   Right a -> Just a
-                   _      -> Nothing
+parseTimeXML = parseSingleElem' parseTimeHelper'
+                 where parseTimeHelper' x = let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
+                         case pt of
+                           Left _  -> Nothing
+                           Right a -> Just a
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML t = case t of
-                       (x:_) -> let ptz = parseStr2TimeZone (T.unpack x) :: Either EPCISTimeError TimeZone in
-                                     case ptz of
-                                       Left _  -> Nothing
-                                       Right a -> Just a
-                       _      -> Nothing
+parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
+                       where parseTimeZoneHelper' x = let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
+                               case ptz of
+                                 Left _  -> Nothing
+                                 Right a -> Just a
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
@@ -60,35 +68,21 @@ parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
 parseDWhen :: Cursor -> Maybe DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
-  let rtn = c $/ element "recordTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
-  let rt = parseTimeXML rtn
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
+
+  let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
     Just et' -> Just (DWhen et' rt (fromJust tz))
     _        -> Nothing
 
--- |Parse BizStep by Name
-parseBizStep :: [T.Text] -> Maybe BizStep
-parseBizStep ts = case ts of
-                    (x:_) -> mkBizStep . T.unpack $ x
-                    _     -> Nothing
-
--- |Parse Disposition by Name
-parseDisposition :: [T.Text] -> Maybe Disposition
-parseDisposition ts = case ts of
-                        (x:_) -> mkDisposition . T.unpack $ x
-                        _     -> Nothing
-
 -- |Parse DWhy
 parseDWhy :: Cursor -> Maybe DWhy
 parseDWhy c = do
-  let biz = c $/ element "bizStep" &/ content
-  let disp = c $/ element "disposition" &/ content
-  let pbiz = parseBizStep biz
-  let pdisp = parseDisposition disp
-  mkDWhy pbiz pdisp
+  let biz = parseBizStep (c $/ element "bizStep" &/ content)
+  let disp = parseDisposition (c $/ element "disposition" &/ content)
+  mkDWhy biz disp
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
@@ -97,10 +91,8 @@ parseDWhy c = do
 -- |TODO: there must be some more modification on it
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rp = c $/ element "readPoint"   &/ element "id" &/ content
-  let bl = c $/ element "bizLocation" &/ element "id" &/ content
-  let rps = (mkLocation . T.unpack) <$> rp
-  let bls = (mkLocation . T.unpack) <$> bl
+  let rps = (mkLocation . T.unpack) <$> (c $/ element "readPoint"   &/ element "id" &/ content)
+  let bls = (mkLocation . T.unpack) <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
 -- |Parse QuantityElement
@@ -119,110 +111,94 @@ parseQuantity c = do
                           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
                                        Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
--- |Parse Action by Name
-parseAction :: [T.Text] -> Maybe Action
-parseAction t = case t of
-                  (x:_) -> mkAction . T.unpack $ x
-                  _     -> Nothing
-
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 parseEPCList :: [T.Text] -> [EPC]
-parseEPCList ts = fromJust <$> (mkEPC "EPC" . T.unpack <$> ts)
+parseEPCList = parseListElem' (mkEPC "EPC")
 
--- |Parse a single EPCClass
-parseEPCClass :: [T.Text] -> Maybe EPCClass
-parseEPCClass ts = case ts of
-                     (x:_) -> Just $ EPCClass $ T.unpack x
-                     _     -> Nothing
-
-parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue ts = case ts of
-                          (x:_) -> readMaybe (T.unpack x) :: Maybe Integer
-                          _     -> Nothing
-
--- |Alias to parseEPCList 
+-- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
 parseChildEPCList :: [T.Text] -> [EPC]
 parseChildEPCList = parseEPCList
+-- |Parse BizStep by Name
+parseBizStep :: [T.Text] -> Maybe BizStep
+parseBizStep = parseSingleElem' mkBizStep
+
+-- |Parse Disposition by Name
+parseDisposition :: [T.Text] -> Maybe Disposition
+parseDisposition = parseSingleElem' mkDisposition
+
+-- |Parse Action by Name
+parseAction :: [T.Text] -> Maybe Action
+parseAction = parseSingleElem' mkAction
+
+-- |Parse a single EPCClass
+parseEPCClass :: [T.Text] -> Maybe EPCClass
+parseEPCClass = parseSingleElem' mkEPCClass
+
+-- |Parse a single Maybe Integer
+parseQuantityValue :: [T.Text] -> Maybe Integer
+parseQuantityValue = parseSingleElem' readMaybeInteger where
+                          readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID t = case t of
-                    (x:_) -> Just $ T.unpack x
-                    _     -> Nothing
+parseParentID = parseSingleElem' Just
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
-  let act = c $/ element "action" &/ content
+  let act = parseAction (c $/ element "action" &/ content)
   -- find all epcs below epcList tag
-  let epc = c $/ element "epcList" &/ element "epc" &/ content
+  let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
   -- find all quantityElement, regardless parent tag
-  let qt  = getCursorsByName "quantityElement" c
+  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
 
-  -- parsed action
-  let pact = parseAction act
-  -- parsed epc
-  let pepc = parseEPCList epc
-  -- parsed quantity
-  let pq = fromJust <$> filter isJust (parseQuantity <$> qt)
-
-  case pact of
+  case act of
     Nothing -> Nothing
-    Just p  -> Just $ ObjectDWhat p pepc pq
+    Just p  -> Just $ ObjectDWhat p epc qt
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
 parseAggregationDWhat c = do
-  let pid = c $/ element "parentID" &/ content
-  let childEPCs = c $/ element "childEPCs" &/ element "epc" &/ content
-  let act = c $/ element "action" &/ content
-  let qt  = getCursorsByName "quantityElement" c
+  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content)
+  let act = parseAction (c $/ element "action" &/ content)
+  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
 
-  let ppid = parseParentID pid
-  let pchildEPCs = parseChildEPCList childEPCs
-  let pact = parseAction act
-  let pq = fromJust <$> filter isJust (parseQuantity <$> qt)
-
-  case pact of
+  case act of
     Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p ppid pchildEPCs pq
+    Just p  -> Just $ AggregationDWhat p pid childEPCs qt
 
 -- |parse QuantityDWhat dimension
 parseQuantityDWhat :: Cursor -> Maybe DWhat
 parseQuantityDWhat c = do
-  let ec = c $/ element "epcClass" &/ content
-  let qt = c $/ element "quantity" &/ content
-  let pec = parseEPCClass ec
-  let pqt = parseQuantityValue qt
+  let ec = parseEPCClass (c $/ element "epcClass" &/ content)
+  let qt = parseQuantityValue (c $/ element "quantity" &/ content)
 
-  if isNothing pec || isNothing pqt
+  if isNothing ec || isNothing qt
      then Nothing
-     else Just $ QuantityDWhat (fromJust pec) (fromJust pqt)
+     else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
 
+-- |parse a list of tuples
+-- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' et l = case l of
                          []     -> []
-                         (x:xs) -> let i  = x^._1
-                                       w1 = x^._2
-                                       w2 = x^._3
-                                       w3 = x^._4
-                                       w4 = x^._5 in
+                         (x:xs) -> let (i, w1, w2, w3, w4) = x in
                                        if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                           Nothing : parseEventList' et xs      else
                                           mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
-parseEventID c = do
+parseEventID c = do 
   let eid = c $/ element "eventID" &/ content
-  case eid of
-    []    -> Nothing
-    (x:_) -> let uuid = fromText x in
-                 case uuid of
-                   Nothing -> Nothing
-                   Just u  -> Just $ EventID u
+  parseSingleElem' parseEventID' eid where
+    parseEventID' eid' = let uuid = fromString eid' in
+                             case uuid of
+                               Nothing -> Nothing
+                               Just u  -> Just $ EventID u
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Maybe Event]
@@ -239,6 +215,7 @@ parseEventByType c et = do
   let dwhat = case et of
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
+                QuantityEventT    -> parseQuantityDWhat    <$> eCursors
                 _                 -> const Nothing         <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
