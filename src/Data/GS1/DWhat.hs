@@ -63,9 +63,9 @@ makeClassy ''BizTransaction
 
 -- | TransactionType, TransactionID
 mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt = parseBizTransactionType t in
-                           case bt of
-                             Just t  -> Just BizTransaction{_btid = i, _bt = t}
+mkBizTransaction t i = let bt' = parseBizTransactionType t in
+                           case bt' of
+                             Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
                              _       -> Nothing
 
 type BizTransactionList = [BizTransaction]
@@ -93,7 +93,7 @@ data DWhat = -- ObjectDWhat action epcList quantityList
            -- QuantityDWhat epcClass quantity
            | QuantityDWhat EPCClass Integer
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList quantityList
-           | TransactionDWhat Action String [BizTransaction] [EPC] [QuantityElement]
+           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [EPC] [QuantityElement]
            -- TransformationDWhat transformationID inputEPCList inputQuantityList outputEPCList outputQuantityList
            | TransformationDWhat (Maybe TransformationID) [EPC] [QuantityElement] [EPC] [QuantityElement]
            deriving (Show, Eq, Generic)

@@ -160,16 +160,14 @@ parseObjectDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p epc qt
 
-parseBizTransactionHelp :: (T.Text, T.Text) -> Maybe BizTransaction
-parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
-
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Maybe BizTransaction]
 parseBizTransaction c = do
-  let texts = c $/ element "bizTransaction" &/ content
-  let attrs = foldMap id (c $/ element "bizTransaction" &| attribute "type")
+  let texts = c $// element "bizTransaction" &/ content
+  let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
   let z = zip attrs texts
-  parseBizTransactionHelp <$> z
+  parseBizTransactionHelp <$> z 
+    where parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
@@ -192,6 +190,18 @@ parseQuantityDWhat c = do
   if isNothing ec || isNothing qt
      then Nothing
      else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
+
+parseTransactionDWhat :: Cursor -> Maybe DWhat
+parseTransactionDWhat c = do
+  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
+  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
+  let act = parseAction (c $/ element "action" &/ content)
+  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  
+  case act of
+    Nothing -> Nothing
+    Just p  -> Just $ TransactionDWhat p pid bizT epcs qt
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
@@ -228,7 +238,7 @@ parseEventByType c et = do
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
                 QuantityEventT    -> parseQuantityDWhat    <$> eCursors
-                TransactionEventT -> const Nothing         <$> eCursors
+                TransactionEventT -> parseTransactionDWhat <$> eCursors
                 _                 -> const Nothing         <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
