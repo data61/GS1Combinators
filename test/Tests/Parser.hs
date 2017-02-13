@@ -140,6 +140,12 @@ testParser = do
       let qeCursors = getCursorsByName "QuantityEvent" cursor
       parseQuantityDWhat <$> qeCursors `shouldBe` [Just (QuantityDWhat (EPCClass "http://data61.csiro.au:epcClass:hey") 100)]
 
+    it "parses a valid TransactionDWhat" $ do
+      doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
+      let cursor = fromDocument doc
+      let teCursors = getCursorsByName "TransactionEvent" cursor
+      parseTransactionDWhat <$> teCursors `shouldBe` [Just (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po}] [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] []), Just (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po},BizTransaction {_btid = "urn:epcglobal:cbv:bt:0614141073467:1152", _bt = Desadv}] [EPC "urn:epc:id:sgtin:0614141.107346.2018"] [])]
+
   describe "parse ObjectEvent" $
     it "parses a valid object event" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
