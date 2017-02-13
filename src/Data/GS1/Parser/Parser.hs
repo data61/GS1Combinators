@@ -120,6 +120,7 @@ parseEPCList = parseListElem' (mkEPC "EPC")
 -- name="childEPCs" type="epcis:EPCListType"
 parseChildEPCList :: [T.Text] -> [EPC]
 parseChildEPCList = parseEPCList
+
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Maybe BizStep
 parseBizStep = parseSingleElem' mkBizStep
@@ -158,6 +159,17 @@ parseObjectDWhat c = do
   case act of
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p epc qt
+
+parseBizTransactionHelp :: (T.Text, T.Text) -> Maybe BizTransaction
+parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
+
+-- |BizTransactionList element
+parseBizTransaction :: Cursor -> [Maybe BizTransaction]
+parseBizTransaction c = do
+  let texts = c $/ element "bizTransaction" &/ content
+  let attrs = foldMap id (c $/ element "bizTransaction" &| attribute "type")
+  let z = zip attrs texts
+  parseBizTransactionHelp <$> z
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
@@ -216,6 +228,7 @@ parseEventByType c et = do
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
                 QuantityEventT    -> parseQuantityDWhat    <$> eCursors
+                TransactionEventT -> const Nothing         <$> eCursors
                 _                 -> const Nothing         <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors

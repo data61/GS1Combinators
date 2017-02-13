@@ -3,6 +3,7 @@
 module Tests.Parser where
 
 import           Data.Maybe
+import qualified Data.Text              as T
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
@@ -104,6 +105,21 @@ testParser = do
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "quantityElement" cursor
       parseQuantity <$> oeCursors `shouldBe` [Just $ QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") 200 (Just "KGM")]
+
+  describe "parse BizTransaction" $ do
+    it "parse BizTransaction element" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+      let cursor = fromDocument doc
+      let btCursor = cursor $// element "bizTransactionList"
+      parseBizTransaction <$> btCursor `shouldBe` [[Just BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po}], [Just BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po},Just BizTransaction {_btid = "urn:epcglobal:cbv:bt:0614141073467:1152", _bt = Desadv}]]
+
+    it "get all attrs" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+      let cursor = fromDocument doc2
+      let btCursor = cursor $// element "bizTransactionList"
+      let c = head btCursor
+      let attrs = c $/ element "bizTransaction" &| attribute "type"
+      parseBizTransactionType . T.unpack <$> foldMap id attrs `shouldBe` [Just Po]
 
   describe "parse DWhat" $ do
     it "parses a valid ObjectDWhat" $ do
