@@ -61,6 +61,13 @@ data BizTransaction = BizTransaction
 
 makeClassy ''BizTransaction
 
+-- | TransactionType, TransactionID
+mkBizTransaction :: String -> String -> Maybe BizTransaction
+mkBizTransaction t i = let bt = parseBizTransactionType t in
+                           case bt of
+                             Just t  -> Just BizTransaction{_btid = i, _bt = t}
+                             _       -> Nothing
+
 type BizTransactionList = [BizTransaction]
 
 -- | TransformationID
