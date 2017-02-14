@@ -1,14 +1,58 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
-module Data.GS1.SourceDest where
+module Data.GS1.DWhere where
 
+import           Control.Lens
+import           GHC.Generics
+import           Text.Printf
+
+import           Data.GS1.EPC
 import           Data.GS1.URI
 import           Data.GS1.Utils
-import           GHC.Generics
+
+-- |Location takes a GLN as its argument
+newtype Location = Location EPC
+  deriving (Eq, Generic)
+
+instance Show Location where
+  show (Location e) = show e
+
+mkLocation :: String -> Location
+mkLocation s = Location $ EPC s
+
+-- |Location synonym
+type ReadPointLocation = Location
+
+-- |Location synonym
+type BizLocation = Location
+
+-- |Latitude is Double
+type Latitude = Double
+
+-- |Longitude is Double
+type Longitude = Double
+
+-- |GeoLocation
+data GeoLocation = GeoLocation Latitude Longitude
+  deriving (Eq)
+
+-- |non-normative representation - simplest form of RFC5870
+ppGeoLocation :: GeoLocation -> String
+ppGeoLocation (GeoLocation lat lon) = printf "geo:%f,%f" lat lon
+
+instance Show GeoLocation where
+  show = ppGeoLocation
+
+instance URI Location where
+  uriPrefix _             = "urn:epc:id"
+  uriQuantifier _         = "sgln"
+  uriPayload (Location g) = ppEPC g
 
 -- EPCIS 1.2 section 7.3.5.4 line 1150
 -- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]
-data SourceDestID = SourceDestID String
+newtype SourceDestID = SourceDestID String
   deriving (Show, Eq, Generic, Read)
 
 instance URI SourceDestID where
@@ -49,3 +93,13 @@ data Source = Source SourceDestType SourceDestID
 
 data Destination = Destination SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
+data DWhere = DWhere
+  {
+    _readPoint   :: [ReadPointLocation]
+  , _bizLocation :: [BizLocation]
+  , _srcType     :: [SourceDestType]
+  , _destType    :: [SourceDestType]
+  }
+  deriving (Show, Eq, Generic)
+
+makeClassy ''DWhere

@@ -7,25 +7,23 @@
     schemaVersion="1.2">
   <EPCISBody>
     <EventList>
-      <ObjectEvent>
-        <eventID>a70ed7d2-e9cd-11e6-bf0e-fe55135034f3</eventID>
-        <recordTime>2005-04-03T20:33:31.116-06:00</recordTime>
-        <eventTimeZoneOffset>-06:00</eventTimeZoneOffset>
-        <epcList>
-          <epc>urn:epc:id:sgtin:0614141.107346.2017</epc>
-          <epc>urn:epc:id:sgtin:0614141.107346.2018</epc>
-        </epcList>
-        <action>OBSERVE</action>
+      <QuantityEvent>
+        <eventID>e1021740-e3ab-32e6-e40e-fd55135034f3</eventID>
+        <eventTime>2005-03-03T20:33:31.116+10:00</eventTime>
+        <recordTime>2005-03-03T20:33:31.116+10:00</recordTime>
+        <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+        <epcClass>http://data61.csiro.au:epcClass:hey</epcClass>
+        <quantity>100</quantity>
         <bizStep>urn:epcglobal:cbv:bizstep:shipping</bizStep>
         <disposition>urn:epcglobal:cbv:disp:in_transit</disposition>
         <readPoint>
           <id>urn:epc:id:sgln:0614141.07346.1234</id>
         </readPoint>
         <bizTransactionList>
-          <bizTransaction type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678
-          </bizTransaction>
+          <bizTransaction type="urn:epcglobal:cbv:btt:po">http://transaction.acme.com/po/12345678</bizTransaction>
+          <bizTransaction type="urn:epcglobal:cbv:btt:desadv">urn:epcglobal:cbv:bt:0614141073467:1152</bizTransaction>
         </bizTransactionList>
-      </ObjectEvent>
+      </QuantityEvent>
     </EventList>
   </EPCISBody>
 </epcis:EPCISDocument>

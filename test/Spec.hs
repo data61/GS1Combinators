@@ -1,28 +1,39 @@
 module Main where
 
-import           Tests.Event
-import           Tests.Location
+import           Tests.DWhat
+import           Tests.DWhen
+import           Tests.DWhere
+import           Tests.DWhy
 import           Tests.Object
 import           Tests.Parser
 import           Tests.Utils
 
-import           Test.Hspec     (hspec)
+import           Test.Hspec   (hspec)
 
 main :: IO ()
 main = do
+  -- DWhere
   hspec testPassGLN
   hspec testMkEPC
 
+  -- DWhy
   hspec testBizStep
   hspec testDisposition
+
+  -- DWhat
   hspec testBizTransaction
   hspec testMkDWhat
+
+  -- DWhen
+  hspec testParseTime
   hspec testMkDWhen
 
-  hspec testRevertCamelCase
-  hspec testMkCamelCase
-  hspec testParseTime
-
+  -- Object
   hspec testObjectID
 
-  hspec testParseDWhen
+  -- Parser
+  hspec testParser
+
+  -- Utils
+  hspec testRevertCamelCase
+  hspec testMkCamelCase
