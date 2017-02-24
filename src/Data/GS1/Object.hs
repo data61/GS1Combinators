@@ -9,13 +9,16 @@ import           Network.Parser.Rfc3986     (segmentNz)
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
-type Quantity = Integer
+type Quantity = Double
 
 type Uom = String
 
 -- |Simple quantity representation
-data QuantityElement = QuantityElement EPCClass Quantity Uom
-  deriving (Show, Eq)
+data QuantityElement = QuantityElement EPCClass Quantity (Maybe Uom)
+  deriving (Eq, Show)
+
+-- |Alias of QuantityList
+type QuantityList = [QuantityElement]
 
 -- |EPCIS 7.3.6
 -- Not sure if it is right way
@@ -71,10 +74,7 @@ subdelims :: String
 subdelims = "!$&'()*+,;="
 
 validSegmentNzChar :: Char -> Bool
-validSegmentNzChar c
-  | c `elem` unreserved || c `elem` subdelims = True
-  | c == '@' || c == ':'                      = True
-  | otherwise                                 = False
+validSegmentNzChar c = c `elem` ['@', ':'] ++ unreserved ++ subdelims 
 
 validateObjectID :: String -> Maybe ObjectID
 validateObjectID s = case s of
@@ -89,7 +89,7 @@ validateObjectID s = case s of
                                                                                then (++) <$> Just [x, a, b] <*> oidHelp xxs
                                                                                else Nothing
                                                                _         -> Nothing
-                                                      _   -> if validSegmentNzChar x 
+                                                      _   -> if validSegmentNzChar x
                                                                  then (:) <$> Just x <*> oidHelp xs
                                                                  else Nothing
 
@@ -105,8 +105,6 @@ data ObjectType = PhysicalT
 data Object = Object IDLevel ObjectType ObjectID
   deriving (Eq, Show)
 
--- FIXME The Object should be redesigned to aviod confusion
-
 -- TODO ObjectClassID
-
+-- class level identifier
 type ObjectClassID = String
