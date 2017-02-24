@@ -1,64 +1,27 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.Event where
 
 import           Control.Lens
-
-import           Data.GS1.EPCISTime
-import           Data.GS1.EventID
-import           Data.GS1.Location
-import           Data.GS1.SourceDest
-import           Data.GS1.DWhat
-import           Data.GS1.DWhy
-import           Data.Time.LocalTime
 import           GHC.Generics
 
-
-data DWhen = DWhen
-  {
-    _eventTime  :: EPCISTime
-  , _recordTime :: EPCISTime
-  , _timeZone   :: TimeZone
-  }
-  deriving (Show, Eq, Generic)
-
-makeClassy ''DWhen
-
-data DWhere = DWhere
-  {
-    _readPoint   :: Maybe ReadPointLocation
-  , _bizLocation :: Maybe BizLocation
-  , _srcDestType :: Maybe [SourceDestType]
-  }
-  deriving (Show, Eq, Generic)
-
-makeClassy ''DWhere
-
-{-
-data Action = Add
-            | Observe
-            | Delete
-            deriving (Show, Eq, Generic)
-
---FIXME make the DWhat more concrete
-data DWhat = AggregationDWhat
-           | ObjectDWhat
-           | QuantityDWhat
-           | TransformationDWhat
-           | TransactionDWhat
-           deriving (Show, Eq, Generic)
-
-makeClassy ''DWhat
--}
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EventID
+import           Data.GS1.Utils
 
 data EventType = ObjectEventT
                | AggregationEventT
                | QuantityEventT
                | TransactionEventT
                | TransformationEventT
-               deriving (Show, Eq, Generic)
+               deriving (Show, Eq, Generic, Read)
+
+mkEventType :: String -> Maybe EventType
+mkEventType = mkByName
 
 data Eventish a = Eventish
   {
@@ -104,13 +67,12 @@ instance HasDWhere (Eventish a) where
 newtype Event = Event (Eventish EventType)
   deriving (Show, Eq, Generic)
 
-newEvent :: EventID -> EventType -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
-newEvent i t w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
-                               case (t, w1) of
-                                 (ObjectEventT, ObjectDWhat{})                 -> e
-                                 (AggregationEventT, AggregationDWhat{})       -> e
-                                 (QuantityEventT, QuantityDWhat{})             -> e
-                                 (TransactionEventT, TransactionDWhat{})       -> e
-                                 (TransformationEventT, TransformationDWhat{}) -> e
-                                 _                                             -> Nothing
-
+mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
+mkEvent t i w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
+                              case (t, w1) of
+                                (ObjectEventT, ObjectDWhat{})                 -> e
+                                (AggregationEventT, AggregationDWhat{})       -> e
+                                (QuantityEventT, QuantityDWhat{})             -> e
+                                (TransactionEventT, TransactionDWhat{})       -> e
+                                (TransformationEventT, TransformationDWhat{}) -> e
+                                _                                             -> Nothing

@@ -8,27 +8,38 @@ import           Control.Lens.TH
 import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Data.Char
+import           Data.Either
+import           Data.Either.Combinators  (fromRight')
 import           Data.List
+import           Data.List.Split
 import           GHC.Generics
 import           Text.Read
 
 -- |TODO TEMP EPCClass is a String
-type EPCClass = String
+newtype EPCClass = EPCClass String
+  deriving (Eq, Show)
+
+-- |TODO more restrictions here in the future
+mkEPCClass :: String -> Maybe EPCClass
+mkEPCClass x = Just $ EPCClass x
 
 -- |Elctronic Product Code
 -- It could represented by many standards
 -- For example GLN (GTIN13) is one of them
--- Currently it has one method to convert the meaningful EPC to a consecutive string
-data EPC = GLN GS1CompanyPrefix LocationRef CheckDigit
-  deriving (Eq)
+-- TODO: Currently it has one method to convert the meaningful EPC to a consecutive string
+data EPC = EPC String
+         | GLN GS1CompanyPrefix LocationRef CheckDigit
+         deriving (Eq)
 
--- |FIXME DEBUG Show
 instance Show EPC where
-  show _gln@GLN {} = ppGLN _gln
+  show = ppEPC
 
--- |Pretty print GLN
-ppGLN :: EPC -> String
-ppGLN (GLN pref ref cd) = intercalate "." [pref, ref, cd]
+-- |Pretty print EPC
+ppEPC :: EPC -> String
+ppEPC epc = case epc of
+              GLN pref ref cd -> intercalate "." [pref, ref, cd]
+              EPC s           -> s
+
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -40,7 +51,7 @@ type LocationRef = String
 type CheckDigit = String
 
 data LocationError
-  = IllegalFormat
+  = IllegalGLNFormat
   | InvalidChecksum
   deriving (Show, Eq, Generic)
 
@@ -73,6 +84,17 @@ validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
 gln ::(AsLocationError e, MonadError e m)
      => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m EPC
 gln pref ref cd
-  | not (wellFormatGLN pref ref cd) = throwing _IllegalFormat ()
+  | not (wellFormatGLN pref ref cd) = throwing _IllegalGLNFormat ()
   | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
   | otherwise                       = pure (GLN pref ref cd)
+
+-- |type -> payload -> Maybe EPC
+-- TODO: add more types
+mkEPC :: String -> String -> Maybe EPC
+mkEPC t p = case t of
+              "EPC" -> Just $ EPC p
+              "GLN" -> case splitOn "." p of
+                         [a, b, c] -> let x = gln a b c :: Either LocationError EPC in
+                                          if isRight x then Just (fromRight' x) else Nothing
+                         _         -> Nothing
+              _     -> Nothing

@@ -2,8 +2,8 @@
 
 module Data.GS1.ErrorDeclaration where
 
+import           Data.GS1.DWhen
 import           Data.GS1.EventID
-import           Data.GS1.EPCISTime
 import           Data.GS1.URI
 import           Data.GS1.Utils
 import           GHC.Generics
