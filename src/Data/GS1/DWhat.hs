@@ -12,6 +12,9 @@ import           Data.GS1.Object
 import           Data.GS1.URI
 import           Data.GS1.Utils
 
+import           Data.Aeson
+import           Data.Aeson.TH
+
 {-
   Example:
 
@@ -35,6 +38,7 @@ data BizTransactionType = Bol       -- Bill of Lading
                         | Recadv    -- Receiving Advice
                         | Rma       -- Return Mechandise Authorisation
                         deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''BizTransactionType)
 
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
@@ -58,6 +62,7 @@ data BizTransaction = BizTransaction
   , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''BizTransaction)
 
 makeClassy ''BizTransaction
 
@@ -80,6 +85,7 @@ data Action = Add
             | Observe
             | Delete
             deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''Action)
 
 mkAction :: String -> Maybe Action
 mkAction s = mkByName . camelCase $ toLower <$> s
@@ -97,6 +103,8 @@ data DWhat = -- ObjectDWhat action epcList quantityList
            -- TransformationDWhat transformationID inputEPCList inputQuantityList outputEPCList outputQuantityList
            | TransformationDWhat (Maybe TransformationID) [EPC] [QuantityElement] [EPC] [QuantityElement]
            deriving (Show, Eq, Generic)
+
+$(deriveJSON defaultOptions ''DWhat)
 
 ppDWhat :: DWhat -> String
 ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs

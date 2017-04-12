@@ -11,10 +11,13 @@ import           Text.Printf
 import           Data.GS1.EPC
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.Aeson
+import           Data.Aeson.TH
 
 -- |Location takes a GLN as its argument
 newtype Location = Location EPC
   deriving (Eq, Generic)
+$(deriveJSON defaultOptions ''Location)
 
 instance Show Location where
   show (Location e) = show e
@@ -37,6 +40,7 @@ type Longitude = Double
 -- |GeoLocation
 data GeoLocation = GeoLocation Latitude Longitude
   deriving (Eq)
+$(deriveJSON defaultOptions ''GeoLocation)
 
 -- |non-normative representation - simplest form of RFC5870
 ppGeoLocation :: GeoLocation -> String
@@ -54,6 +58,7 @@ instance URI Location where
 -- Example can be found at EPCIS 1.2 section 9.6.2 line [3319..3340]
 newtype SourceDestID = SourceDestID String
   deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''SourceDestID)
 
 instance URI SourceDestID where
   uriPrefix _                 = "urn:epc:id"
@@ -72,6 +77,7 @@ data SourceDestType = SDOwningParty
                     | SDProcessingParty
                     | SDLocation
                     deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''SourceDestType)
 
 instance URI SourceDestType where
   uriPrefix _     = "urn:epcglobal:cbv"
@@ -90,9 +96,12 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 
 data Source = Source SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''Source)
 
 data Destination = Destination SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''Destination)
+
 data DWhere = DWhere
   {
     _readPoint   :: [ReadPointLocation]
@@ -101,5 +110,5 @@ data DWhere = DWhere
   , _destType    :: [SourceDestType]
   }
   deriving (Show, Eq, Generic)
-
+$(deriveJSON defaultOptions ''DWhere)
 makeClassy ''DWhere

@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators   #-}
 
 module Data.GS1.Event where
 
@@ -12,6 +14,8 @@ import           Data.GS1.DWhere
 import           Data.GS1.DWhy
 import           Data.GS1.EventID
 import           Data.GS1.Utils
+import           Data.Aeson
+import           Data.Aeson.TH
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -19,6 +23,8 @@ data EventType = ObjectEventT
                | TransactionEventT
                | TransformationEventT
                deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''EventType)
+
 
 mkEventType :: String -> Maybe EventType
 mkEventType = mkByName
