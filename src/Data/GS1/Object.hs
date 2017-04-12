@@ -1,3 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module Data.GS1.Object where
 
 import           Codec.Binary.UTF8.String
@@ -6,6 +10,9 @@ import qualified Data.ByteString.Char8      as C
 import           Data.Char                  (toLower)
 import           Data.GS1.EPC
 import           Network.Parser.Rfc3986     (segmentNz)
+import           Data.Aeson
+import           Data.Aeson.TH
+import           GHC.Generics
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
@@ -15,7 +22,9 @@ type Uom = String
 
 -- |Simple quantity representation
 data QuantityElement = QuantityElement EPCClass Quantity (Maybe Uom)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+$(deriveJSON defaultOptions ''QuantityElement)
 
 -- |Alias of QuantityList
 type QuantityList = [QuantityElement]
@@ -42,7 +51,7 @@ privateObjectID = undefined
 httpObjectID :: String -> Maybe ObjectID
 httpObjectID s = let result = maybeResult $ parse segmentNz (C.pack s) in
                      case result of
-                       Just wa -> Just $ decode wa
+                       Just wa -> Just $ Codec.Binary.UTF8.String.decode wa
                        Nothing -> Nothing
 
 hexDigit :: Char -> Maybe Char
@@ -74,7 +83,7 @@ subdelims :: String
 subdelims = "!$&'()*+,;="
 
 validSegmentNzChar :: Char -> Bool
-validSegmentNzChar c = c `elem` ['@', ':'] ++ unreserved ++ subdelims 
+validSegmentNzChar c = c `elem` ['@', ':'] ++ unreserved ++ subdelims
 
 validateObjectID :: String -> Maybe ObjectID
 validateObjectID s = case s of
@@ -95,15 +104,18 @@ validateObjectID s = case s of
 
 data IDLevel = InstanceLevelT
              | ClassLevelT
-             deriving (Eq, Show)
+             deriving (Eq, Show, Generic)
+$(deriveJSON defaultOptions ''IDLevel)
 
 data ObjectType = PhysicalT
                 | DigitalT
-                deriving (Eq, Show)
+                deriving (Eq, Show, Generic)
+$(deriveJSON defaultOptions ''ObjectType)
 
 -- |EPCIS 1.0
 data Object = Object IDLevel ObjectType ObjectID
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+$(deriveJSON defaultOptions ''Data.GS1.Object.Object)
 
 -- TODO ObjectClassID
 -- class level identifier

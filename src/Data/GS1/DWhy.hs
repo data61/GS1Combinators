@@ -10,8 +10,9 @@ import           GHC.Generics
 
 import           Data.GS1.URI
 import           Data.GS1.Utils
+import           Data.Aeson
+import           Data.Aeson.TH
 
--- | BizStep
 data BizStep = Accepting
                   | Arriving
                   | Assembling
@@ -51,6 +52,7 @@ data BizStep = Accepting
                   | Unloading
                   | VoidShipping
                   deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''BizStep)
 
 makeClassy ''BizStep
 
@@ -72,6 +74,7 @@ mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
 data DispositionError = InvalidDisposition
                       | OtherDispositionError
                       deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''DispositionError)
 
 makeClassyPrisms ''DispositionError
 
@@ -98,6 +101,7 @@ data Disposition = Active
                  | Stolen
                  | Unknown
                  deriving (Show, Eq, Generic, Read)
+$(deriveJSON defaultOptions ''Disposition)
 
 makeClassyPrisms ''Disposition
 
@@ -118,6 +122,7 @@ mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
 
 data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''DWhy)
 
 instance HasBizStep DWhy where
   bizStep =

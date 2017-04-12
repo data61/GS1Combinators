@@ -10,6 +10,8 @@ import           Control.Monad.Except     (MonadError)
 import           Data.Either.Combinators
 import           Data.Time
 import           GHC.Generics
+import           Data.Aeson
+import           Data.Aeson.TH
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
@@ -20,6 +22,7 @@ import           GHC.Generics
 type EPCISTime = UTCTime
 
 data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''EPCISTimeError)
 
 makeClassyPrisms ''EPCISTimeError
 
@@ -46,6 +49,8 @@ data DWhen = DWhen
   , _timeZone   :: TimeZone
   }
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''TimeZone)
+$(deriveJSON defaultOptions ''DWhen)
 
 makeClassy ''DWhen
 

@@ -14,32 +14,17 @@ import           Data.List
 import           Data.List.Split
 import           GHC.Generics
 import           Text.Read
+import Data.Aeson
+import Data.Aeson.TH
 
 -- |TODO TEMP EPCClass is a String
 newtype EPCClass = EPCClass String
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+$(deriveJSON defaultOptions ''EPCClass)
 
 -- |TODO more restrictions here in the future
 mkEPCClass :: String -> Maybe EPCClass
 mkEPCClass x = Just $ EPCClass x
-
--- |Elctronic Product Code
--- It could represented by many standards
--- For example GLN (GTIN13) is one of them
--- TODO: Currently it has one method to convert the meaningful EPC to a consecutive string
-data EPC = EPC String
-         | GLN GS1CompanyPrefix LocationRef CheckDigit
-         deriving (Eq)
-
-instance Show EPC where
-  show = ppEPC
-
--- |Pretty print EPC
-ppEPC :: EPC -> String
-ppEPC epc = case epc of
-              GLN pref ref cd -> intercalate "." [pref, ref, cd]
-              EPC s           -> s
-
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -56,6 +41,26 @@ data LocationError
   deriving (Show, Eq, Generic)
 
 makeClassyPrisms ''LocationError
+
+
+-- |Elctronic Product Code
+-- It could represented by many standards
+-- For example GLN (GTIN13) is one of them
+-- TODO: Currently it has one method to convert the meaningful EPC to a consecutive string
+data EPC = EPC String
+         | GLN GS1CompanyPrefix LocationRef CheckDigit
+         deriving (Eq, Generic, Read)
+$(deriveJSON defaultOptions ''EPC)
+
+instance Show EPC where
+  show = ppEPC
+
+-- |Pretty print EPC
+ppEPC :: EPC -> String
+ppEPC epc = case epc of
+              GLN pref ref cd -> intercalate "." [pref, ref, cd]
+              EPC s           -> s
+
 
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf

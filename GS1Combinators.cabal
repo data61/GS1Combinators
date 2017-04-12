@@ -33,6 +33,7 @@ library
                      , mtl
                      , time
                      , lens
+                     , aeson
                      , utf8-string
                      , uuid
                      , hweblib
@@ -81,6 +82,7 @@ test-suite GS1Combinators-test
                      , GS1Combinators
                      , hspec
                      , time
+                     , aeson
                      , lens
                      , xml-conduit
                      , mtl
