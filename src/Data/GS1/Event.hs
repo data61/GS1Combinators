@@ -16,6 +16,7 @@ import           Data.GS1.EventID
 import           Data.GS1.Utils
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Swagger
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -24,6 +25,7 @@ data EventType = ObjectEventT
                | TransformationEventT
                deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''EventType)
+instance ToSchema EventType
 
 
 mkEventType :: String -> Maybe EventType

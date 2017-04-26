@@ -14,13 +14,15 @@ import           Data.List
 import           Data.List.Split
 import           GHC.Generics
 import           Text.Read
-import Data.Aeson
-import Data.Aeson.TH
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Swagger
 
 -- |TODO TEMP EPCClass is a String
 newtype EPCClass = EPCClass String
   deriving (Eq, Show, Generic)
 $(deriveJSON defaultOptions ''EPCClass)
+instance ToSchema EPCClass
 
 -- |TODO more restrictions here in the future
 mkEPCClass :: String -> Maybe EPCClass
@@ -51,6 +53,7 @@ data EPC = EPC String
          | GLN GS1CompanyPrefix LocationRef CheckDigit
          deriving (Eq, Generic, Read)
 $(deriveJSON defaultOptions ''EPC)
+instance ToSchema EPC
 
 instance Show EPC where
   show = ppEPC

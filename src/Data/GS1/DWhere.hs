@@ -13,11 +13,14 @@ import           Data.GS1.URI
 import           Data.GS1.Utils
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Swagger
+
 
 -- |Location takes a GLN as its argument
 newtype Location = Location EPC
   deriving (Eq, Generic)
 $(deriveJSON defaultOptions ''Location)
+instance ToSchema Location
 
 instance Show Location where
   show (Location e) = show e
@@ -39,8 +42,9 @@ type Longitude = Double
 
 -- |GeoLocation
 data GeoLocation = GeoLocation Latitude Longitude
-  deriving (Eq)
+  deriving (Eq, Generic)
 $(deriveJSON defaultOptions ''GeoLocation)
+instance ToSchema GeoLocation
 
 -- |non-normative representation - simplest form of RFC5870
 ppGeoLocation :: GeoLocation -> String
@@ -59,6 +63,7 @@ instance URI Location where
 newtype SourceDestID = SourceDestID String
   deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''SourceDestID)
+instance ToSchema SourceDestID
 
 instance URI SourceDestID where
   uriPrefix _                 = "urn:epc:id"
@@ -78,6 +83,7 @@ data SourceDestType = SDOwningParty
                     | SDLocation
                     deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''SourceDestType)
+instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   uriPrefix _     = "urn:epcglobal:cbv"
@@ -97,10 +103,12 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 data Source = Source SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''Source)
+instance ToSchema Source
 
 data Destination = Destination SourceDestType SourceDestID
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''Destination)
+instance ToSchema Destination
 
 data DWhere = DWhere
   {
@@ -111,4 +119,5 @@ data DWhere = DWhere
   }
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhere)
+instance ToSchema DWhere
 makeClassy ''DWhere
