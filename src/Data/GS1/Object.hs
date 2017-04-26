@@ -13,6 +13,7 @@ import           Network.Parser.Rfc3986     (segmentNz)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           GHC.Generics
+import           Data.Swagger
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
@@ -25,6 +26,7 @@ data QuantityElement = QuantityElement EPCClass Quantity (Maybe Uom)
   deriving (Eq, Show, Generic)
 
 $(deriveJSON defaultOptions ''QuantityElement)
+instance ToSchema QuantityElement
 
 -- |Alias of QuantityList
 type QuantityList = [QuantityElement]
@@ -106,16 +108,19 @@ data IDLevel = InstanceLevelT
              | ClassLevelT
              deriving (Eq, Show, Generic)
 $(deriveJSON defaultOptions ''IDLevel)
+instance ToSchema IDLevel
 
 data ObjectType = PhysicalT
                 | DigitalT
                 deriving (Eq, Show, Generic)
 $(deriveJSON defaultOptions ''ObjectType)
+instance ToSchema ObjectType
 
 -- |EPCIS 1.0
 data Object = Object IDLevel ObjectType ObjectID
   deriving (Eq, Show, Generic)
 $(deriveJSON defaultOptions ''Data.GS1.Object.Object)
+instance ToSchema Data.GS1.Object.Object
 
 -- TODO ObjectClassID
 -- class level identifier

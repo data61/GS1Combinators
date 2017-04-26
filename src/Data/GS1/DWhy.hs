@@ -12,6 +12,7 @@ import           Data.GS1.URI
 import           Data.GS1.Utils
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Swagger
 
 data BizStep = Accepting
                   | Arriving
@@ -53,6 +54,7 @@ data BizStep = Accepting
                   | VoidShipping
                   deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''BizStep)
+instance ToSchema BizStep
 
 makeClassy ''BizStep
 
@@ -75,6 +77,7 @@ data DispositionError = InvalidDisposition
                       | OtherDispositionError
                       deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DispositionError)
+instance ToSchema DispositionError
 
 makeClassyPrisms ''DispositionError
 
@@ -102,6 +105,7 @@ data Disposition = Active
                  | Unknown
                  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Disposition)
+instance ToSchema Disposition
 
 makeClassyPrisms ''Disposition
 
@@ -123,6 +127,7 @@ mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
 data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
+instance ToSchema DWhy
 
 instance HasBizStep DWhy where
   bizStep =

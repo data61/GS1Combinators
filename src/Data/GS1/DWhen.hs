@@ -12,6 +12,8 @@ import           Data.Time
 import           GHC.Generics
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Swagger
+import qualified Data.Text as T
 
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
@@ -21,8 +23,23 @@ import           Data.Aeson.TH
 -- |The TimeZone will be saved independently
 type EPCISTime = UTCTime
 
+-- copied from https://github.com/data61/bom-solar-webservice/blob/master/app/Main.hs
+-- | A datatype representing a UTCTime shown and read using the ISO 8601 format with HH:MM:SS and timezone
+--
+{-
+newtype ISO8601 = ISO8601 UTCTime deriving (Eq, Generic, ToJSON, FromJSON)
+iso8601Format = iso8601DateFormat $ Just "%H:%M:%S%z"
+instance Show            ISO8601 where show (ISO8601 t) = formatTime defaultTimeLocale iso8601Format t
+instance Read            ISO8601 where readsPrec p = (coerce :: ReadS UTCTime -> ReadS ISO8601) $ readSTime True defaultTimeLocale iso8601Format
+instance ToParamSchema   ISO8601 where
+  toParamSchema _ = mempty
+    & type_ .~ SwaggerString
+    & format .~ Just (pack iso8601Format)
+-}
+
 data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''EPCISTimeError)
+instance ToSchema EPCISTimeError
 
 makeClassyPrisms ''EPCISTimeError
 
@@ -42,15 +59,40 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
                                       pure tz
                         _      -> throwing _IllegalTimeFormat ()
 
+instance Eq ZonedTime where
+  x==y = (show x) == (show y)
 data DWhen = DWhen
   {
     _eventTime  :: EPCISTime
-  , _recordTime :: Maybe EPCISTime -- minOccurs = 0
+  , _recordTime :: Maybe EPCISTime-- minOccurs = 0
   , _timeZone   :: TimeZone
   }
   deriving (Show, Eq, Generic)
+
 $(deriveJSON defaultOptions ''TimeZone)
+--instance ToSchema ZonedTime
+instance ToParamSchema TimeZone where
+  toParamSchema _ = mempty
+    & type_ .~ SwaggerString
+
+
+-- copied from
+-- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
+named :: T.Text -> Schema -> NamedSchema
+named name schema = NamedSchema (Just name) schema
+
+timeSchema :: T.Text -> Schema
+timeSchema fmt = mempty
+  & type_ .~ SwaggerString
+  & format ?~ fmt
+
+
+-- XXX I have literally no idea what is happening here! Please check!
+instance ToSchema TimeZone where
+  declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
+
 $(deriveJSON defaultOptions ''DWhen)
+instance ToSchema DWhen
 
 makeClassy ''DWhen
 
