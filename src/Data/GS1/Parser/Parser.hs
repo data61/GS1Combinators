@@ -210,7 +210,7 @@ parseEventList' et l = case l of
                          (x:xs) -> let (i, w1, w2, w3, w4) = x in
                                        if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                           Nothing : parseEventList' et xs      else
-                                          mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4) : parseEventList' et xs
+                                          Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do

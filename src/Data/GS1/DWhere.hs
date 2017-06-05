@@ -15,6 +15,10 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 
+import           Database.SQLite.Simple.ToField
+import           Data.Aeson.Text
+import           Data.ByteString.Char8 (pack)
+import qualified Data.Text.Lazy as TxtL
 
 -- |Location takes a GLN as its argument
 newtype Location = Location EPC
@@ -121,3 +125,6 @@ data DWhere = DWhere
 $(deriveJSON defaultOptions ''DWhere)
 instance ToSchema DWhere
 makeClassy ''DWhere
+
+instance ToField DWhere where
+  toField = toField . TxtL.toStrict . encodeToLazyText

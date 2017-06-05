@@ -16,6 +16,10 @@ import           Data.Aeson
 import           Data.Aeson.TH
 
 import           Data.Swagger
+import           Database.SQLite.Simple.ToField
+import Data.Aeson.Text
+import Data.ByteString.Char8 (pack)
+import qualified Data.Text.Lazy as TxtL
 {-
   Example:
 
@@ -97,7 +101,7 @@ mkAction s = mkByName . camelCase $ toLower <$> s
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-           ObjectDWhat Action [EPC] [QuantityElement]
+          ObjectDWhat Action [EPC] [QuantityElement]
            -- AggregationDWhat action parentID childEPC childQuantityList
            | AggregationDWhat Action (Maybe ParentID) [EPC] [QuantityElement]
            -- QuantityDWhat epcClass quantity
@@ -110,6 +114,9 @@ data DWhat = -- ObjectDWhat action epcList quantityList
 
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
+
+instance ToField DWhat where
+  toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
 ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs
