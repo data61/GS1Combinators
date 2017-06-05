@@ -18,6 +18,9 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 
+import           Database.SQLite.Simple.ToField
+import           Data.ByteString.Char8 (pack)
+
 -- |TODO TEMP EPCClass is a String
 newtype EPCClass = EPCClass String
   deriving (Eq, Show, Generic)
@@ -57,6 +60,9 @@ instance ToSchema EPC
 
 instance Show EPC where
   show = ppEPC
+
+instance ToField EPC where
+  toField = toField . pack . show
 
 -- |Pretty print EPC
 ppEPC :: EPC -> String

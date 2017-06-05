@@ -12,7 +12,10 @@ import           Data.GS1.URI
 import           Data.GS1.Utils
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Aeson.Text
 import           Data.Swagger
+import           Database.SQLite.Simple.ToField
+import qualified Data.Text.Lazy as TxtL
 
 data BizStep = Accepting
                   | Arriving
@@ -128,6 +131,9 @@ data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
 instance ToSchema DWhy
+
+instance ToField DWhy where
+  toField = toField . TxtL.toStrict . encodeToLazyText
 
 instance HasBizStep DWhy where
   bizStep =

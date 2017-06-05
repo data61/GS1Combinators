@@ -15,6 +15,10 @@ import           Data.Aeson.TH
 import           Data.Swagger
 import qualified Data.Text as T
 
+import Database.SQLite.Simple.ToField
+import Data.Aeson.Text
+import Data.ByteString.Char8 (pack)
+import qualified Data.Text.Lazy as TxtL
 {-
    A timestamp, giving the date and time in a time zone-independent manner.
    For bindings in which fields of this type are represented textually,
@@ -75,6 +79,8 @@ instance ToParamSchema TimeZone where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
 
+instance ToField TimeZone where
+  toField = toField . pack . show
 
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477

@@ -18,6 +18,11 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 
+import Data.Aeson.Text
+import Data.ByteString.Char8 (pack)
+import qualified Data.Text.Lazy as TxtL
+import Database.SQLite.Simple.ToField
+
 data EventType = ObjectEventT
                | AggregationEventT
                | QuantityEventT
@@ -26,14 +31,16 @@ data EventType = ObjectEventT
                deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
+instance ToField EventType where
+  toField = toField . pack . show
 
 
 mkEventType :: String -> Maybe EventType
 mkEventType = mkByName
 
-data Eventish a = Eventish
+data Event = Event
   {
-    _type  :: a
+    _type  :: EventType
   , _eid   :: EventID
   , _what  :: DWhat
   , _when  :: DWhen
@@ -41,7 +48,14 @@ data Eventish a = Eventish
   , _where :: DWhere
   }
   deriving (Show, Eq, Generic)
+$(deriveJSON defaultOptions ''Event)
 
+
+mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Event
+mkEvent t id what when why dwhere = Event t id what when why dwhere
+
+{-
+   commenting out the lens stuff, we don't use it anyway...
 instance HasEventID (Eventish a) where
   eventID =
     lens
@@ -75,6 +89,9 @@ instance HasDWhere (Eventish a) where
 newtype Event = Event (Eventish EventType)
   deriving (Show, Eq, Generic)
 
+$(deriveJSON defaultOptions ''Event)
+
+
 mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
 mkEvent t i w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
                               case (t, w1) of
@@ -84,3 +101,5 @@ mkEvent t i w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
                                 (TransactionEventT, TransactionDWhat{})       -> e
                                 (TransformationEventT, TransformationDWhat{}) -> e
                                 _                                             -> Nothing
+
+-}
