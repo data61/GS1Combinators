@@ -49,10 +49,11 @@ data Event = Event
   }
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''Event)
+instance ToSchema Event
 
 
 mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Event
-mkEvent t id what when why dwhere = Event t id what when why dwhere
+mkEvent = Event
 
 {-
    commenting out the lens stuff, we don't use it anyway...
