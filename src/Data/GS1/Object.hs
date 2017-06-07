@@ -51,10 +51,11 @@ privateObjectID = undefined
 -- RFC 3986 segment nz
 -- get the ObjectID from Http link, a colon might be required
 httpObjectID :: String -> Maybe ObjectID
-httpObjectID s = let result = maybeResult $ parse segmentNz (C.pack s) in
-                     case result of
-                       Just wa -> Just $ Codec.Binary.UTF8.String.decode wa
-                       Nothing -> Nothing
+httpObjectID s =
+  let result = maybeResult $ parse segmentNz (C.pack s)
+   in
+    fmap (Codec.Binary.UTF8.String.decode) result
+
 
 hexDigit :: Char -> Maybe Char
 hexDigit c = if toLower c `elem` (['0'..'9'] ++ ['a'..'f']) then Just c else Nothing
@@ -63,12 +64,14 @@ pctEncoded' :: Char -> Char -> Maybe String
 pctEncoded' a b = form <$> hexDigit a <*> hexDigit b where
   form a' b' = ['%', a', b']
 
+-- XXX you probably want to pattern here instead of using length
 isPctEncoded :: String -> Bool
 isPctEncoded s
   | length s == 3 = isPctEncoded' s
   | otherwise     = False
   where
     isPctEncoded' s' = case s' of
+                         -- XXX these three lines can be rewritten using the _Just prism and the function has (an excellent first exercise!)
                          [x, a, b] -> case x of
                                         '%' -> let ec = pctEncoded' a b in
                                                    case ec of

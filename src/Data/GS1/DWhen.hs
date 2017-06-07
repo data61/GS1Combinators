@@ -53,7 +53,7 @@ parseStr2Time :: (AsEPCISTimeError e, MonadError e m) => String -> m EPCISTime
 parseStr2Time s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime in
                       case parsed of
                         Just et -> pure et
-                        _       -> throwing _IllegalTimeFormat ()
+                        Nothing -> throwing _IllegalTimeFormat ()
 
 -- |parse the string and obtain TimeZone,
 parseStr2TimeZone :: (AsEPCISTimeError e, MonadError e m) => String -> m TimeZone
@@ -61,7 +61,10 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
                       case parsed of
                         Just t -> let tz = zonedTimeZone t :: TimeZone in
                                       pure tz
-                        _      -> throwing _IllegalTimeFormat ()
+                        Nothing -> throwing _IllegalTimeFormat ()
+
+
+
 
 instance Eq ZonedTime where
   x==y = (show x) == (show y)
@@ -103,6 +106,7 @@ instance ToSchema DWhen
 makeClassy ''DWhen
 
 -- |eventTime, recordTime, the timezone is eventTime's
+-- XXX a lot of this switching between Either and Maybe can be rewritten using _Left and _Right prisms
 mkDWhen :: String -> String -> Maybe DWhen
 mkDWhen a b = let et = parseStr2Time a :: Either EPCISTimeError EPCISTime
                   rt = parseStr2Time b :: Either EPCISTimeError EPCISTime
