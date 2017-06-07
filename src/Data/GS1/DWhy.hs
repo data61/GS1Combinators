@@ -60,6 +60,7 @@ $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
 makeClassy ''BizStep
+-- XXX - you might also want makeClassyPrisms for BizStep (as well as, or instead of, makeClassy)
 
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
@@ -134,7 +135,12 @@ instance ToSchema DWhy
 
 instance ToField DWhy where
   toField = toField . TxtL.toStrict . encodeToLazyText
-
+{-
+XXX - FIXME
+this is not a lawful lens
+it is a Traversal though
+you might also want makeClassyPrisms for BizStep (as well as, or instead of, makeClassy)
+-}
 instance HasBizStep DWhy where
   bizStep =
     lens
@@ -145,6 +151,8 @@ instance HasBizStep DWhy where
 -- Nothing is the cause
 makeClassy ''DWhy
 
+-- XXX mkDWhy can be rewritten as:
+--mkDWhy = liftA2 DWhy
 mkDWhy :: Maybe BizStep -> Maybe Disposition -> Maybe DWhy
 mkDWhy step disp = if isNothing step || isNothing disp then Nothing
                      else Just $ DWhy step disp

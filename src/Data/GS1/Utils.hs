@@ -14,10 +14,9 @@ import           Text.Read
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
 insertUs' :: String -> String
-insertUs' [] = []
-insertUs' (x:xs)
-  | isUpper x = '_' : toLower x : insertUs' xs
-  | otherwise = x : insertUs' xs
+insertUs' s = s >>= f
+  where f c = if (isUpper c) then '_':[(toLower c)] else [(toLower c)]
+
 
 revertCamelCase :: String -> String
 revertCamelCase [] = []
@@ -25,6 +24,12 @@ revertCamelCase str = let r = insertUs' str in
                           case r of
                             '_':t -> t
                             _     -> r
+
+{-
+XXX - this is a good exercise, the camelCase function can be rewritten using the _head prism and the modify function (called (%~)) https://github.csiro.au/Blockchain/GS1Combinators/blob/master/src/Data/GS1/Utils.hs#L29
+
+another question, do revertCamelCase and camelCase functions form an Iso?
+-}
 
 camelCase :: String -> String
 camelCase []     = []
