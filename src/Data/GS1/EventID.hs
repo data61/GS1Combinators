@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE TypeOperators   #-}
-
+{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-} --, UndecidableInstances #-}
 
 module Data.GS1.EventID where
 
 import           Control.Lens
 import           Control.Monad (liftM)
-import           Data.UUID
+import           Data.UUID as UUID
 import           Data.Aeson
 import           Data.Aeson.TH
 import           GHC.Generics
@@ -16,8 +16,10 @@ import           Database.SQLite.Simple.ToField
 import           Data.ByteString.Char8 (pack)
 import           Web.HttpApiData
 
-newtype EventID = EventID UUID
+newtype EventID = EventID UUID.UUID
   deriving (Show, Eq, Generic)
+
+makeWrapped ''EventID
 
 instance FromHttpApiData EventID where
   parseQueryParam httpData = liftM EventID $ parseQueryParam httpData
@@ -25,7 +27,7 @@ instance FromHttpApiData EventID where
 instance ToField EventID where
   toField = toField . pack . show
 
-$(deriveJSON defaultOptions ''UUID)
+$(deriveJSON defaultOptions ''UUID.UUID)
 --instance ToSchema UUID
 $(deriveJSON defaultOptions ''EventID)
 instance ToSchema EventID
