@@ -1,4 +1,5 @@
 module Data.GS1.URI where
+{-
 
 import           Data.List
 
@@ -20,3 +21,4 @@ class URI a where
   uriPrefix     :: a -> URIPrefix
   uriQuantifier :: a -> URIQuantifier
   uriPayload    :: a -> URIPayload
+  -}
