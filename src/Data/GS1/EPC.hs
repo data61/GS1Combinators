@@ -82,6 +82,14 @@ instance URI LabelEPC where
     readURI epc = readURILabelEPC epc
     validURI epc = validURILabelEPC  epc
 
+type Quantity = Float
+type Uom = String
+
+-- EPCIS_Guideline.pdf - page 28, table 4-2
+data ClassLabelEPC = GTIN Quantity Uom
+                    -- |LGTIN GS1CompanyPrefix ItemReference Lot Quantity Uom -- e.g. olives in a vat, harvested in April 2017
+                    |GRAI String
+
 readURILabelEPC :: String -> LabelEPC
 readURILabelEPC = undefined
 
