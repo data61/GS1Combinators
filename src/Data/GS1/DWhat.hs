@@ -24,13 +24,13 @@ import qualified Data.Text.Lazy as TxtL
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-          ObjectDWhat Action [LabelEPC] [QuantityElement]
-           -- AggregationDWhat action parentID childEPC childQuantityList
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC] [QuantityElement]
-           -- TransactionDWhat action parentID(URI) bizTransactionList epcList quantityList
-           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC] [QuantityElement]
-           -- TransformationDWhat transformationID inputEPCList inputQuantityList outputEPCList outputQuantityList
-           | TransformationDWhat (Maybe TransformationID) [LabelEPC] [QuantityElement] [LabelEPC] [QuantityElement]
+          ObjectDWhat Action [LabelEPC]
+           -- AggregationDWhat action parentID childEPC
+           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+           -- TransactionDWhat action parentID(URI) bizTransactionList epcList
+           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
+           -- TransformationDWhat transformationID inputEPCList outputEPCList
+           | TransformationDWhat (Maybe TransformationID) [LabelEPC]  [LabelEPC]
            deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''DWhat)
@@ -40,9 +40,9 @@ instance ToField DWhat where
   toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
-ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs
-ppDWhat (AggregationDWhat a pid epcs qs) = "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n" ++ show qs
-ppDWhat (TransactionDWhat a s bizT epcs qs) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n" ++ show qs
-ppDWhat (TransformationDWhat tid iepcs iqs oepcs oqs) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show iepcs ++ "\n" ++ show iqs ++ "\n" ++ show oepcs ++ "\n" ++ show oqs
+ppDWhat (ObjectDWhat a epcs ) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n"
+ppDWhat (AggregationDWhat a pid epcs ) = "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n"
+ppDWhat (TransactionDWhat a s bizT epcs ) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n"
+ppDWhat (TransformationDWhat tid inputEpcs outputEpcs ) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show inputEpcs ++ "\n" ++ show outputEpcs ++ "\n"
 
 makeClassy ''DWhat
