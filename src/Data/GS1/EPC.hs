@@ -69,26 +69,39 @@ data SGTINFilterValue = AllOthers
 $(deriveJSON defaultOptions ''SGTINFilterValue)
 instance ToSchema SGTINFilterValue
 
+{-
+■ The GS1 Company Prefix, assigned by GS1 to a managing entity.
+  This is the same as the GS1 Company Prefix digits within a GS1 SSCC key.
 
+■ The Serial Reference, assigned by the managing entity to a particular
+  logistics handling unit. The Serial Reference as it appears
+  in the EPC URI is derived from the SSCC by concatenating the
+  Extension Digit of the SSCC and the Serial Reference digits,
+  and treating the result as a single numeric string.
+-}
+
+type Uom = String
+type Amount = Float
+type AssetType = String
+
+data Quantity =   MeasuredQuantity Amount Uom
+                | ItemCount Integer
+                deriving (Show, Read, Eq, Generic)
+$(deriveJSON defaultOptions ''Quantity)
+instance ToSchema Quantity
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a vat, harvested in April 2017
-                |GIAI GS1CompanyPrefix IndividualAssetReference -- Global Individual Asset Identifier, e.g. bucket for olives
-                |SSCC ExtensionDigit GS1CompanyPrefix SerialReference CheckDigit --serial shipping container code
-                |SGTIN (Maybe SGTINFilterValue) GS1CompanyPrefix ItemReference CheckDigit SerialNumber --serialsed global trade item number
+data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot (Maybe Quantity)-- e.g. olives in a vat, harvested in April 2017
+                |GIAI GS1CompanyPrefix SerialNumber -- Global Individual Asset Identifier, e.g. bucket for olives
+                |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
+                |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber --serialsed global trade item number
+                |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
                 deriving (Show, Read, Eq, Generic)
 instance URI LabelEPC where
     printURI epc = printURILabelEPC epc
     readURI epc = readURILabelEPC epc
     validURI epc = validURILabelEPC  epc
 
-type Quantity = Float
-type Uom = String
-
--- EPCIS_Guideline.pdf - page 28, table 4-2
-data ClassLabelEPC = GTIN Quantity Uom
-                    -- |LGTIN GS1CompanyPrefix ItemReference Lot Quantity Uom -- e.g. olives in a vat, harvested in April 2017
-                    |GRAI String
 
 readURILabelEPC :: String -> LabelEPC
 readURILabelEPC = undefined
@@ -98,10 +111,11 @@ validURILabelEPC  = undefined
 
 
 printURILabelEPC :: LabelEPC -> String
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot ) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just _)) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot --FIXME : quantity
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
 printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) = "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (SSCC extDigit gs1CompanyPrefix serialReference checkDigit) = "urn:epc:id:scc:"++gs1CompanyPrefix++"."++serialReference
-printURILabelEPC (SGTIN maybeSGTINFilterValue gs1CompanyPrefix itemReference checkDigit serialReference ) = "urn:epc:id:sgtin:"++gs1CompanyPrefix++"."++itemReference++"."++serialReference
+printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) = "urn:epc:id:scc:"++gs1CompanyPrefix++"."++serialNumber
+printURILabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) = "urn:epc:id:sgtin:"++gs1CompanyPrefix++"."++itemReference++"."++serialNumber --FIXME: add Maybe SGTINFilterValue
 
 
 $(deriveJSON defaultOptions ''LabelEPC)
@@ -351,7 +365,7 @@ mkBizTransaction t i = let bt' = parseBizTransactionType t in
 type TransformationID = String
 
 -- | ParentID
-type ParentID = String
+type ParentID = LabelEPC
 
 data Action = Add
             | Observe
