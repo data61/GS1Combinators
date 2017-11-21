@@ -17,9 +17,9 @@ import           Data.Swagger
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
-type Quantity = Double
+--type Quantity = Double
 
-type Uom = String
+--type Uom = String
 
 -- |Simple quantity representation
 data QuantityElement = QuantityElement EPCClass Quantity (Maybe Uom)
