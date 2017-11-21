@@ -102,6 +102,8 @@ instance URI LabelEPC where
     readURI epc = readURILabelEPC epc
     validURI epc = validURILabelEPC  epc
 
+instance ToField LabelEPC where
+  toField = toField . pack . show
 
 readURILabelEPC :: String -> LabelEPC
 readURILabelEPC = undefined
