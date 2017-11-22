@@ -106,7 +106,9 @@ instance ToField LabelEPC where
   toField = toField . pack . show
 
 readURILabelEPC :: String -> LabelEPC
-readURILabelEPC = undefined
+readURILabelEPC uri = undefined
+-- split them into tokens and then pattern match --TODO
+
 
 validURILabelEPC :: LabelEPC -> Bool
 validURILabelEPC  = undefined
