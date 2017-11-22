@@ -553,7 +553,7 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
                                           Nothing -> ""
 
 instance URI ErrorDeclaration where
-  printURI er  =  "urn:epcglobal:cbv:er:" ++ (ppErrorDecleration er)
+  printURI er  =  "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
   readURI _       = undefined --FIXME
   validURI _      = True --FIXME
 {-
