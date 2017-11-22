@@ -296,8 +296,8 @@ confirmMatchingPrefix prfxStr testStr = take (length prfxStr) testStr == prfxStr
 -- assumes prfxStr has more than 1 token
 confirmMatchingPrefix :: String -> String -> Bool
 confirmMatchingPrefix prfxStr testStr
-  | (not (isInfixOf ":" testStr)) = False
-  | otherwise = (init (split ':' prefixStr)) == (init (split ':' testStr))
+  | not isInfixOf ":" testStr = False
+  | otherwise = init split ':' prefixStr == init split ':' testStr
 
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 -- TODO Matt Perry
