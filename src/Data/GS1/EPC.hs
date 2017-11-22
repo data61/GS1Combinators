@@ -24,6 +24,8 @@ import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
 
+import Data.List
+
 
 -- More Refernce: TDS 1.9
 
@@ -286,8 +288,16 @@ ppBizStep = revertCamelCase . show
 mkBizStep' :: String -> Maybe BizStep
 mkBizStep' = mkByName
 
+{-
 confirmMatchingPrefix :: String -> String -> Bool
 confirmMatchingPrefix prfxStr testStr = take (length prfxStr) testStr == prfxStr
+-}
+
+-- assumes prfxStr has more than 1 token
+confirmMatchingPrefix :: String -> String -> Bool
+confirmMatchingPrefix prfxStr testStr
+  | (not (isInfixOf ":" testStr)) = False
+  | otherwise = (init (split ':' prefixStr)) == (init (split ':' testStr))
 
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 -- TODO Matt Perry
