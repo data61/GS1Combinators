@@ -113,12 +113,21 @@ validURILabelEPC  = undefined
 
 
 printURILabelEPC :: LabelEPC -> String
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just _)) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot --FIXME : quantity
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) = "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) = "urn:epc:id:scc:"++gs1CompanyPrefix++"."++serialNumber
-printURILabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) = "urn:epc:id:sgtin:"++gs1CompanyPrefix++"."++itemReference++"."++serialNumber --FIXME: add Maybe SGTINFilterValue
-
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
+    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+    --FIXME : quantity -- where does quantity go? -@SA
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
+    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
+    "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
+printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) =
+    "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
+printURILabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
+    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+    --FIXME: add Maybe SGTINFilterValue
+printURILabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+    --FIXME: add Maybe SGTINFilterValue
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
@@ -147,13 +156,13 @@ instance ToSchema LocationReference
 
 instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationCoord lat lng)  (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-"++lat++"-"++lng++"."++ext
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationCoord lat lng)  Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-"++lat++"-"++lng
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng
   printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "."++str++"."++ext
+    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "."++str
+    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
   readURI _ = undefined --FIXME
   validURI _ = True --FIXME
