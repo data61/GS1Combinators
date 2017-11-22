@@ -57,7 +57,7 @@ type IndividualAssetReference = String
 type SerialNumber = String
 type SGLNExtension = String
 
-data SGTINFilterValue = AllOthers
+data SGTINFilterValue =  AllOthers
                        | POSTradeItem
                        | FullCaseForTransport
                        | Reserved1
@@ -98,9 +98,9 @@ data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot (Maybe Quantity)-- e.g
                 |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
                 deriving (Show, Read, Eq, Generic)
 instance URI LabelEPC where
-    printURI epc = printURILabelEPC epc
-    readURI epc = readURILabelEPC epc
-    validURI epc = validURILabelEPC  epc
+    printURI = printURILabelEPC
+    readURI = readURILabelEPC
+    validURI = validURILabelEPC
 
 instance ToField LabelEPC where
   toField = toField . pack . show
@@ -173,7 +173,7 @@ $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
-  printURI epc = printSrcDestURI epc
+  printURI = printSrcDestURI
   readURI epc = undefined --FIXME
   validURI epc = True --FIXME
 
@@ -427,9 +427,9 @@ ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
 
 instance URI Disposition where
-  printURI disp=  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
+  printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  readURI _     = undefined --FIXME
+  validURI _    = True --FIXME
 
 mkDisposition' :: String -> Maybe Disposition
 mkDisposition' = mkByName
