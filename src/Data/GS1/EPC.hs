@@ -25,8 +25,6 @@ import           Data.GS1.Utils
 import           Database.SQLite.Simple.ToField
 
 
-
-
 -- More Refernce: TDS 1.9
 
 -- URI Prefix
@@ -105,10 +103,10 @@ instance URI LabelEPC where
 instance ToField LabelEPC where
   toField = toField . pack . show
 
-readURILabelEPC :: String -> LabelEPC
+readURILabelEPC :: String -> Maybe LabelEPC
 readURILabelEPC = undefined
 
-validURILabelEPC :: LabelEPC -> Bool
+validURILabelEPC :: String -> Bool
 validURILabelEPC  = undefined
 
 
@@ -194,7 +192,6 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
                             parseURI s uri :: Maybe SourceDestType
 
 -}
-
 
 
 data BusinessTransactionEPC = GDTI
@@ -289,10 +286,18 @@ ppBizStep = revertCamelCase . show
 mkBizStep' :: String -> Maybe BizStep
 mkBizStep' = mkByName
 
+confirmMatchingPrefix :: String -> String -> Bool
+confirmMatchingPrefix prfxStr testStr = take (length prfxStr) testStr == prfxStr
+
+bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
+-- TODO Matt Perry
 instance URI BizStep where
-  printURI epc = "urn:epcglobal:cbv:bizstep:" ++ ppBizStep epc
-  readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
+  printURI epc = bizstepPrefixStr ++ ppBizStep epc
+  readURI epc
+    | confirmMatchingPrefix bizstepPrefixStr epc =
+      mkBizStep' (drop (length bizstepPrefixStr) epc)
+    | otherwise = Nothing
+  validURI epc = Data.Maybe.isJust (readURI epc)
 
 
 mkBizStep :: String -> Maybe BizStep
@@ -331,6 +336,7 @@ instance ToSchema BizTransactionType
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
+-- TODO Matt Perry
 instance URI BizTransactionType where
   printURI   btt  =  "urn:epcglobal:cbv:btt:" ++ (show btt)
   readURI _       = undefined --FIXME
@@ -426,6 +432,7 @@ makeClassyPrisms ''Disposition
 ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
 
+-- TODO Matt Perry
 instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
   readURI _     = undefined --FIXME
@@ -541,6 +548,7 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
                                           Just a  -> ppErrorReasonID a
                                           Nothing -> ""
 
+-- TODO Matt Perry
 instance URI ErrorDeclaration where
   printURI er  =  "urn:epcglobal:cbv:er:" ++ (ppErrorDecleration er)
   readURI _       = undefined --FIXME
