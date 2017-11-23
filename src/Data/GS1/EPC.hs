@@ -91,12 +91,13 @@ $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot (Maybe Quantity)-- e.g. olives in a vat, harvested in April 2017
+data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a vat, harvested in April 2017
                 |GIAI GS1CompanyPrefix SerialNumber -- Global Individual Asset Identifier, e.g. bucket for olives
                 |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
                 |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber --serialsed global trade item number
                 |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
                 deriving (Show, Read, Eq, Generic)
+
 instance URI LabelEPC where
     printURI = printURILabelEPC
     readURI = readURILabelEPC
@@ -109,16 +110,37 @@ readURILabelEPC :: String -> LabelEPC
 readURILabelEPC uri = undefined
 -- split them into tokens and then pattern match --TODO
 
+readURILabelEPC :: [String] -> LabelEPC
+readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
+  LGTIN gs1CompanyPrefix itemReference lot
+    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." rest
+readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
+  GIAI gs1CompanyPrefix individualAssetReference
+    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." rest
+readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
+  SSCC gs1CompanyPrefix serialNumber
+    where [gs1CompanyPrefix, serialNumber] = splitOn "." rest
+readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
+  SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." rest
+readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+  GRAI gs1CompanyPrefix assetType serialNumber
+    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." rest
+readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
 
 validURILabelEPC :: LabelEPC -> Bool
 validURILabelEPC  = undefined
 
 
 printURILabelEPC :: LabelEPC -> String
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
-    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-    --FIXME : quantity -- where does quantity go? -@SA
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
+
+-- commented out because we do not have quantity right now
+-- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
+--     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+--     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
+-- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
+--     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot _) =
     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
 printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
     "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
@@ -130,6 +152,8 @@ printURILabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference s
 printURILabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
     "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
+printURILabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
+    "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
