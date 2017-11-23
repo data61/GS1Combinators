@@ -20,17 +20,18 @@ import Data.Aeson.Text
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
+type IDQuantity = (LabelEPC, Quantity)
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-          ObjectDWhat Action [LabelEPC]
+          ObjectDWhat Action [LabelEPC] [IDQuantity]
            -- AggregationDWhat action parentID childEPC
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]  [IDQuantity]
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
-           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
+           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC] [IDQuantity]
            -- TransformationDWhat transformationID inputEPCList outputEPCList
-           | TransformationDWhat (Maybe TransformationID) [LabelEPC]  [LabelEPC]
+           | TransformationDWhat (Maybe TransformationID) [LabelEPC]  [LabelEPC] [IDQuantity]
            deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''DWhat)
