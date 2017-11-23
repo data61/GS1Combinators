@@ -226,9 +226,9 @@ instance URI SourceDestType where
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
-  |epcType==SDOwningParty = prefix ++ "owning_party"
-  |epcType==SDProcessingParty = prefix ++ "processing_party"
-  |epcType==SDLocation = prefix ++ "location"
+  |epcType == SDOwningParty = prefix ++ "owning_party"
+  |epcType == SDProcessingParty = prefix ++ "processing_party"
+  |epcType == SDLocation = prefix ++ "location"
     where
       prefix = "urn:epcglobal:cbv:sdt:"
 
