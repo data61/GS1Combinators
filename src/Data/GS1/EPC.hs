@@ -288,10 +288,11 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 
 -}
 
-data BusinessTransactionEPC = GDTI
-                              | GSRN
+data BusinessTransactionEPC =  GDTI
+                             | GSRN
                               deriving (Show, Read, Eq, Generic)
 
+-- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
   printURI epc = "implment me" --FIXME
   readURI epc = undefined --FIXME
