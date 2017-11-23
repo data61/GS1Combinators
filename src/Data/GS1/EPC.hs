@@ -16,6 +16,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 import           Text.Printf
+import           Data.List.Split
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
@@ -57,7 +58,7 @@ type IndividualAssetReference = String
 type SerialNumber = String
 type SGLNExtension = String
 
-data SGTINFilterValue = AllOthers
+data SGTINFilterValue =  AllOthers
                        | POSTradeItem
                        | FullCaseForTransport
                        | Reserved1
@@ -91,34 +92,66 @@ $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot (Maybe Quantity)-- e.g. olives in a vat, harvested in April 2017
+data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a vat, harvested in April 2017
                 |GIAI GS1CompanyPrefix SerialNumber -- Global Individual Asset Identifier, e.g. bucket for olives
                 |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
                 |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber --serialsed global trade item number
                 |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
                 deriving (Show, Read, Eq, Generic)
+
 instance URI LabelEPC where
-    printURI epc = printURILabelEPC epc
-    readURI epc = readURILabelEPC epc
-    validURI epc = validURILabelEPC  epc
+    printURI = printURILabelEPC
+    readURI epcStr = readURILabelEPC $ splitOn ":" epcStr
+    validURI = validURILabelEPC
 
 instance ToField LabelEPC where
   toField = toField . pack . show
 
-readURILabelEPC :: String -> LabelEPC
-readURILabelEPC = undefined
+
+readURILabelEPC :: [String] -> LabelEPC
+readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
+  LGTIN gs1CompanyPrefix itemReference lot
+    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." $ concat rest
+readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
+  GIAI gs1CompanyPrefix individualAssetReference
+    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." $ concat rest
+readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
+  SSCC gs1CompanyPrefix serialNumber
+    where [gs1CompanyPrefix, serialNumber] = splitOn "." $ concat rest
+readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
+  SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." $ concat rest
+readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+  GRAI gs1CompanyPrefix assetType serialNumber
+    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." $ concat rest
+readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
 
 validURILabelEPC :: LabelEPC -> Bool
 validURILabelEPC  = undefined
 
 
 printURILabelEPC :: LabelEPC -> String
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just _)) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot --FIXME : quantity
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) = "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) = "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) = "urn:epc:id:scc:"++gs1CompanyPrefix++"."++serialNumber
-printURILabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) = "urn:epc:id:sgtin:"++gs1CompanyPrefix++"."++itemReference++"."++serialNumber --FIXME: add Maybe SGTINFilterValue
 
+-- commented out because we do not have quantity right now
+-- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
+--     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+--     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
+-- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
+--     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
+    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
+    "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
+printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) =
+    "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
+printURILabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
+    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+    --FIXME: add Maybe SGTINFilterValue
+printURILabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+    --FIXME: add Maybe SGTINFilterValue
+printURILabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
+    "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
@@ -147,13 +180,13 @@ instance ToSchema LocationReference
 
 instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationCoord lat lng)  (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-"++lat++"-"++lng++"."++ext
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationCoord lat lng)  Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-"++lat++"-"++lng
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng
   printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "."++str++"."++ext
+    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "."++str
+    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
   readURI _ = undefined --FIXME
   validURI _ = True --FIXME
@@ -173,7 +206,7 @@ $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
-  printURI epc = printSrcDestURI epc
+  printURI = printSrcDestURI
   readURI epc = undefined --FIXME
   validURI epc = True --FIXME
 
@@ -332,7 +365,7 @@ ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
-  printURI   btt  =  "urn:epcglobal:cbv:btt:" ++ (show btt)
+  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI _       = undefined --FIXME
   validURI _      = True --FIXME
 
@@ -427,9 +460,9 @@ ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
 
 instance URI Disposition where
-  printURI disp=  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
+  printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  readURI _     = undefined --FIXME
+  validURI _    = True --FIXME
 
 mkDisposition' :: String -> Maybe Disposition
 mkDisposition' = mkByName
@@ -492,7 +525,7 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
 
 
 instance Eq ZonedTime where
-  x==y = (show x) == (show y)
+  x == y = show x == show y
 
 $(deriveJSON defaultOptions ''TimeZone)
 --instance ToSchema ZonedTime
@@ -542,7 +575,7 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
                                           Nothing -> ""
 
 instance URI ErrorDeclaration where
-  printURI er  =  "urn:epcglobal:cbv:er:" ++ (ppErrorDecleration er)
+  printURI er  =  "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
   readURI _       = undefined --FIXME
   validURI _      = True --FIXME
 {-

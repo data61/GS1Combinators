@@ -10,7 +10,7 @@ testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $
     it "produces correct URI" $
-      ppURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
+      printURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
 
   describe "parseBizStep" $ do
     it "parse valid uri to bizstep" $
@@ -29,7 +29,7 @@ testDisposition :: Spec
 testDisposition = do
   describe "Disposition" $
     it "produces correct URI" $
-      ppURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
+      printURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
 
   describe "parse Disposition" $ do
     it "parse the valid uri to disposition" $

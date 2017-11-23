@@ -15,7 +15,7 @@ import           Text.Read
 -- and make each uppercase letter to lowercase
 insertUs' :: String -> String
 insertUs' s = s >>= f
-  where f c = if (isUpper c) then '_':[(toLower c)] else [(toLower c)]
+  where f c = if isUpper c then '_' : [toLower c] else [toLower c]
 
 
 revertCamelCase :: String -> String
