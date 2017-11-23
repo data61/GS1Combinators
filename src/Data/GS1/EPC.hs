@@ -100,15 +100,12 @@ data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a va
 
 instance URI LabelEPC where
     printURI = printURILabelEPC
-    readURI = readURILabelEPC
+    readURI epcStr = readURILabelEPC $ splitOn ":" epcStr
     validURI = validURILabelEPC
 
 instance ToField LabelEPC where
   toField = toField . pack . show
 
-readURILabelEPC :: String -> LabelEPC
-readURILabelEPC uri = undefined
--- split them into tokens and then pattern match --TODO
 
 readURILabelEPC :: [String] -> LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
