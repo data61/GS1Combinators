@@ -42,8 +42,7 @@ type URIPayload = String
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> a
-  validURI      :: a -> Bool
+  readURI       :: String -> Maybe a
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
@@ -117,27 +116,25 @@ instance ToField LabelEPC where
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
-readURILabelEPC :: [String] -> LabelEPC
+readURILabelEPC :: [String] -> Maybe LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  CL (LGTIN gs1CompanyPrefix itemReference lot) Nothing
+  Just $ CL (LGTIN gs1CompanyPrefix itemReference lot) Nothing
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
 readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
-  CL (GRAI gs1CompanyPrefix assetType serialNumber) Nothing
+  Just $ CL (GRAI gs1CompanyPrefix assetType serialNumber) Nothing
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 
 readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  IL (GIAI gs1CompanyPrefix individualAssetReference)
+  Just $ IL (GIAI gs1CompanyPrefix individualAssetReference)
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
 readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  IL (SSCC gs1CompanyPrefix serialNumber)
+  Just $ IL (SSCC gs1CompanyPrefix serialNumber)
     where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
 readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
+  Just $ IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
     where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
-readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
-
-validURILabelEPC :: LabelEPC -> Bool
-validURILabelEPC  = undefined
+-- readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
+readURILabelEPC _ = Nothing
 
 
 printURILabelEPC :: LabelEPC -> String
@@ -149,19 +146,21 @@ printURILabelEPC :: LabelEPC -> String
 -- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
 --     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
 printURILabelEPC (CL (LGTIN gs1CompanyPrefix itemReference lot) _) =
-    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+  "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURILabelEPC (CL (GRAI gs1CompanyPrefix assetType serialNumber) _ ) =
+  "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
+
+
 printURILabelEPC (IL (GIAI gs1CompanyPrefix individualAssetReference)) =
-    "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
+  "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
 printURILabelEPC (IL (SSCC gs1CompanyPrefix serialNumber)) =
-    "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
+  "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
 printURILabelEPC (IL (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber)) =
-    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
 printURILabelEPC (IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber)) =
-    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (CL (GRAI gs1CompanyPrefix assetType serialNumber) _ ) =
-    "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
 $(deriveJSON defaultOptions ''LabelEPC)
 $(deriveJSON defaultOptions ''ClassLabel)
@@ -203,8 +202,10 @@ instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
-  readURI _ = undefined --FIXME
-  validURI _ = True --FIXME
+  readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+
+readURILocationEPC :: [String] -> Maybe LocationEPC
+readURILocationEPC  = undefined
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
