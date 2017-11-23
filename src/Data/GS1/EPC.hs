@@ -234,15 +234,14 @@ hasCoord s = isJust obj
     obj = parseCoord $ splitOn "-" s
 
 readURILocationEPC :: [String] -> Maybe LocationEPC
-readURILocationEPC _ = error "Not implemented yet"
-readURILocationEPC [companyPrefix, locationStr, ext]
-  | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
-  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
-    where
-      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
 readURILocationEPC [companyPrefix, locationStr]
   | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) Nothing
   | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+    where
+      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
+readURILocationEPC [companyPrefix, locationStr, ext]
+  | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
+  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
     where
       [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
 readURILocationEPC _ = Nothing
