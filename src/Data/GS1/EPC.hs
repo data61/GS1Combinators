@@ -263,7 +263,7 @@ instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   printURI = printSrcDestURI
-  readURI epc = undefined --FIXME
+  readURI epc = readSrcDestURI $ last $ splitOn ":" epc --FIXME - fixed @SA
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
@@ -273,6 +273,11 @@ printSrcDestURI epcType
     where
       prefix = "urn:epcglobal:cbv:sdt:"
 
+readSrcDestURI :: String -> Maybe SourceDestType
+readSrcDestURI "owning_party" = Just SDOwningParty
+readSrcDestURI "processing_party" = Just SDProcessingParty
+readSrcDestURI "location" = Just SDLocation
+readSrcDestURI _ = Nothing
 {-
 mkSourceDestType :: String -> Maybe SourceDestType
 mkSourceDestType = mkByName
