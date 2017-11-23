@@ -18,6 +18,7 @@ import           Data.Swagger
 import           Text.Printf
 import           Data.List.Split
 import           Data.Maybe
+import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
@@ -286,16 +287,37 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
                             parseURI s uri :: Maybe SourceDestType
 
 -}
-
-data BusinessTransactionEPC =  GDTI
-                             | GSRN
+-- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
+type DocumentType = String
+type ServiceReference = String
+data BusinessTransactionEPC =  GDTI GS1CompanyPrefix DocumentType SerialNumber
+                             | GSRN GS1CompanyPrefix SerialReference
                               deriving (Show, Read, Eq, Generic)
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
-  printURI epc = "implment me" --FIXME
-  readURI epc = undefined --FIXME
+  printURI = printURIBusinessTransactionEPC --FIXME
+  readURI epcStr = undefined --FIXME
 
+printURIBusinessTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
+  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
+printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
+  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, serialReference]
+
+-- the length of the arguments should equal to the following, according to the spec
+gsrnPaddedComponentLength = 17
+gdtiPaddedComponentLength = 12
+
+readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
+readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
+  | length (gs1CompanyPrefix ++ serialReference) == gsrnPaddedComponentLength
+    = Just $ GSRN gs1CompanyPrefix serialReference
+  | otherwise = Nothing
+readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
+  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPaddedComponentLength
+    = Just $ GDTI documentType documentType serialNumber
+  | otherwise = Nothing
+readURIBusinessTransactionEPC _ = Nothing
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
