@@ -92,12 +92,19 @@ $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a vat, harvested in April 2017
-                |GIAI GS1CompanyPrefix SerialNumber -- Global Individual Asset Identifier, e.g. bucket for olives
-                |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
-                |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber --serialsed global trade item number
-                |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
+data LabelEPC = CL ClassLabel (Maybe Quantity) | IL InstanceLabel
                 deriving (Show, Read, Eq, Generic)
+data ClassLabel = LGTIN GS1CompanyPrefix ItemReference Lot
+                -- e.g. olives in a vat, harvested in April 2017
+                | GRAI GS1CompanyPrefix AssetType SerialNumber
+                --Global returnable asset identifier
+                deriving (Show, Read, Eq, Generic)
+data InstanceLabel = GIAI GS1CompanyPrefix SerialNumber 
+                    -- Global Individual Asset Identifier, e.g. bucket for olives
+                    |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
+                    |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
+                    --serialsed global trade item number
+                    deriving (Show, Read, Eq, Generic)
 
 instance URI LabelEPC where
     printURI = printURILabelEPC
@@ -106,7 +113,6 @@ instance URI LabelEPC where
 
 instance ToField LabelEPC where
   toField = toField . pack . show
-
 
 readURILabelEPC :: [String] -> LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
