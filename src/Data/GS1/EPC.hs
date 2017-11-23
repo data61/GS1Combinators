@@ -17,6 +17,7 @@ import           Data.Aeson.TH
 import           Data.Swagger
 import           Text.Printf
 import           Data.List.Split
+import           Data.Maybe
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
@@ -222,29 +223,29 @@ instance URI LocationEPC where
 
   readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
 
+-- returns Nothing if string cannot be parsed into lat and long
+parseCoord :: [String] -> Maybe [String]
+parseCoord ["latLong", lat, long] = Just [lat, long]
+parseCoord _ = Nothing
 
-parseCoord :: String -> [String]
-parseCoord = error "Not implemented yet"
-  
+hasCoord :: String -> Bool
+hasCoord s = isJust obj
+  where
+    obj = parseCoord $ splitOn "-" s
 
 readURILocationEPC :: [String] -> Maybe LocationEPC
-readURILocationEPC [companyPrefix, locationReferenceStr, ext] =
-  Just $ SGLN companyPrefix (LocationReferenceNum locationReferenceStr) (Just ext)
-readURILocationEPC [companyPrefix, locationReferenceStr] =
-  Just $ SGLN companyPrefix (LocationReferenceNum locationReferenceStr) Nothing
-
-readURILocationEPC [companyPrefix, coord, ext] =
-  Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
+readURILocationEPC _ = error "Not implemented yet"
+readURILocationEPC [companyPrefix, locationStr, ext]
+  | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
+  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
     where
-      [lat, lng] = parseCoord coord
-readURILocationEPC [companyPrefix, coord] =
-  Just $ SGLN companyPrefix (LocationCoord lat lng) Nothing
+      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
+readURILocationEPC [companyPrefix, locationStr]
+  | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) Nothing
+  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
     where
-      [lat, lng] = parseCoord coord
-
-
-
-
+      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
+readURILocationEPC _ = Nothing
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
