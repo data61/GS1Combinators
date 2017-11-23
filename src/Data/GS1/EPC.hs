@@ -93,6 +93,9 @@ $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 
+-- Given a suffix/uri body, returns a list of strings separated by "."
+-- The separator should be passed on as an argument to this function in order
+-- to make it more generalised
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
