@@ -108,7 +108,6 @@ data InstanceLabel = GIAI GS1CompanyPrefix SerialNumber
 instance URI LabelEPC where
     printURI = printURILabelEPC
     readURI epcStr = readURILabelEPC $ splitOn ":" epcStr
-    validURI = validURILabelEPC
 
 instance ToField LabelEPC where
   toField = toField . pack . show
@@ -224,7 +223,6 @@ instance ToSchema SourceDestType
 instance URI SourceDestType where
   printURI = printSrcDestURI
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
@@ -251,9 +249,6 @@ data BusinessTransactionEPC = GDTI
 instance URI BusinessTransactionEPC where
   printURI epc = "implment me" --FIXME
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
-
-
 
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
@@ -339,8 +334,6 @@ mkBizStep' = mkByName
 instance URI BizStep where
   printURI epc = "urn:epcglobal:cbv:bizstep:" ++ ppBizStep epc
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
-
 
 mkBizStep :: String -> Maybe BizStep
 mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
@@ -381,7 +374,6 @@ ppBizTransactionType = revertCamelCase . show
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
 
 mkBizTransactionType :: String -> Maybe BizTransactionType
 mkBizTransactionType = mkByName
@@ -476,7 +468,6 @@ ppDisposition = revertCamelCase . show
 instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
   readURI _     = undefined --FIXME
-  validURI _    = True --FIXME
 
 mkDisposition' :: String -> Maybe Disposition
 mkDisposition' = mkByName
@@ -591,7 +582,6 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
 instance URI ErrorDeclaration where
   printURI er  =  "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
   readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
 {-
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
