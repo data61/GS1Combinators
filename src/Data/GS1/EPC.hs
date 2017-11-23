@@ -42,8 +42,7 @@ type URIPayload = String
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> a
-  validURI      :: a -> Bool
+  readURI       :: String -> Maybe a
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
@@ -91,67 +90,100 @@ data Quantity =   MeasuredQuantity Amount Uom
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
+
+getSuffixTokens :: [String] -> [String]
+getSuffixTokens suffix = splitOn "." $ concat suffix
+
+
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot -- e.g. olives in a vat, harvested in April 2017
-                |GIAI GS1CompanyPrefix SerialNumber -- Global Individual Asset Identifier, e.g. bucket for olives
-                |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
-                |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber --serialsed global trade item number
-                |GRAI GS1CompanyPrefix AssetType SerialNumber --Global returnable asset identifier
-                deriving (Show, Read, Eq, Generic)
+data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
+                     -- e.g. olives in a vat, harvested in April 2017
+                    |GRAI GS1CompanyPrefix AssetType SerialNumber
+                     --Global returnable asset identifier
+                     deriving (Show, Read, Eq, Generic)
 
-instance URI LabelEPC where
-    printURI = printURILabelEPC
-    readURI epcStr = readURILabelEPC $ splitOn ":" epcStr
-    validURI = validURILabelEPC
-
-instance ToField LabelEPC where
+instance URI ClassLabelEPC where
+    printURI = printURIClassLabelEPC
+    readURI epcStr = readURIClassLabelEPC $ splitOn ":" epcStr
+  
+instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
 
-readURILabelEPC :: [String] -> LabelEPC
-readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  LGTIN gs1CompanyPrefix itemReference lot
-    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  GIAI gs1CompanyPrefix individualAssetReference
-    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  SSCC gs1CompanyPrefix serialNumber
-    where [gs1CompanyPrefix, serialNumber] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
-  GRAI gs1CompanyPrefix assetType serialNumber
-    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." $ concat rest
-readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
-
-validURILabelEPC :: LabelEPC -> Bool
-validURILabelEPC  = undefined
+readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
+readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
+  Just $ LGTIN gs1CompanyPrefix itemReference lot
+    where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+  Just $ GRAI gs1CompanyPrefix assetType serialNumber
+    where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
+-- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
+readURIClassLabelEPC _ = Nothing
 
 
-printURILabelEPC :: LabelEPC -> String
+printURIClassLabelEPC :: ClassLabelEPC -> String
+printURIClassLabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
+  "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+printURIClassLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
+  "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
--- commented out because we do not have quantity right now
--- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
---     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
---     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
--- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
---     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
-    "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
-    "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) =
-    "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURILabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
-    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+$(deriveJSON defaultOptions ''ClassLabelEPC)
+instance ToSchema ClassLabelEPC
+
+
+
+
+data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
+                       -- Global Individual Asset Identifier, e.g. bucket for olives
+                       |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
+                       |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
+                       --serialsed global trade item number
+                       deriving (Show, Read, Eq, Generic)
+
+
+
+instance URI InstanceLabelEPC where
+    printURI = printURIInstanceLabelEPC
+    readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
+
+                    
+readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
+  Just $ GIAI gs1CompanyPrefix individualAssetReference
+    where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
+  Just $ SSCC gs1CompanyPrefix serialNumber
+    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
+  Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+-- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
+readURIInstanceLabelEPC _ = Nothing
+
+
+printURIInstanceLabelEPC :: InstanceLabelEPC -> String
+printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
+  "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
+printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
+  "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
+  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
-    "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
-    "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
+
+
+$(deriveJSON defaultOptions ''InstanceLabelEPC)
+instance ToSchema InstanceLabelEPC
+
+instance ToField InstanceLabelEPC where
+    toField = toField . pack . show
+
+
+-- this should be moved to src/.../DWhat.hs
+data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+                deriving (Show, Read, Eq, Generic)
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
@@ -188,8 +220,10 @@ instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
-  readURI _ = undefined --FIXME
-  validURI _ = True --FIXME
+  readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+
+readURILocationEPC :: [String] -> Maybe LocationEPC
+readURILocationEPC  = undefined
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -208,13 +242,12 @@ instance ToSchema SourceDestType
 instance URI SourceDestType where
   printURI = printSrcDestURI
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
-  |epcType==SDOwningParty = prefix ++ "owning_party"
-  |epcType==SDProcessingParty = prefix ++ "processing_party"
-  |epcType==SDLocation = prefix ++ "location"
+  |epcType == SDOwningParty = prefix ++ "owning_party"
+  |epcType == SDProcessingParty = prefix ++ "processing_party"
+  |epcType == SDLocation = prefix ++ "location"
     where
       prefix = "urn:epcglobal:cbv:sdt:"
 
@@ -228,8 +261,6 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 
 -}
 
-
-
 data BusinessTransactionEPC = GDTI
                               | GSRN
                               deriving (Show, Read, Eq, Generic)
@@ -237,9 +268,6 @@ data BusinessTransactionEPC = GDTI
 instance URI BusinessTransactionEPC where
   printURI epc = "implment me" --FIXME
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
-
-
 
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
@@ -325,8 +353,6 @@ mkBizStep' = mkByName
 instance URI BizStep where
   printURI epc = "urn:epcglobal:cbv:bizstep:" ++ ppBizStep epc
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
-
 
 mkBizStep :: String -> Maybe BizStep
 mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
@@ -367,7 +393,6 @@ ppBizTransactionType = revertCamelCase . show
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
 
 mkBizTransactionType :: String -> Maybe BizTransactionType
 mkBizTransactionType = mkByName
@@ -462,7 +487,6 @@ ppDisposition = revertCamelCase . show
 instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
   readURI _     = undefined --FIXME
-  validURI _    = True --FIXME
 
 mkDisposition' :: String -> Maybe Disposition
 mkDisposition' = mkByName
@@ -577,7 +601,6 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
 instance URI ErrorDeclaration where
   printURI er  =  "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
   readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
 {-
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
