@@ -16,6 +16,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 import           Text.Printf
+import           Data.List.Split
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
@@ -110,19 +111,19 @@ instance ToField LabelEPC where
 readURILabelEPC :: [String] -> LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   LGTIN gs1CompanyPrefix itemReference lot
-    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." rest
+    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   GIAI gs1CompanyPrefix individualAssetReference
-    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." rest
+    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
   SSCC gs1CompanyPrefix serialNumber
-    where [gs1CompanyPrefix, serialNumber] = splitOn "." rest
+    where [gs1CompanyPrefix, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
   SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." rest
+    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
   GRAI gs1CompanyPrefix assetType serialNumber
-    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." rest
+    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
 
 validURILabelEPC :: LabelEPC -> Bool
@@ -137,7 +138,7 @@ printURILabelEPC :: LabelEPC -> String
 --     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
 -- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
 --     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot _) =
+printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
 printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
     "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
