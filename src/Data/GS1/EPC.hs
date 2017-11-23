@@ -116,19 +116,19 @@ instance ToField LabelEPC where
 
 readURILabelEPC :: [String] -> LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  LGTIN gs1CompanyPrefix itemReference lot
+  CL (LGTIN gs1CompanyPrefix itemReference lot) Nothing
     where [gs1CompanyPrefix, itemReference, lot] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  GIAI gs1CompanyPrefix individualAssetReference
+  IL (GIAI gs1CompanyPrefix individualAssetReference)
     where [gs1CompanyPrefix, individualAssetReference] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  SSCC gs1CompanyPrefix serialNumber
+  IL (SSCC gs1CompanyPrefix serialNumber)
     where [gs1CompanyPrefix, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+  IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
     where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
-  GRAI gs1CompanyPrefix assetType serialNumber
+  CL (GRAI gs1CompanyPrefix assetType serialNumber) Nothing
     where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." $ concat rest
 readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
 
@@ -144,23 +144,28 @@ printURILabelEPC :: LabelEPC -> String
 --     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
 -- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
 --     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
+printURILabelEPC (CL (LGTIN gs1CompanyPrefix itemReference lot) _) =
     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
+printURILabelEPC (IL (GIAI gs1CompanyPrefix individualAssetReference)) =
     "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (SSCC gs1CompanyPrefix serialNumber) =
+printURILabelEPC (IL (SSCC gs1CompanyPrefix serialNumber)) =
     "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURILabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
+printURILabelEPC (IL (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber)) =
     "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+printURILabelEPC (IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber)) =
     "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
+printURILabelEPC (CL (GRAI gs1CompanyPrefix assetType serialNumber) _ ) =
     "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
 $(deriveJSON defaultOptions ''LabelEPC)
+$(deriveJSON defaultOptions ''ClassLabel)
+$(deriveJSON defaultOptions ''InstanceLabel)
+
 instance ToSchema LabelEPC
+instance ToSchema ClassLabel
+instance ToSchema InstanceLabel
 
 
 type Lng = String
@@ -233,8 +238,6 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
                             parseURI s uri :: Maybe SourceDestType
 
 -}
-
-
 
 data BusinessTransactionEPC = GDTI
                               | GSRN
