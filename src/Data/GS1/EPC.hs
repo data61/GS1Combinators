@@ -114,22 +114,26 @@ instance URI LabelEPC where
 instance ToField LabelEPC where
   toField = toField . pack . show
 
+getSuffixTokens :: [String] -> [String]
+getSuffixTokens suffix = splitOn "." $ concat suffix
+
 readURILabelEPC :: [String] -> LabelEPC
 readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   CL (LGTIN gs1CompanyPrefix itemReference lot) Nothing
-    where [gs1CompanyPrefix, itemReference, lot] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  IL (GIAI gs1CompanyPrefix individualAssetReference)
-    where [gs1CompanyPrefix, individualAssetReference] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  IL (SSCC gs1CompanyPrefix serialNumber)
-    where [gs1CompanyPrefix, serialNumber] = splitOn "." $ concat rest
-readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = splitOn "." $ concat rest
+    where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
 readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
   CL (GRAI gs1CompanyPrefix assetType serialNumber) Nothing
-    where [gs1CompanyPrefix, assetType, serialNumber] = splitOn "." $ concat rest
+    where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
+
+readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
+  IL (GIAI gs1CompanyPrefix individualAssetReference)
+    where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
+readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
+  IL (SSCC gs1CompanyPrefix serialNumber)
+    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
+  IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
+    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
 readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
 
 validURILabelEPC :: LabelEPC -> Bool
