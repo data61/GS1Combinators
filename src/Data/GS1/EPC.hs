@@ -90,84 +90,103 @@ data Quantity =   MeasuredQuantity Amount Uom
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
---GS1_EPC_TDS_i1_10.pdf (page 27)
-data LabelEPC = CL ClassLabel (Maybe Quantity) | IL InstanceLabel
-                deriving (Show, Read, Eq, Generic)
-data ClassLabel = LGTIN GS1CompanyPrefix ItemReference Lot
-                -- e.g. olives in a vat, harvested in April 2017
-                | GRAI GS1CompanyPrefix AssetType SerialNumber
-                --Global returnable asset identifier
-                deriving (Show, Read, Eq, Generic)
-data InstanceLabel = GIAI GS1CompanyPrefix SerialNumber 
-                    -- Global Individual Asset Identifier, e.g. bucket for olives
-                    |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
-                    |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
-                    --serialsed global trade item number
-                    deriving (Show, Read, Eq, Generic)
-
-instance URI LabelEPC where
-    printURI = printURILabelEPC
-    readURI epcStr = readURILabelEPC $ splitOn ":" epcStr
-
-instance ToField LabelEPC where
-  toField = toField . pack . show
 
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
-readURILabelEPC :: [String] -> Maybe LabelEPC
-readURILabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  Just $ CL (LGTIN gs1CompanyPrefix itemReference lot) Nothing
+
+--GS1_EPC_TDS_i1_10.pdf (page 27)
+data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
+                     -- e.g. olives in a vat, harvested in April 2017
+                    |GRAI GS1CompanyPrefix AssetType SerialNumber
+                     --Global returnable asset identifier
+                     deriving (Show, Read, Eq, Generic)
+
+instance URI ClassLabelEPC where
+    printURI = printURIClassLabelEPC
+    readURI epcStr = readURIClassLabelEPC $ splitOn ":" epcStr
+  
+instance ToField ClassLabelEPC where
+  toField = toField . pack . show
+
+
+readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
+readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
+  Just $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURILabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
-  Just $ CL (GRAI gs1CompanyPrefix assetType serialNumber) Nothing
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+  Just $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
-
-readURILabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  Just $ IL (GIAI gs1CompanyPrefix individualAssetReference)
-    where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
-readURILabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  Just $ IL (SSCC gs1CompanyPrefix serialNumber)
-    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
-readURILabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  Just $ IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
--- readURILabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURILabelEPC _ = Nothing
+-- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
+readURIClassLabelEPC _ = Nothing
 
 
-printURILabelEPC :: LabelEPC -> String
-
--- commented out because we do not have quantity right now
--- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot (Just quantity)) =
---     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
---     --FIXME : quantity -- at the moment, the quantity is not parsed - @SA
--- printURILabelEPC (LGTIN gs1CompanyPrefix itemReference lot Nothing) =
---     "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (CL (LGTIN gs1CompanyPrefix itemReference lot) _) =
+printURIClassLabelEPC :: ClassLabelEPC -> String
+printURIClassLabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
   "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURILabelEPC (CL (GRAI gs1CompanyPrefix assetType serialNumber) _ ) =
+printURIClassLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
   "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
 
+$(deriveJSON defaultOptions ''ClassLabelEPC)
+instance ToSchema ClassLabelEPC
 
-printURILabelEPC (IL (GIAI gs1CompanyPrefix individualAssetReference)) =
+
+
+
+data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
+                       -- Global Individual Asset Identifier, e.g. bucket for olives
+                       |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
+                       |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
+                       --serialsed global trade item number
+                       deriving (Show, Read, Eq, Generic)
+
+
+
+instance URI InstanceLabelEPC where
+    printURI = printURIInstanceLabelEPC
+    readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
+
+                    
+readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
+  Just $ GIAI gs1CompanyPrefix individualAssetReference
+    where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
+  Just $ SSCC gs1CompanyPrefix serialNumber
+    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
+  Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+-- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
+readURIInstanceLabelEPC _ = Nothing
+
+
+printURIInstanceLabelEPC :: InstanceLabelEPC -> String
+printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
   "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
-printURILabelEPC (IL (SSCC gs1CompanyPrefix serialNumber)) =
+printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
   "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURILabelEPC (IL (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber)) =
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
-printURILabelEPC (IL (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber)) =
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
+
+
+$(deriveJSON defaultOptions ''InstanceLabelEPC)
+instance ToSchema InstanceLabelEPC
+
+instance ToField InstanceLabelEPC where
+    toField = toField . pack . show
+
+
+-- this should be moved to src/.../DWhat.hs
+data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+                deriving (Show, Read, Eq, Generic)
 
 $(deriveJSON defaultOptions ''LabelEPC)
-$(deriveJSON defaultOptions ''ClassLabel)
-$(deriveJSON defaultOptions ''InstanceLabel)
-
 instance ToSchema LabelEPC
-instance ToSchema ClassLabel
-instance ToSchema InstanceLabel
 
 
 type Lng = String
