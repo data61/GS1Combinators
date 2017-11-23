@@ -300,9 +300,11 @@ data BusinessTransactionEPC =  GDTI GS1CompanyPrefix DocumentType SerialNumber
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
-  printURI = printURIBusinessTransactionEPC --FIXME
-  readURI epcStr = undefined --FIXME
-
+  printURI = printURIBusinessTransactionEPC
+  readURI epcStr = readURIBusinessTransactionEPC $
+                      getSuffixTokens [last $ splitOn ":" epcStr]
+--                    Getting the uri body out of the string
+printURIBusinessTransactionEPC :: BusinessTransactionEPC -> String
 printURIBusinessTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
   "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
 printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
