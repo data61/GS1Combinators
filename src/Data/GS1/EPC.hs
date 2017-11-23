@@ -222,8 +222,29 @@ instance URI LocationEPC where
 
   readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
 
+
+parseCoord :: String -> [String]
+parseCoord = error "Not implemented yet"
+  
+
 readURILocationEPC :: [String] -> Maybe LocationEPC
-readURILocationEPC  = undefined
+readURILocationEPC [companyPrefix, locationReferenceStr, ext] =
+  Just $ SGLN companyPrefix (LocationReferenceNum locationReferenceStr) (Just ext)
+readURILocationEPC [companyPrefix, locationReferenceStr] =
+  Just $ SGLN companyPrefix (LocationReferenceNum locationReferenceStr) Nothing
+
+readURILocationEPC [companyPrefix, coord, ext] =
+  Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
+    where
+      [lat, lng] = parseCoord coord
+readURILocationEPC [companyPrefix, coord] =
+  Just $ SGLN companyPrefix (LocationCoord lat lng) Nothing
+    where
+      [lat, lng] = parseCoord coord
+
+
+
+
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
