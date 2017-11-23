@@ -364,7 +364,7 @@ ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
-  printURI   btt  =  "urn:epcglobal:cbv:btt:" ++ (show btt)
+  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI _       = undefined --FIXME
   validURI _      = True --FIXME
 
@@ -524,7 +524,7 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
 
 
 instance Eq ZonedTime where
-  x==y = (show x) == (show y)
+  x == y = show x == show y
 
 $(deriveJSON defaultOptions ''TimeZone)
 --instance ToSchema ZonedTime
