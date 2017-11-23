@@ -25,6 +25,7 @@ import           Data.GS1.Utils
 import           Database.SQLite.Simple.ToField
 
 import Data.List
+import Data.Maybe
 
 
 -- More Refernce: TDS 1.9
@@ -41,9 +42,7 @@ type URIPayload = String
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> a
-  validURI      :: a -> Bool
-
+  readURI       :: String -> Maybe a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -100,16 +99,12 @@ data LabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot (Maybe Quantity)-- e.g
 instance URI LabelEPC where
     printURI = printURILabelEPC
     readURI = readURILabelEPC
-    validURI = validURILabelEPC
 
 instance ToField LabelEPC where
   toField = toField . pack . show
 
 readURILabelEPC :: String -> Maybe LabelEPC
 readURILabelEPC = undefined
-
-validURILabelEPC :: String -> Bool
-validURILabelEPC  = undefined
 
 
 printURILabelEPC :: LabelEPC -> String
@@ -156,7 +151,6 @@ instance URI LocationEPC where
     "urn:epc:id:sgln:" ++ companyPrefix ++ "."++str
 
   readURI _ = undefined --FIXME
-  validURI _ = True --FIXME
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -175,7 +169,6 @@ instance ToSchema SourceDestType
 instance URI SourceDestType where
   printURI = printSrcDestURI
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
@@ -203,9 +196,6 @@ data BusinessTransactionEPC = GDTI
 instance URI BusinessTransactionEPC where
   printURI epc = "implment me" --FIXME
   readURI epc = undefined --FIXME
-  validURI epc = True --FIXME
-
-
 
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
@@ -295,20 +285,19 @@ confirmMatchingPrefix prfxStr testStr = take (length prfxStr) testStr == prfxStr
 
 -- assumes prfxStr has more than 1 token
 confirmMatchingPrefix :: String -> String -> Bool
-confirmMatchingPrefix prfxStr testStr
-  | not isInfixOf ":" testStr = False
-  | otherwise = init split ':' prefixStr == init split ':' testStr
+confirmMatchingPrefix prefixStr testStr
+  | (":" `isInfixOf` testStr) = (init (T.split (==':') (T.pack prefixStr)) == (init (T.split (==':') (T.pack testStr))))
+  | otherwise = False
 
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
--- TODO Matt Perry
+
+-- CHECK - better to use mkBizStep' or mkBizStep ?
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
   readURI epc
     | confirmMatchingPrefix bizstepPrefixStr epc =
       mkBizStep' (drop (length bizstepPrefixStr) epc)
     | otherwise = Nothing
-  validURI epc = Data.Maybe.isJust (readURI epc)
-
 
 mkBizStep :: String -> Maybe BizStep
 mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
@@ -346,11 +335,9 @@ instance ToSchema BizTransactionType
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
--- TODO Matt Perry
 instance URI BizTransactionType where
-  printURI   btt  =  "urn:epcglobal:cbv:btt:" ++ (show btt)
-  readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
+  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ (show btt)
+  readURI         = parseBizTransactionType
 
 mkBizTransactionType :: String -> Maybe BizTransactionType
 mkBizTransactionType = mkByName
@@ -442,11 +429,9 @@ makeClassyPrisms ''Disposition
 ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
 
--- TODO Matt Perry
 instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI _     = undefined --FIXME
-  validURI _    = True --FIXME
+  readURI       = mkDisposition
 
 mkDisposition' :: String -> Maybe Disposition
 mkDisposition' = mkByName
@@ -558,11 +543,10 @@ ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
                                           Just a  -> ppErrorReasonID a
                                           Nothing -> ""
 
--- TODO Matt Perry
 instance URI ErrorDeclaration where
   printURI er  =  "urn:epcglobal:cbv:er:" ++ (ppErrorDecleration er)
   readURI _       = undefined --FIXME
-  validURI _      = True --FIXME
+
 {-
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
