@@ -563,7 +563,7 @@ instance ToField TimeZone where
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
 named :: T.Text -> Schema -> NamedSchema
-named name schema = NamedSchema (Just name) schema
+named name = NamedSchema (Just name)
 
 timeSchema :: T.Text -> Schema
 timeSchema fmt = mempty
