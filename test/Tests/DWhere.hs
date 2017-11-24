@@ -19,23 +19,24 @@ testSGLN =
           Just (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
       it "Invalid URI" $
         (readURI :: String -> Maybe LocationEPC) "this:is:invalid" `shouldBe` Nothing
-      -- it "Some other valid uri" $
-      --   readURI "urn:epc:class:lgtin:4012345.012345.998877" `shouldBe` Nothing
-      -- it "Empty string" $
-      --   readURI "" `shouldBe` Nothing
-      -- it "Only one component missing" $
-      --   readURI "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
-      -- it "Invalid length - failure expected" $
-      --   readURI "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
+      it "Some other valid uri" $
+        (readURI :: String -> Maybe LocationEPC) "urn:epc:class:lgtin:4012345.012345.998877" `shouldBe` Nothing
+      it "Empty string" $
+        (readURI :: String -> Maybe LocationEPC) "" `shouldBe` Nothing
+      it "Some components missing" $
+        (readURI :: String -> Maybe LocationEPC) "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
+      it "Invalid length - failure expected" $
+        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
 -- TODO
-    -- describe "SGLN with lat and long" $ do
-    --   it "LatLong" $
-    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+    -- Specs for lat-long could not be found in the standard. going off the source code
+    describe "SGLN with lat and long" $ do
+      it "LatLong" $
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
       
-    --   it "LatLong" $
-    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      it "LatLong" $
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
     
 
 
