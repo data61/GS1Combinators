@@ -5,8 +5,8 @@ import           Data.GS1.DWhere
 import           Data.GS1.URI
 import           Test.Hspec
 
-type EitherLE = Either LocationError EPC
-
+type EitherLE = Either LocationError LocationEPC
+--                                  Experimental
 testPassGLN :: Spec
 testPassGLN =
   describe "Location" $ do

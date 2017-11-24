@@ -233,7 +233,7 @@ parseCoord :: [String] -> Maybe [String]
 parseCoord ["latLong", lat, long] = Just [lat, long]
 parseCoord _ = Nothing
 
--- checks if the string has coords. not a pure function
+-- checks if the string has coords. not a fully generalised function
 hasCoord :: String -> Bool
 hasCoord s = isJust obj
   where
