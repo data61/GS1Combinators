@@ -5,13 +5,13 @@ import           Data.GS1.DWhere
 import           Data.GS1.URI
 import           Test.Hspec
 
-type EitherLE = Either LocationError EPC
-
+type EitherLE = Either LocationError LocationEPC
+--                                   Experimental
 testPassGLN :: Spec
 testPassGLN =
   describe "Location" $ do
-    it "GLN is verified correctly" $
-      (gln "0614141" "18133" "9" :: EitherLE) `shouldBe` Right (GLN "0614141" "18133" "9")
+    it "SGLN is verified correctly" $
+      (SGLN "0614141" "18133" "9" :: EitherLE) `shouldBe` Right (GLN "0614141" "18133" "9")
 
     it "GLN is verified correctly" $
       (gln "0532132" "14112" "7" :: EitherLE) `shouldBe` Right (GLN "0532132" "14112" "7")
