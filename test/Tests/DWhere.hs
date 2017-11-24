@@ -26,18 +26,22 @@ testSGLN =
         (readURI :: String -> Maybe LocationEPC) "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
       it "Invalid length - failure expected" $
         (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
--- TODO
+  
     -- Specs for lat-long could not be found in the standard. going off the source code
+    -- "urn:epc:id:sgln:0614141.latLong-123-456.400"
+    -- "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
     describe "SGLN with lat and long" $ do
-      it "LatLong" $
-        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      it "LatLong with ext" $
+        readURI "urn:epc:id:sgln:0614141.latLong-123-456.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationCoord "123" "456") (Just "400"))
       
-      it "LatLong" $
-        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
-    
+      it "LatLong without ext" $
+        readURI "urn:epc:id:sgln:0614141.latLong-123-456" `shouldBe` 
+          Just (SGLN "0614141" (LocationCoord "123" "456") Nothing)
 
+      it "Invalid urn with LatLong" $
+        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:0614141.123-456"
+          `shouldBe` Nothing
 
     -- it "GLN is verified correctly from 20141216 onesteel" $
     --   (gln "9348585" "01002" "3" :: EitherLE) `shouldBe` Right (GLN "9348585" "01002" "3")
