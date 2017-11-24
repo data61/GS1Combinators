@@ -10,20 +10,33 @@ type EitherLE = Either LocationError LocationEPC
 testSGLN :: Spec
 testSGLN =
   describe "Location" $ do
-    it "SGLN is read correctly - LocationReferenceNum with extension" $
-      readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-        Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
-
-    -- it "SGLN is read correctly - LatLong" $
-    --   readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-    --     Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+    describe "SGLN with location reference" $ do
+      it "LocationReferenceNum with extension" $
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      it "LocationReferenceNum without extension" $
+        readURI "urn:epc:id:sgln:0614141.12345" `shouldBe`
+          Just (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
+      it "Invalid URI" $
+        (readURI :: String -> Maybe LocationEPC) "this:is:invalid" `shouldBe` Nothing
+      -- it "Some other valid uri" $
+      --   readURI "urn:epc:class:lgtin:4012345.012345.998877" `shouldBe` Nothing
+      -- it "Empty string" $
+      --   readURI "" `shouldBe` Nothing
+      -- it "Only one component missing" $
+      --   readURI "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
+      -- it "Invalid length - failure expected" $
+      --   readURI "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
+-- TODO
+    -- describe "SGLN with lat and long" $ do
+    --   it "LatLong" $
+    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      
+    --   it "LatLong" $
+    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
     
-    -- it "SGLN is read correctly - LocationReferenceNum with extension" $
-    --   readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe`
-    --     Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
-
-
-
 
 
     -- it "GLN is verified correctly from 20141216 onesteel" $
