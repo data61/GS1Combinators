@@ -286,7 +286,6 @@ printSrcDestURI :: SourceDestType -> String
 printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
 printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
 printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
-printSrcDestURI _ = error "Invalid argument"
 
 readSrcDestURI :: String -> Maybe SourceDestType
 readSrcDestURI "owning_party" = Just SDOwningParty
