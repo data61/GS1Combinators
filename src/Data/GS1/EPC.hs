@@ -312,7 +312,10 @@ printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
   "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, serialReference]
 
 -- the length of the arguments should equal to the following, according to the spec
+-- used for the purposes of validation
+gsrnPaddedComponentLength :: Int
 gsrnPaddedComponentLength = 17
+gdtiPaddedComponentLength :: Int
 gdtiPaddedComponentLength = 12
 
 readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
