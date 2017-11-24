@@ -6,8 +6,8 @@ import           Test.Hspec
 
 type EitherLE = Either LocationError LocationEPC
 --                                  Experimental
-testSGLN :: Spec
-testSGLN =
+testReadSGLN :: Spec
+testReadSGLN =
   describe "Location" $ do
     describe "SGLN with location reference" $ do
       it "LocationReferenceNum with extension" $
