@@ -399,6 +399,10 @@ instance ToSchema BizStep
 makeClassy ''BizStep
 -- XXX - you might also want makeClassyPrisms for BizStep (as well as, or instead of, makeClassy)
 
+-- DELETEME since not used, redundant
+-- mkBizStep' :: String -> Maybe BizStep
+-- mkBizStep' = mkByName
+
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
@@ -445,6 +449,10 @@ ppBizTransactionType = revertCamelCase . show
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI         = parseBizTransactionType
+
+-- DELETEME since redundant
+-- mkBizTransactionType :: String -> Maybe BizTransactionType
+-- mkBizTransactionType = mkByName
 
 parseBizTransactionType :: String -> Maybe BizTransactionType
 parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
@@ -532,6 +540,10 @@ makeClassyPrisms ''Disposition
 
 ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
+
+-- DELETEME since redundant, not used
+-- mkDisposition' :: String -> Maybe Disposition
+-- mkDisposition' = mkByName
 
 instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
