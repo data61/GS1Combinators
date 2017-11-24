@@ -13,7 +13,8 @@ import           Test.Hspec   (hspec)
 main :: IO ()
 main = do
   -- DWhere
-  hspec testSGLN
+  hspec testReadSGLN
+  hspec testPrintSGLN
   -- hspec testMkEPC
 
   -- -- DWhy
