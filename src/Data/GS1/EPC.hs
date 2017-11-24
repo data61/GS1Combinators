@@ -28,6 +28,7 @@ import Data.List
 import Data.Maybe
 
 
+
 -- More Refernce: TDS 1.9
 
 -- URI Prefix
@@ -520,32 +521,32 @@ timeSchema fmt = mempty
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
 
+-- DELETED ErrorReasonID since incorrect since it 
+-- -- |EPCIS 1.2 section 7.5
+-- -- FIXME example should be found to verify the implementation is correct
+-- data ErrorReasonID = DidNotOccur
+--                    | IncorrectData
+--                    deriving (Show, Eq, Generic)
 
--- |EPCIS 1.2 section 7.5
--- FIXME example should be found to verify the implementation is correct
-data ErrorReasonID = DidNotOccur
-                   | IncorrectData
-                   deriving (Show, Eq, Generic)
+-- ppErrorReasonID :: ErrorReasonID -> String
+-- ppErrorReasonID = revertCamelCase . show
 
-ppErrorReasonID :: ErrorReasonID -> String
-ppErrorReasonID = revertCamelCase . show
-
-data ErrorDeclaration = ErrorDeclaration
-  {
-    _declarationTime    :: EPCISTime
-  , _reason             :: Maybe ErrorReasonID
-  , _correctiveEventIDs :: Maybe [EventID]
-  }
-  deriving (Show, Eq, Generic)
+-- data ErrorDeclaration = ErrorDeclaration
+--   {
+--     _declarationTime    :: EPCISTime
+--   , _reason             :: Maybe ErrorReasonID
+--   , _correctiveEventIDs :: Maybe [EventID]
+--   }
+--   deriving (Show, Eq, Generic)
 
 
-ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
-                                          Just a  -> ppErrorReasonID a
-                                          Nothing -> ""
+-- ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
+--                                           Just a  -> ppErrorReasonID a
+--                                           Nothing -> ""
 
-instance URI ErrorDeclaration where
-  printURI er  =  "urn:epcglobal:cbv:er:" ++ (ppErrorDecleration er)
-  readURI _       = undefined --FIXME
+-- instance URI ErrorDeclaration where
+--   printURI er  = "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
+--   readURI _    = undefined --FIXME
 
 {-
 -- |calculate the check digit from gs1company prefix and location reference
