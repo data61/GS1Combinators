@@ -270,13 +270,13 @@ instance URI SourceDestType where
   printURI = printSrcDestURI
   readURI epc = readSrcDestURI $ last $ splitOn ":" epc --FIXME - fixed @SA
 
+srcDestPrefixStr :: String
+srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
+
 printSrcDestURI :: SourceDestType -> String
-printSrcDestURI epcType
-  | epcType == SDOwningParty = prefixStr ++ "owning_party"
-  | epcType == SDProcessingParty = prefixStr ++ "processing_party"
-  | epcType == SDLocation = prefixStr ++ "location"
-    where
-      prefixStr = "urn:epcglobal:cbv:sdt:"
+printSrcDestURI SDOwningParty = prefixStr ++ "owning_party"
+printSrcDestURI SDProcessingParty = prefixStr ++ "processing_party"
+printSrcDestURI SDLocation = prefixStr ++ "location"
 printSrcDestURI _ = error "Invalid argument"
 
 readSrcDestURI :: String -> Maybe SourceDestType
