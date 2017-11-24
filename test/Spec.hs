@@ -25,8 +25,8 @@ main = do
   -- hspec testMkDWhat
 
   -- -- DWhen
-  -- hspec testParseTime
-  -- hspec testMkDWhen
+  hspec testParseTime
+  hspec testMkDWhen
 
   -- -- Object
   -- hspec testObjectID
