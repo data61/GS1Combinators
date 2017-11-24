@@ -2,7 +2,6 @@ module Tests.DWhere where
 
 import           Data.GS1.EPC
 import           Data.GS1.DWhere
-import           Data.GS1.URI
 import           Test.Hspec
 
 type EitherLE = Either LocationError LocationEPC
