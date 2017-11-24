@@ -43,6 +43,12 @@ testReadSGLN =
         (readURI :: String -> Maybe LocationEPC) "urn:epc:id:0614141.123-456"
           `shouldBe` Nothing
 
+testPrintSGLN :: Spec
+testPrintSGLN = error "Not implemented yet"
+
+
+
+-- DELETEME
     -- it "GLN is verified correctly from 20141216 onesteel" $
     --   (gln "9348585" "01002" "3" :: EitherLE) `shouldBe` Right (GLN "9348585" "01002" "3")
 
