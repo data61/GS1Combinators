@@ -271,11 +271,12 @@ instance URI SourceDestType where
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI epcType
-  |epcType == SDOwningParty = prefix ++ "owning_party"
-  |epcType == SDProcessingParty = prefix ++ "processing_party"
-  |epcType == SDLocation = prefix ++ "location"
+  | epcType == SDOwningParty = prefixStr ++ "owning_party"
+  | epcType == SDProcessingParty = prefixStr ++ "processing_party"
+  | epcType == SDLocation = prefixStr ++ "location"
     where
-      prefix = "urn:epcglobal:cbv:sdt:"
+      prefixStr = "urn:epcglobal:cbv:sdt:"
+printSrcDestURI _ = error "Invalid argument"
 
 readSrcDestURI :: String -> Maybe SourceDestType
 readSrcDestURI "owning_party" = Just SDOwningParty
