@@ -28,14 +28,15 @@ testSGLN =
       -- it "Invalid length - failure expected" $
       --   readURI "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
 -- TODO
-    -- describe "SGLN with lat and long" $ do
-    --   it "LatLong" $
-    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+    -- could not find the specs for this in the standard. going off source code
+    describe "SGLN with lat and long" $ do
+      it "LatLong" $
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
       
-    --   it "LatLong" $
-    --     readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
-    --       Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      it "LatLong" $
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+          Just (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
     
 
 
