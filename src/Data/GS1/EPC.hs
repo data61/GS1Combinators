@@ -226,7 +226,14 @@ instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
-  readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+  readURI epcStr
+   | isLocationEPC (splitOn ":" epcStr) =
+      readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+   | otherwise            = Nothing
+
+isLocationEPC :: [String] -> Bool
+isLocationEPC ("urn":"epc":"id":"sgln":_) = True
+isLocationEPC _                      = False
 
 -- returns Nothing if string cannot be parsed into lat and long
 parseCoord :: [String] -> Maybe [String]
