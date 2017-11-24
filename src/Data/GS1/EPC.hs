@@ -274,9 +274,9 @@ srcDestPrefixStr :: String
 srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
 
 printSrcDestURI :: SourceDestType -> String
-printSrcDestURI SDOwningParty = prefixStr ++ "owning_party"
-printSrcDestURI SDProcessingParty = prefixStr ++ "processing_party"
-printSrcDestURI SDLocation = prefixStr ++ "location"
+printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
+printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
+printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
 printSrcDestURI _ = error "Invalid argument"
 
 readSrcDestURI :: String -> Maybe SourceDestType
