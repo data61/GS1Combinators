@@ -27,11 +27,6 @@ import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
 
-import Data.List
-import Data.Maybe
-
-
-
 -- More Refernce: TDS 1.9
 
 -- URI Prefix
@@ -407,35 +402,15 @@ makeClassy ''BizStep
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
-mkBizStep' :: String -> Maybe BizStep
-mkBizStep' = mkByName
-
-{-
-confirmMatchingPrefix :: String -> String -> Bool
-confirmMatchingPrefix prfxStr testStr = take (length prfxStr) testStr == prfxStr
--}
-
--- assumes prfxStr has more than 1 token
-confirmMatchingPrefix :: String -> String -> Bool
-confirmMatchingPrefix prefixStr testStr
-  | (":" `isInfixOf` testStr) = (init (T.split (==':') (T.pack prefixStr)) == (init (T.split (==':') (T.pack testStr))))
-  | otherwise = False
-
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
--- CHECK - better to use mkBizStep' or mkBizStep ?
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI epc
-    | confirmMatchingPrefix bizstepPrefixStr epc =
-      mkBizStep' (drop (length bizstepPrefixStr) epc)
-    | otherwise = Nothing
+  readURI = mkBizStep
 
 mkBizStep :: String -> Maybe BizStep
 mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
                       parseURI s uri :: Maybe BizStep
-
-
 
 {-
   Example:
@@ -470,9 +445,6 @@ ppBizTransactionType = revertCamelCase . show
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
   readURI         = parseBizTransactionType
-
-mkBizTransactionType :: String -> Maybe BizTransactionType
-mkBizTransactionType = mkByName
 
 parseBizTransactionType :: String -> Maybe BizTransactionType
 parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
@@ -565,14 +537,9 @@ instance URI Disposition where
   printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
   readURI       = mkDisposition
 
-mkDisposition' :: String -> Maybe Disposition
-mkDisposition' = mkByName
-
 mkDisposition :: String -> Maybe Disposition
 mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
                          parseURI s uri :: Maybe Disposition
-
-
 
 
 ---------------------------
