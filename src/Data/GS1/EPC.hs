@@ -232,7 +232,7 @@ instance URI LocationEPC where
    | otherwise            = Nothing
 
 isLocationEPC :: [String] -> Bool
-isLocationEPC ("urn":"epc":"id":"sgln":_) = True
+isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
 isLocationEPC _                      = False
 
 -- returns Nothing if string cannot be parsed into lat and long
