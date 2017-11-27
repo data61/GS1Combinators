@@ -110,12 +110,11 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
--- TODO validate length
 readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Just $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Just $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
@@ -139,7 +138,6 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        --serialsed global trade item number
                        deriving (Show, Read, Eq, Generic)
 
--- TODO validate length
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
@@ -419,8 +417,8 @@ bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
-                  parseURI s uri :: Maybe BizStep
+  readURI  s   = let uri = "urn:epcglobal:cbv:bizstep" in
+                    parseURI s uri :: Maybe BizStep
 
 {-
   Example:
