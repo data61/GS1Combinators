@@ -15,7 +15,6 @@ main = do
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
-  -- hspec testMkEPC
 
   -- -- DWhy
   hspec testBizStep
