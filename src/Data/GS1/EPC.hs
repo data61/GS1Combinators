@@ -475,7 +475,7 @@ makeClassy ''BizTransaction
 
 -- | TransactionType, TransactionID
 mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt' = parseBizTransactionType t in
+mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
                            case bt' of
                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
                              _       -> Nothing
