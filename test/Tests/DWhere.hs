@@ -8,7 +8,7 @@ type EitherLE = Either LocationError LocationEPC
 --                                  Experimental
 testReadSGLN :: Spec
 testReadSGLN =
-  describe "Location - Testing readURI" $ do
+  describe "Location - Testing readURI" $
     describe "SGLN with location reference" $ do
       it "LocationReferenceNum with extension" $
         readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
@@ -24,29 +24,16 @@ testReadSGLN =
         (readURI :: String -> Maybe LocationEPC) "" `shouldBe` Nothing
       it "Some components missing" $
         (readURI :: String -> Maybe LocationEPC) "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
-      it "Invalid length - failure expected" $
-        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing
-  
-    -- Specs for lat-long could not be found in the standard. going off the source code
-    -- "urn:epc:id:sgln:0614141.latLong-123-456.400"
-    -- "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
-    describe "SGLN with lat and long" $ do
-      it "LatLong with ext" $
-        readURI "urn:epc:id:sgln:0614141.latLong-123-456.400" `shouldBe` 
-          Just (SGLN "0614141" (LocationCoord "123" "456") (Just "400"))
-      
-      it "LatLong without ext" $
-        readURI "urn:epc:id:sgln:0614141.latLong-123-456" `shouldBe` 
-          Just (SGLN "0614141" (LocationCoord "123" "456") Nothing)
-
-      it "Invalid urn with LatLong" $
-        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:0614141.123-456"
-          `shouldBe` Nothing
+      describe "Invalid length" $ do
+        it "Shorter length" $
+          (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing
+        it "Longer length" $
+          (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06534590.123234322.4" `shouldBe` Nothing
 
 testPrintSGLN :: Spec
 -- testPrintSGLN = error "Not implemented yet"
 testPrintSGLN =
-  describe "Location - Testing printURI" $ do
+  describe "Location - Testing printURI" $
     describe "SGLN with location reference" $ do
       it "LocationReferenceNum with extension" $
         printURI (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
@@ -55,14 +42,6 @@ testPrintSGLN =
         printURI (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
           `shouldBe` "urn:epc:id:sgln:0614141.12345"
   
-    describe "SGLN with lat and long" $ do
-      it "LatLong with ext" $
-        printURI (SGLN "0614141" (LocationCoord "123" "456") (Just "400"))
-          `shouldBe` "urn:epc:id:sgln:0614141.latLong-123-456.400"
-      
-      it "LatLong without ext" $
-        printURI (SGLN "0614141" (LocationCoord "123" "456") Nothing)
-          `shouldBe` "urn:epc:id:sgln:0614141.latLong-123-456"
 
 -- DELETEME
     -- it "GLN is verified correctly from 20141216 onesteel" $
