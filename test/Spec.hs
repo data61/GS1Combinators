@@ -13,16 +13,16 @@ import           Test.Hspec   (hspec)
 main :: IO ()
 main = do
   -- DWhere
-  hspec testPassGLN
-  hspec testMkEPC
+  hspec testReadSGLN
+  hspec testPrintSGLN
 
-  -- DWhy
+  -- -- DWhy
   hspec testBizStep
   hspec testDisposition
 
   -- DWhat
-  hspec testBizTransaction
-  hspec testMkDWhat
+  -- hspec testBizTransaction
+  -- hspec testMkDWhat
 
   -- DWhen
   hspec testParseTime
@@ -32,7 +32,7 @@ main = do
   hspec testObjectID
 
   -- Parser
-  hspec testParser
+  -- hspec testParser
 
   -- Utils
   hspec testRevertCamelCase

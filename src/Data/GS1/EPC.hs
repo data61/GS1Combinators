@@ -17,6 +17,8 @@ import           Data.Aeson.TH
 import           Data.Swagger
 import           Text.Printf
 import           Data.List.Split
+import           Data.Maybe
+import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
@@ -24,9 +26,6 @@ import           Data.GS1.EventID
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
-
-
-
 
 -- More Refernce: TDS 1.9
 
@@ -43,7 +42,6 @@ type URIPayload = String
 class URI a where
   printURI      :: a -> String
   readURI       :: String -> Maybe a
-
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -91,6 +89,9 @@ $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 
+-- Given a suffix/uri body, returns a list of strings separated by "."
+-- The separator should be passed on as an argument to this function in order
+-- to make it more generalised
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
@@ -131,8 +132,6 @@ $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 
-
-
 data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
                        -- Global Individual Asset Identifier, e.g. bucket for olives
                        |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
@@ -141,12 +140,11 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        deriving (Show, Read, Eq, Generic)
 
 
-
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
 
-                    
+
 readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Just $ GIAI gs1CompanyPrefix individualAssetReference
@@ -189,10 +187,9 @@ $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
 
-type Lng = String
-type Lat = String
-data LocationReference = LocationCoord Lat Lng
-                        |LocationReferenceNum String
+type Lng = Float
+type Lat = Float
+data LocationReference = LocationReferenceNum String
   deriving (Read, Eq, Generic)
 
 
@@ -200,30 +197,61 @@ data LocationEPC = SGLN GS1CompanyPrefix LocationReference (Maybe SGLNExtension)
   deriving (Show, Read, Eq, Generic)
 
 -- |non-normative representation - simplest form of RFC5870
-ppLocationReference :: LocationReference -> String
-ppLocationReference (LocationCoord lat lng) = printf "geo:%f,%f" lat lng
-ppLocationReference (LocationReferenceNum str) = str
+-- deprecated, kept momentarily for reference
+-- ppLocationReference :: LocationReference -> String
+-- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
+-- ppLocationReference (LocationReferenceNum str) = str
 
 
 instance Show LocationReference where
-  show = ppLocationReference
+  show (LocationReferenceNum str) = str
 
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
-  printURI (SGLN companyPrefix (LocationCoord lat lng)  (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
-  printURI (SGLN companyPrefix (LocationCoord lat lng)  Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng
   printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
 
-  readURI epcStr = readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+  readURI epcStr
+   | isLocationEPC (splitOn ":" epcStr) =
+      readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+   | otherwise            = Nothing
+
+isLocationEPC :: [String] -> Bool
+isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
+isLocationEPC _                                   = False
+
+-- returns Nothing if string cannot be parsed into lat and long
+-- now deprecated
+parseCoord :: [String] -> Maybe [String]
+parseCoord ["latLong", lat, long] = Just [lat, long]
+parseCoord _ = Nothing
+
+-- checks if the string has coords. not a fully generalised function
+-- now deprecated
+hasCoord :: String -> Bool
+hasCoord s = isJust obj
+  where
+    obj = parseCoord $ splitOn "-" s
+
+-- GS1_EPC_TDS_i1_11.pdf Page 29
+sglnPaddedComponentLength :: Int
+sglnPaddedComponentLength = 12
 
 readURILocationEPC :: [String] -> Maybe LocationEPC
-readURILocationEPC  = undefined
+-- without extension
+readURILocationEPC [companyPrefix, locationStr]
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise = Nothing
+-- with extension
+readURILocationEPC [companyPrefix, locationStr, ext]
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise = Nothing
+readURILocationEPC _ = Nothing -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -241,16 +269,21 @@ instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   printURI = printSrcDestURI
-  readURI epc = undefined --FIXME
+  readURI epc = readSrcDestURI $ last $ splitOn ":" epc --FIXME - fixed @SA
+
+srcDestPrefixStr :: String
+srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
 
 printSrcDestURI :: SourceDestType -> String
-printSrcDestURI epcType
-  |epcType == SDOwningParty = prefix ++ "owning_party"
-  |epcType == SDProcessingParty = prefix ++ "processing_party"
-  |epcType == SDLocation = prefix ++ "location"
-    where
-      prefix = "urn:epcglobal:cbv:sdt:"
+printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
+printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
+printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
 
+readSrcDestURI :: String -> Maybe SourceDestType
+readSrcDestURI "owning_party" = Just SDOwningParty
+readSrcDestURI "processing_party" = Just SDProcessingParty
+readSrcDestURI "location" = Just SDLocation
+readSrcDestURI _ = Nothing
 {-
 mkSourceDestType :: String -> Maybe SourceDestType
 mkSourceDestType = mkByName
@@ -260,15 +293,46 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
                             parseURI s uri :: Maybe SourceDestType
 
 -}
-
-data BusinessTransactionEPC = GDTI
-                              | GSRN
+-- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
+type DocumentType = String
+type ServiceReference = String
+data BusinessTransactionEPC =  GDTI GS1CompanyPrefix DocumentType SerialNumber
+                             | GSRN GS1CompanyPrefix SerialReference
                               deriving (Show, Read, Eq, Generic)
 
+-- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
-  printURI epc = "implment me" --FIXME
-  readURI epc = undefined --FIXME
+  printURI = printURIBusinessTransactionEPC
+  readURI epcStr = readURIBusinessTransactionEPC $
+                      getSuffixTokens [last $ splitOn ":" epcStr]
+--                    Getting the uri body out of the string
+printURIBusinessTransactionEPC :: BusinessTransactionEPC -> String
+printURIBusinessTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
+  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
+printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
+  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, serialReference]
 
+-- the length of the arguments should equal to the following, according to the spec
+-- used for the purposes of validation
+
+-- GS1_EPC_TDS_i1_11.pdf Page 31
+gsrnPaddedComponentLength :: Int
+gsrnPaddedComponentLength = 17
+
+-- GS1_EPC_TDS_i1_11.pdf Page 32
+gdtiPaddedComponentLength :: Int
+gdtiPaddedComponentLength = 12
+
+readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
+readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
+  | length (gs1CompanyPrefix ++ serialReference) == gsrnPaddedComponentLength
+    = Just $ GSRN gs1CompanyPrefix serialReference
+  | otherwise = Nothing
+readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
+  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPaddedComponentLength
+    = Just $ GDTI documentType documentType serialNumber
+  | otherwise = Nothing
+readURIBusinessTransactionEPC _ = Nothing
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
@@ -344,21 +408,19 @@ instance ToSchema BizStep
 makeClassy ''BizStep
 -- XXX - you might also want makeClassyPrisms for BizStep (as well as, or instead of, makeClassy)
 
+-- DELETEME since not used, redundant
+-- mkBizStep' :: String -> Maybe BizStep
+-- mkBizStep' = mkByName
+
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
-mkBizStep' :: String -> Maybe BizStep
-mkBizStep' = mkByName
+bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
-  printURI epc = "urn:epcglobal:cbv:bizstep:" ++ ppBizStep epc
-  readURI epc = undefined --FIXME
-
-mkBizStep :: String -> Maybe BizStep
-mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
-                      parseURI s uri :: Maybe BizStep
-
-
+  printURI epc = bizstepPrefixStr ++ ppBizStep epc
+  readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
+                  parseURI s uri :: Maybe BizStep
 
 {-
   Example:
@@ -392,14 +454,12 @@ ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
-  readURI _       = undefined --FIXME
+  readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
+                        parseURI s uri :: Maybe BizTransactionType
 
-mkBizTransactionType :: String -> Maybe BizTransactionType
-mkBizTransactionType = mkByName
-
-parseBizTransactionType :: String -> Maybe BizTransactionType
-parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
-                                parseURI s uri :: Maybe BizTransactionType
+-- DELETEME since redundant
+-- mkBizTransactionType :: String -> Maybe BizTransactionType
+-- mkBizTransactionType = mkByName
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
@@ -415,7 +475,7 @@ makeClassy ''BizTransaction
 
 -- | TransactionType, TransactionID
 mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt' = parseBizTransactionType t in
+mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
                            case bt' of
                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
                              _       -> Nothing
@@ -484,19 +544,14 @@ makeClassyPrisms ''Disposition
 ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
 
+-- DELETEME since redundant, not used
+-- mkDisposition' :: String -> Maybe Disposition
+-- mkDisposition' = mkByName
+
 instance URI Disposition where
-  printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI _     = undefined --FIXME
-
-mkDisposition' :: String -> Maybe Disposition
-mkDisposition' = mkByName
-
-mkDisposition :: String -> Maybe Disposition
-mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
-                         parseURI s uri :: Maybe Disposition
-
-
-
+  printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
+                      parseURI s uri :: Maybe Disposition
 
 ---------------------------
 -- WHEN  -------------------
@@ -563,7 +618,7 @@ instance ToField TimeZone where
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
 named :: T.Text -> Schema -> NamedSchema
-named name schema = NamedSchema (Just name) schema
+named name = NamedSchema (Just name) -- this function has been Eta reduced
 
 timeSchema :: T.Text -> Schema
 timeSchema fmt = mempty
@@ -575,32 +630,33 @@ timeSchema fmt = mempty
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
 
+-- DELETED ErrorReasonID since incorrect since it 
+-- -- |EPCIS 1.2 section 7.5
+-- -- FIXME example should be found to verify the implementation is correct
+-- data ErrorReasonID = DidNotOccur
+--                    | IncorrectData
+--                    deriving (Show, Eq, Generic)
 
--- |EPCIS 1.2 section 7.5
--- FIXME example should be found to verify the implementation is correct
-data ErrorReasonID = DidNotOccur
-                   | IncorrectData
-                   deriving (Show, Eq, Generic)
+-- ppErrorReasonID :: ErrorReasonID -> String
+-- ppErrorReasonID = revertCamelCase . show
 
-ppErrorReasonID :: ErrorReasonID -> String
-ppErrorReasonID = revertCamelCase . show
-
-data ErrorDeclaration = ErrorDeclaration
-  {
-    _declarationTime    :: EPCISTime
-  , _reason             :: Maybe ErrorReasonID
-  , _correctiveEventIDs :: Maybe [EventID]
-  }
-  deriving (Show, Eq, Generic)
+-- data ErrorDeclaration = ErrorDeclaration
+--   {
+--     _declarationTime    :: EPCISTime
+--   , _reason             :: Maybe ErrorReasonID
+--   , _correctiveEventIDs :: Maybe [EventID]
+--   }
+--   deriving (Show, Eq, Generic)
 
 
-ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
-                                          Just a  -> ppErrorReasonID a
-                                          Nothing -> ""
+-- ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
+--                                           Just a  -> ppErrorReasonID a
+--                                           Nothing -> ""
 
-instance URI ErrorDeclaration where
-  printURI er  =  "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
-  readURI _       = undefined --FIXME
+-- instance URI ErrorDeclaration where
+--   printURI er  = "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
+--   readURI _    = undefined --FIXME
+
 {-
 -- |calculate the check digit from gs1company prefix and location reference
 --  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
