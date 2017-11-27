@@ -9,6 +9,8 @@ module Tests.DWhat where
 -- import           Data.GS1.EPC
 -- import           Data.GS1.Object
 
+-- DELETEME
+-- this test function appears to be deprecated - @sa
 -- testBizTransaction :: Spec
 -- testBizTransaction =
 --   describe "Parse BizTransactionID" $ do
