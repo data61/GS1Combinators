@@ -197,7 +197,7 @@ data LocationEPC = SGLN GS1CompanyPrefix LocationReference (Maybe SGLNExtension)
   deriving (Show, Read, Eq, Generic)
 
 -- |non-normative representation - simplest form of RFC5870
--- deprecated
+-- deprecated, kept momentarily for reference
 -- ppLocationReference :: LocationReference -> String
 -- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
 -- ppLocationReference (LocationReferenceNum str) = str
