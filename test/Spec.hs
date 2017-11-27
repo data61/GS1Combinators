@@ -26,8 +26,8 @@ main = do
   -- hspec testMkDWhat
 
   -- -- DWhen
-  hspec testParseTime
-  hspec testMkDWhen
+  -- hspec testParseTime
+  -- hspec testMkDWhen
 
   -- -- Object
   -- hspec testObjectID
@@ -36,5 +36,5 @@ main = do
   -- hspec testParser
 
   -- -- Utils
-  hspec testRevertCamelCase
-  hspec testMkCamelCase
+  -- hspec testRevertCamelCase
+  -- hspec testMkCamelCase
