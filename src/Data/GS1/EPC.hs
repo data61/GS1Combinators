@@ -189,8 +189,7 @@ instance ToSchema LabelEPC
 
 type Lng = Float
 type Lat = Float
-data LocationReference = LocationCoord Lat Lng
-                        |LocationReferenceNum String
+data LocationReference = LocationReferenceNum String
   deriving (Read, Eq, Generic)
 
 
