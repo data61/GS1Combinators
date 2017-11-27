@@ -192,8 +192,8 @@ $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
 
-type Lng = String
-type Lat = String
+type Lng = Float
+type Lat = Float
 data LocationReference = LocationCoord Lat Lng
                         |LocationReferenceNum String
   deriving (Read, Eq, Generic)
@@ -204,7 +204,7 @@ data LocationEPC = SGLN GS1CompanyPrefix LocationReference (Maybe SGLNExtension)
 
 -- |non-normative representation - simplest form of RFC5870
 ppLocationReference :: LocationReference -> String
-ppLocationReference (LocationCoord lat lng) = printf "geo:%f,%f" lat lng
+ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
 ppLocationReference (LocationReferenceNum str) = str
 
 
@@ -215,9 +215,9 @@ instance ToSchema LocationReference
 
 instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationCoord lat lng)  (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng ++ "." ++ ext
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ show lat ++ "-" ++ show lng ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationCoord lat lng)  Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ lat ++ "-" ++ lng
+    "urn:epc:id:sgln:" ++ companyPrefix ++ ".latLong-" ++ show lat ++ "-" ++ show lng
   printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
     "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str ++ "." ++ ext
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
@@ -243,19 +243,28 @@ hasCoord s = isJust obj
   where
     obj = parseCoord $ splitOn "-" s
 
+sglnPaddedComponentLength :: Int
+sglnPaddedComponentLength = 12
+
 readURILocationEPC :: [String] -> Maybe LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
   | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) Nothing
+  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
   | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
     where
-      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
+      [latStr, lngStr] = fromJust $ parseCoord $ splitOn "-" locationStr
+      lat = read latStr :: Float
+      lng = read lngStr :: Float
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
   | hasCoord locationStr = Just $ SGLN companyPrefix (LocationCoord lat lng) (Just ext)
+  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
   | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
     where
-      [lat, lng] = fromJust $ parseCoord $ splitOn "-" locationStr
+      [latStr, lngStr] = fromJust $ parseCoord $ splitOn "-" locationStr
+      lat = read latStr :: Float
+      lng = read lngStr :: Float
 readURILocationEPC _ = Nothing
 
 $(deriveJSON defaultOptions ''LocationReference)
