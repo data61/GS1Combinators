@@ -15,26 +15,25 @@ main = do
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
-  -- hspec testMkEPC
 
   -- -- DWhy
-  -- hspec testBizStep
-  -- hspec testDisposition
+  hspec testBizStep
+  hspec testDisposition
 
-  -- -- DWhat
+  -- DWhat
   -- hspec testBizTransaction
   -- hspec testMkDWhat
 
-  -- -- DWhen
-  -- hspec testParseTime
-  -- hspec testMkDWhen
+  -- DWhen
+  hspec testParseTime
+  hspec testMkDWhen
 
-  -- -- Object
-  -- hspec testObjectID
+  -- Object
+  hspec testObjectID
 
-  -- -- Parser
+  -- Parser
   -- hspec testParser
 
-  -- -- Utils
-  -- hspec testRevertCamelCase
-  -- hspec testMkCamelCase
+  -- Utils
+  hspec testRevertCamelCase
+  hspec testMkCamelCase

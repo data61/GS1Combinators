@@ -110,12 +110,11 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
-
 readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Just $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Just $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
@@ -138,7 +137,6 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
                        --serialsed global trade item number
                        deriving (Show, Read, Eq, Generic)
-
 
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
@@ -164,7 +162,8 @@ printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
   "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
   "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just _ ) itemReference serialNumber) =
+                                          --  sgtinFilterValue -> not used yet
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
 printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
@@ -180,17 +179,16 @@ instance ToField InstanceLabelEPC where
 
 
 -- this should be moved to src/.../DWhat.hs
-data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
-                deriving (Show, Read, Eq, Generic)
+-- data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+--                 deriving (Show, Read, Eq, Generic)
 
-$(deriveJSON defaultOptions ''LabelEPC)
-instance ToSchema LabelEPC
+-- $(deriveJSON defaultOptions ''LabelEPC)
+-- instance ToSchema LabelEPC
 
 
 type Lng = Float
 type Lat = Float
-data LocationReference = LocationCoord Lat Lng
-                        |LocationReferenceNum String
+data LocationReference = LocationReferenceNum String
   deriving (Read, Eq, Generic)
 
 
@@ -198,13 +196,14 @@ data LocationEPC = SGLN GS1CompanyPrefix LocationReference (Maybe SGLNExtension)
   deriving (Show, Read, Eq, Generic)
 
 -- |non-normative representation - simplest form of RFC5870
-ppLocationReference :: LocationReference -> String
+-- deprecated, kept momentarily for reference
+-- ppLocationReference :: LocationReference -> String
 -- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
-ppLocationReference (LocationReferenceNum str) = str
+-- ppLocationReference (LocationReferenceNum str) = str
 
 
 instance Show LocationReference where
-  show = ppLocationReference
+  show (LocationReferenceNum str) = str
 
 instance ToSchema LocationReference
 
@@ -236,25 +235,27 @@ hasCoord s = isJust obj
   where
     obj = parseCoord $ splitOn "-" s
 
+-- GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPaddedComponentLength :: Int
 sglnPaddedComponentLength = 12
 
 readURILocationEPC :: [String] -> Maybe LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
-  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise = Nothing
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
-  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise = Nothing
 readURILocationEPC _ = Nothing -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationEPC
-
 
 -- |SourceDestType
 data SourceDestType = SDOwningParty
@@ -311,8 +312,12 @@ printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
 
 -- the length of the arguments should equal to the following, according to the spec
 -- used for the purposes of validation
+
+-- GS1_EPC_TDS_i1_11.pdf Page 31
 gsrnPaddedComponentLength :: Int
 gsrnPaddedComponentLength = 17
+
+-- GS1_EPC_TDS_i1_11.pdf Page 32
 gdtiPaddedComponentLength :: Int
 gdtiPaddedComponentLength = 12
 
@@ -356,45 +361,46 @@ data LocationError
 -- WHAT -------------------
 ---------------------------
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep = Accepting
-                  | Arriving
-                  | Assembling
-                  | Collecting
-                  | Commissioning
-                  | Consigning
-                  | CreatingClassInstance
-                  | CycleCounting
-                  | Decommissioning
-                  | Departing
-                  | Destroying
-                  | Disassembling
-                  | Dispensing
-                  | Encoding
-                  | EnteringExiting
-                  | Holding
-                  | Inspecting
-                  | Installing
-                  | Killing
-                  | Loading
-                  | Other
-                  | Packing
-                  | Picking
-                  | Receiving
-                  | Removing
-                  | Repackaging
-                  | Repairing
-                  | Replacing
-                  | Reserving
-                  | RetailSelling
-                  | Shipping
-                  | StagingOutbound
-                  | StockTaking
-                  | Stocking
-                  | Storing
-                  | Transporting
-                  | Unloading
-                  | VoidShipping
-                  deriving (Show, Eq, Generic, Read)
+             | Arriving
+             | Assembling
+             | Collecting
+             | Commissioning
+             | Consigning
+             | CreatingClassInstance
+             | CycleCounting
+             | Decommissioning
+             | Departing
+             | Destroying
+             | Disassembling
+             | Dispensing
+             | Encoding
+             | EnteringExiting
+             | Holding
+             | Inspecting
+             | Installing
+             | Killing
+             | Loading
+             | Other
+             | Packing
+             | Picking
+             | Receiving
+             | Removing
+             | Repackaging
+             | Repairing
+             | Replacing
+             | Reserving
+             | RetailSelling
+             | Shipping
+             | StagingOutbound
+             | StockTaking
+             | Stocking
+             | Storing
+             | Transporting
+             | Unloading
+             | VoidShipping
+             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
@@ -408,15 +414,13 @@ makeClassy ''BizStep
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
+bizstepPrefixStr :: String
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI = mkBizStep
-
-mkBizStep :: String -> Maybe BizStep
-mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
-                      parseURI s uri :: Maybe BizStep
+  readURI  s   = let uri = "urn:epcglobal:cbv:bizstep" in
+                    parseURI s uri :: Maybe BizStep
 
 {-
   Example:
@@ -450,15 +454,12 @@ ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
-  readURI         = parseBizTransactionType
+  readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
+                        parseURI s uri :: Maybe BizTransactionType
 
 -- DELETEME since redundant
 -- mkBizTransactionType :: String -> Maybe BizTransactionType
 -- mkBizTransactionType = mkByName
-
-parseBizTransactionType :: String -> Maybe BizTransactionType
-parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
-                                parseURI s uri :: Maybe BizTransactionType
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
@@ -474,7 +475,7 @@ makeClassy ''BizTransaction
 
 -- | TransactionType, TransactionID
 mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt' = parseBizTransactionType t in
+mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
                            case bt' of
                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
                              _       -> Nothing
@@ -483,8 +484,8 @@ mkBizTransaction t i = let bt' = parseBizTransactionType t in
 -- | TransformationID
 type TransformationID = String
 
--- | ParentID
-type ParentID = LabelEPC
+-- -- | ParentID
+-- type ParentID = LabelEPC
 
 data Action = Add
             | Observe
@@ -495,9 +496,6 @@ instance ToSchema Action
 
 mkAction :: String -> Maybe Action
 mkAction s = mkByName . camelCase $ toLower <$> s
-
-
-
 
 
 ---------------------------
@@ -548,13 +546,9 @@ ppDisposition = revertCamelCase . show
 -- mkDisposition' = mkByName
 
 instance URI Disposition where
-  printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI       = mkDisposition
-
-mkDisposition :: String -> Maybe Disposition
-mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
-                         parseURI s uri :: Maybe Disposition
-
+  printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
+                      parseURI s uri :: Maybe Disposition
 
 ---------------------------
 -- WHEN  -------------------
@@ -602,8 +596,6 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
                         Just t -> let tz = zonedTimeZone t :: TimeZone in
                                       pure tz
                         Nothing -> throwing _IllegalTimeFormat ()
-
-
 
 
 instance Eq ZonedTime where
