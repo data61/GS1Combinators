@@ -19,6 +19,8 @@ module Tests.DWhat where
 --     it "parse the empty uri to Nothing" $
 --       parseBizTransactionType "" `shouldBe` Nothing
 
+-- TODO = FIXME. commented following out because stops from compiling
+
 -- testMkDWhat :: Spec
 -- testMkDWhat = do
 --   describe "create valid ObjectDWhat" $

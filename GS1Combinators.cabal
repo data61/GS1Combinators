@@ -27,6 +27,7 @@ library
                      , Data.GS1.Object
                      , Data.GS1.Utils
                      , Data.GS1.Parser.Parser
+                     , Data.GS1.URI
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , mtl
@@ -81,6 +82,7 @@ test-suite GS1Combinators-test
                      , Tests.Object
                      , Tests.Utils
                      , Tests.Parser
+                     , Data.GS1.URI
   build-depends:       base
                      , bytestring
                      , GS1Combinators
