@@ -419,10 +419,7 @@ bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI = mkBizStep
-
-mkBizStep :: String -> Maybe BizStep
-mkBizStep s  = let uri = "urn:epcglobal:cbv:bizstep" in
+  readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
                       parseURI s uri :: Maybe BizStep
 
 {-
@@ -555,13 +552,9 @@ ppDisposition = revertCamelCase . show
 -- mkDisposition' = mkByName
 
 instance URI Disposition where
-  printURI disp =  "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI       = mkDisposition
-
-mkDisposition :: String -> Maybe Disposition
-mkDisposition s = let uri = "urn:epcglobal:cbv:disp" in
+  printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
                          parseURI s uri :: Maybe Disposition
-
 
 ---------------------------
 -- WHEN  -------------------
