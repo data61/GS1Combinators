@@ -20,6 +20,14 @@ import           Data.Aeson.Text
 import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
+data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+                deriving (Show, Read, Eq, Generic)
+
+$(deriveJSON defaultOptions ''LabelEPC)
+instance ToSchema LabelEPC
+
+-- | ParentID
+type ParentID = LabelEPC
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event

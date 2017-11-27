@@ -178,11 +178,11 @@ instance ToField InstanceLabelEPC where
 
 
 -- this should be moved to src/.../DWhat.hs
-data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
-                deriving (Show, Read, Eq, Generic)
+-- data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+--                 deriving (Show, Read, Eq, Generic)
 
-$(deriveJSON defaultOptions ''LabelEPC)
-instance ToSchema LabelEPC
+-- $(deriveJSON defaultOptions ''LabelEPC)
+-- instance ToSchema LabelEPC
 
 
 type Lng = Float
@@ -483,8 +483,8 @@ mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType)
 -- | TransformationID
 type TransformationID = String
 
--- | ParentID
-type ParentID = LabelEPC
+-- -- | ParentID
+-- type ParentID = LabelEPC
 
 data Action = Add
             | Observe
