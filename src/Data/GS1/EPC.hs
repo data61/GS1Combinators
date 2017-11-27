@@ -110,12 +110,11 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
-
 readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Just $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Just $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
@@ -138,7 +137,6 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
                        --serialsed global trade item number
                        deriving (Show, Read, Eq, Generic)
-
 
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
@@ -363,45 +361,46 @@ data LocationError
 -- WHAT -------------------
 ---------------------------
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep = Accepting
-                  | Arriving
-                  | Assembling
-                  | Collecting
-                  | Commissioning
-                  | Consigning
-                  | CreatingClassInstance
-                  | CycleCounting
-                  | Decommissioning
-                  | Departing
-                  | Destroying
-                  | Disassembling
-                  | Dispensing
-                  | Encoding
-                  | EnteringExiting
-                  | Holding
-                  | Inspecting
-                  | Installing
-                  | Killing
-                  | Loading
-                  | Other
-                  | Packing
-                  | Picking
-                  | Receiving
-                  | Removing
-                  | Repackaging
-                  | Repairing
-                  | Replacing
-                  | Reserving
-                  | RetailSelling
-                  | Shipping
-                  | StagingOutbound
-                  | StockTaking
-                  | Stocking
-                  | Storing
-                  | Transporting
-                  | Unloading
-                  | VoidShipping
-                  deriving (Show, Eq, Generic, Read)
+             | Arriving
+             | Assembling
+             | Collecting
+             | Commissioning
+             | Consigning
+             | CreatingClassInstance
+             | CycleCounting
+             | Decommissioning
+             | Departing
+             | Destroying
+             | Disassembling
+             | Dispensing
+             | Encoding
+             | EnteringExiting
+             | Holding
+             | Inspecting
+             | Installing
+             | Killing
+             | Loading
+             | Other
+             | Packing
+             | Picking
+             | Receiving
+             | Removing
+             | Repackaging
+             | Repairing
+             | Replacing
+             | Reserving
+             | RetailSelling
+             | Shipping
+             | StagingOutbound
+             | StockTaking
+             | Stocking
+             | Storing
+             | Transporting
+             | Unloading
+             | VoidShipping
+             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
@@ -419,8 +418,8 @@ bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
-                  parseURI s uri :: Maybe BizStep
+  readURI  s   = let uri = "urn:epcglobal:cbv:bizstep" in
+                    parseURI s uri :: Maybe BizStep
 
 {-
   Example:

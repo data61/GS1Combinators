@@ -4,8 +4,6 @@ import           Data.GS1.EPC
 import           Data.GS1.DWhere
 import           Test.Hspec
 
-type EitherLE = Either LocationError LocationEPC
---                                  Experimental
 testReadSGLN :: Spec
 testReadSGLN =
   describe "Location - Testing readURI" $
