@@ -8,7 +8,7 @@ type EitherLE = Either LocationError LocationEPC
 --                                  Experimental
 testReadSGLN :: Spec
 testReadSGLN =
-  describe "Location" $ do
+  describe "Location - Testing readURI" $ do
     describe "SGLN with location reference" $ do
       it "LocationReferenceNum with extension" $
         readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
@@ -25,7 +25,7 @@ testReadSGLN =
       it "Some components missing" $
         (readURI :: String -> Maybe LocationEPC) "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
       it "Invalid length - failure expected" $
-        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing -- failure expected
+        (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing
   
     -- Specs for lat-long could not be found in the standard. going off the source code
     -- "urn:epc:id:sgln:0614141.latLong-123-456.400"
@@ -44,9 +44,25 @@ testReadSGLN =
           `shouldBe` Nothing
 
 testPrintSGLN :: Spec
-testPrintSGLN = error "Not implemented yet"
-
-
+-- testPrintSGLN = error "Not implemented yet"
+testPrintSGLN =
+  describe "Location - Testing printURI" $ do
+    describe "SGLN with location reference" $ do
+      it "LocationReferenceNum with extension" $
+        printURI (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+          `shouldBe` "urn:epc:id:sgln:0614141.12345.400"
+      it "LocationReferenceNum without extension" $
+        printURI (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
+          `shouldBe` "urn:epc:id:sgln:0614141.12345"
+  
+    describe "SGLN with lat and long" $ do
+      it "LatLong with ext" $
+        printURI (SGLN "0614141" (LocationCoord "123" "456") (Just "400"))
+          `shouldBe` "urn:epc:id:sgln:0614141.latLong-123-456.400"
+      
+      it "LatLong without ext" $
+        printURI (SGLN "0614141" (LocationCoord "123" "456") Nothing)
+          `shouldBe` "urn:epc:id:sgln:0614141.latLong-123-456"
 
 -- DELETEME
     -- it "GLN is verified correctly from 20141216 onesteel" $
