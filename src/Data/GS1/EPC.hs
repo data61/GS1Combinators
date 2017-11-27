@@ -137,8 +137,6 @@ $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 
-
-
 data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
                        -- Global Individual Asset Identifier, e.g. bucket for olives
                        |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
@@ -147,12 +145,11 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        deriving (Show, Read, Eq, Generic)
 
 
-
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
 
-                    
+
 readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Just $ GIAI gs1CompanyPrefix individualAssetReference
@@ -233,7 +230,7 @@ instance URI LocationEPC where
 
 isLocationEPC :: [String] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
-isLocationEPC _                      = False
+isLocationEPC _                                   = False
 
 -- returns Nothing if string cannot be parsed into lat and long
 parseCoord :: [String] -> Maybe [String]
