@@ -16,15 +16,15 @@ import           Data.Aeson.TH
 
 import           Data.Swagger
 import           Database.SQLite.Simple.ToField
-import Data.Aeson.Text
-import Data.ByteString.Char8 (pack)
+import           Data.Aeson.Text
+import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-          ObjectDWhat Action [LabelEPC]
+             ObjectDWhat Action [LabelEPC]
            -- AggregationDWhat action parentID childEPC
            | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList

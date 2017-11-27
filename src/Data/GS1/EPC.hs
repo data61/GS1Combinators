@@ -256,7 +256,6 @@ $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationEPC
 
-
 -- |SourceDestType
 data SourceDestType = SDOwningParty
                     | SDProcessingParty
@@ -414,6 +413,7 @@ makeClassy ''BizStep
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
+bizstepPrefixStr :: String
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 instance URI BizStep where
@@ -495,9 +495,6 @@ instance ToSchema Action
 
 mkAction :: String -> Maybe Action
 mkAction s = mkByName . camelCase $ toLower <$> s
-
-
-
 
 
 ---------------------------
@@ -598,8 +595,6 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
                         Just t -> let tz = zonedTimeZone t :: TimeZone in
                                       pure tz
                         Nothing -> throwing _IllegalTimeFormat ()
-
-
 
 
 instance Eq ZonedTime where
