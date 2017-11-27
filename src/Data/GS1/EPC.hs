@@ -420,7 +420,7 @@ bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
   readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
-                      parseURI s uri :: Maybe BizStep
+                  parseURI s uri :: Maybe BizStep
 
 {-
   Example:
@@ -454,7 +454,8 @@ ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
-  readURI         = parseBizTransactionType
+  readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
+                        parseURI s uri :: Maybe BizTransactionType
 
 -- DELETEME since redundant
 -- mkBizTransactionType :: String -> Maybe BizTransactionType
@@ -554,7 +555,7 @@ ppDisposition = revertCamelCase . show
 instance URI Disposition where
   printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
   readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
-                         parseURI s uri :: Maybe Disposition
+                      parseURI s uri :: Maybe Disposition
 
 ---------------------------
 -- WHEN  -------------------
