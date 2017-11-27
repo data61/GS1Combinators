@@ -236,6 +236,7 @@ hasCoord s = isJust obj
   where
     obj = parseCoord $ splitOn "-" s
 
+-- GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPaddedComponentLength :: Int
 sglnPaddedComponentLength = 12
 
@@ -311,8 +312,12 @@ printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
 
 -- the length of the arguments should equal to the following, according to the spec
 -- used for the purposes of validation
+
+-- GS1_EPC_TDS_i1_11.pdf Page 31
 gsrnPaddedComponentLength :: Int
 gsrnPaddedComponentLength = 17
+
+-- GS1_EPC_TDS_i1_11.pdf Page 32
 gdtiPaddedComponentLength :: Int
 gdtiPaddedComponentLength = 12
 
