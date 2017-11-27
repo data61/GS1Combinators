@@ -461,10 +461,6 @@ instance URI BizTransactionType where
 -- mkBizTransactionType :: String -> Maybe BizTransactionType
 -- mkBizTransactionType = mkByName
 
-parseBizTransactionType :: String -> Maybe BizTransactionType
-parseBizTransactionType s = let uri = "urn:epcglobal:cbv:btt" in
-                                parseURI s uri :: Maybe BizTransactionType
-
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
   {
