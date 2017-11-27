@@ -361,6 +361,7 @@ data LocationError
 -- WHAT -------------------
 ---------------------------
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep = Accepting
              | Arriving
              | Assembling
