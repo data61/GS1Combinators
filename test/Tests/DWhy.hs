@@ -35,17 +35,20 @@ testBizStep = do
         `shouldBe` Nothing
 
 testDisposition :: Spec
-testDisposition = do
-  describe "Disposition" $
-    it "produces correct URI" $
-      printURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
+testDisposition =
+  describe "Disposition" $ do
+    describe "Print URI" $ do
+      it "One word" $
+        printURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
+      it "Multiple words" $
+        printURI ContainerClosed `shouldBe` "urn:epcglobal:cbv:disp:container_closed"
 
-  describe "parse Disposition" $ do
-    it "parse the valid uri to disposition" $
-      readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
-    it "parses the invalid uri to Nothing" $
-      (readURI :: String -> Maybe Disposition) "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
-    it "parse invalid string to Nothing" $
-      (readURI :: String -> Maybe Disposition) "somerandomstring" `shouldBe` Nothing
-    it "parse invalid string to Nothing" $
-      (readURI :: String -> Maybe Disposition) "" `shouldBe` Nothing
+    describe "parse  Disposition" $ do
+      it "parse the valid uri to disposition" $
+        readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
+      it "parses the invalid uri to Nothing" $
+        (readURI :: String -> Maybe Disposition) "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
+      it "parse invalid string to Nothing" $
+        (readURI :: String -> Maybe Disposition) "somerandomstring" `shouldBe` Nothing
+      it "parse empty string to Nothing" $
+        (readURI :: String -> Maybe Disposition) "" `shouldBe` Nothing
