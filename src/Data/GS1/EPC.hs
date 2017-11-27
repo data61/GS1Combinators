@@ -243,12 +243,14 @@ sglnPaddedComponentLength = 12
 readURILocationEPC :: [String] -> Maybe LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
-  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise = Nothing
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | length (companyPrefix ++ locationStr) /= sglnPaddedComponentLength = Nothing
-  | otherwise = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise = Nothing
 readURILocationEPC _ = Nothing -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
