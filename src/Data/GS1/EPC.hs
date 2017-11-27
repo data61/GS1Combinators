@@ -110,7 +110,7 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
-
+-- TODO validate length
 readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Just $ LGTIN gs1CompanyPrefix itemReference lot
@@ -139,7 +139,7 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        --serialsed global trade item number
                        deriving (Show, Read, Eq, Generic)
 
-
+-- TODO validate length
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
