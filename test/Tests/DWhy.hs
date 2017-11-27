@@ -14,16 +14,16 @@ testBizStep = do
 
   describe "parseBizStep" $ do
     it "parse valid uri to bizstep" $
-      mkBizStep "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
+      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
 
     it "parse valid uri to bizstep" $
-      mkBizStep "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Just Accepting
+      readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Just Accepting
 
     it "parse valid uri but invalid step to Nothing" $
-      mkBizStep "urn:epcglobal:cbv:bizstep:s" `shouldBe` Nothing
+      (readURI :: String -> Maybe BizStep) "urn:epcglobal:cbv:bizstep:s" `shouldBe` Nothing
 
     it "parse invalid uri to Nothing" $
-      mkBizStep "urn:invalidns:cbv:bizstep:void_shipping" `shouldBe` Nothing
+      (readURI :: String -> Maybe BizStep) "urn:invalidns:cbv:bizstep:void_shipping" `shouldBe` Nothing
 
 testDisposition :: Spec
 testDisposition = do
@@ -33,10 +33,10 @@ testDisposition = do
 
   describe "parse Disposition" $ do
     it "parse the valid uri to disposition" $
-      mkDisposition "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
+      readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
     it "parses the invalid uri to Nothing" $
-      mkDisposition "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
+      (readURI :: String -> Maybe Disposition) "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
     it "parse invalid string to Nothing" $
-      mkDisposition "somerandomstring" `shouldBe` Nothing
+      (readURI :: String -> Maybe Disposition) "somerandomstring" `shouldBe` Nothing
     it "parse invalid string to Nothing" $
-      mkDisposition "" `shouldBe` Nothing
+      (readURI :: String -> Maybe Disposition) "" `shouldBe` Nothing

@@ -6,6 +6,7 @@ module Tests.DWhen (
 import           Data.Either.Combinators
 import           Data.Time
 import           Test.Hspec
+import           Data.GS1.EPC
 
 import           Data.GS1.DWhen
 
