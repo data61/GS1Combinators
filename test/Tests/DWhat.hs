@@ -29,7 +29,9 @@ testMkDWhat = do
       ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")] [])
           `shouldBe`
-            "OBJECT WHAT\nObserve\n[urn:epc:id:sgtin:0614141.107346.2017,urn:epc:id:sgtin:0614141.107346.2018]\n[]"
+            "OBJECT WHAT\nObserve\n" ++
+            "[urn:epc:id:sgtin:0614141.107346.2017," ++
+            "urn:epc:id:sgtin:0614141.107346.2018]\n[]"
 
   describe "create from empty epcs" $
     it "creates DWhat from empty epc list" $
