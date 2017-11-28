@@ -15,6 +15,11 @@ main = do
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
+  
+  -- DWhat
+  hspec testBizStep
+  hspec testBizTransaction
+  hspec testPpDWhat
 
   -- -- DWhy
   hspec testDisposition
@@ -33,8 +38,3 @@ main = do
   hspec testRevertCamelCase
   hspec testMkCamelCase
   hspec testParseURI
-  
-  -- DWhat
-  hspec testBizStep
-  hspec testBizTransaction
-  hspec testPpDWhat
