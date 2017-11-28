@@ -20,7 +20,7 @@ testBizTransaction =
     it "parse the empty uri to Nothing" $
       (readURI :: String -> Maybe BizTransactionType) "" `shouldBe` Nothing
 
--- TODO = FIXME. commented following out because stops from compiling
+-- TODO = FIXME. commented following out because stops from compiling --> Fixed @sa
 
 testMkDWhat :: Spec
 testMkDWhat = do
@@ -29,7 +29,9 @@ testMkDWhat = do
       ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")] [])
           `shouldBe`
-            "OBJECT WHAT\nObserve\n[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n[]\n"
+            "OBJECT WHAT\nObserve\n" ++
+            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n[]\n"
             --"OBJECT WHAT\nObserve\n[urn:epc:id:sgtin:0614141.107346.2017,urn:epc:id:sgtin:0614141.107346.2018]\n[]"
 
   describe "create from empty epcs" $
@@ -42,8 +44,12 @@ testMkDWhat = do
         (Just (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
-        `shouldBe`
-        "AGGREGATION WHAT\nObserve\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+          `shouldBe`
+            "AGGREGATION WHAT\nObserve\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+
+          -- DELETEME
           --"AGGREGATION WHAT\n" ++ "Observe\n" ++
           --"Just \"urn:epc:id:sscc:0614141.1234567890\"\n" ++ 
           --"[urn:epc:id:sgtin:0614141.107346.2017," ++
