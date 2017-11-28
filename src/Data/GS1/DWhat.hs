@@ -48,7 +48,7 @@ instance ToField DWhat where
   toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
-ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ show qs ++ "\n"
+ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n" ++ show qs ++ "\n"
 ppDWhat (AggregationDWhat a pid epcs ) = "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n"
 ppDWhat (TransactionDWhat a s bizT epcs ) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n"
 ppDWhat (TransformationDWhat tid inputEpcs outputEpcs ) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show inputEpcs ++ "\n" ++ show outputEpcs ++ "\n"
