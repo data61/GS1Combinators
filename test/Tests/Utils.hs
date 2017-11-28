@@ -1,7 +1,32 @@
+{-# LANGUAGE DeriveGeneric         #-}
+
+
 module Tests.Utils where
 
 import           Data.GS1.Utils
 import           Test.Hspec
+import           Data.GS1.EPC
+import           GHC.Generics
+
+data TestDataType = Foo
+                  | Bar
+                  | Jaja
+                  deriving (Show, Eq, Generic, Read)
+{-
+$(deriveJSON defaultOptions ''TestDataType)
+instance ToSchema TestDataType
+
+makeClassyPrisms ''TestDataType
+-}
+testDataTypeURI :: String
+testDataTypeURI = "blah:foo:bar"
+
+{-
+instance URI TestDataType where
+  printURI t = testDataTypeURI ++ (revertCamelCase . show t)
+  readURI s = let uri = testDataTypeURI in
+              parseURI s uri :: Maybe TestDataType
+-}
 
 testRevertCamelCase :: Spec
 testRevertCamelCase =
@@ -32,3 +57,9 @@ testMkCamelCase =
 
     it "make camel case strign with string containing upper case char" $
       mkCamelCase "hello_World" `shouldBe` "HelloWorld"
+
+testParseURI :: Spec
+testParseURI =
+  describe "parse a URI" $ do
+    it "parse TestDataType" $
+      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` (Just Foo)
