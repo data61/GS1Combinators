@@ -32,7 +32,7 @@ type ParentID = LabelEPC
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-             ObjectDWhat Action [LabelEPC]
+             ObjectDWhat Action [LabelEPC] [Quantity]
            -- AggregationDWhat action parentID childEPC
            | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
