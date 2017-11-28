@@ -56,8 +56,8 @@ testBizTransaction = do
 
 -- TODO = FIXME. commented following out because stops from compiling --> Fixed @sa
 
-test_ppDWhat :: Spec
-test_ppDWhat = do
+testPpDWhat :: Spec
+testPpDWhat = do
   describe "create valid ObjectDWhat" $
     it "creates ObjectDWhat from valid input" $
       ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
