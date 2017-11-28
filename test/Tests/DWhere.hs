@@ -29,7 +29,6 @@ testReadSGLN =
           (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06534590.123234322.4" `shouldBe` Nothing
 
 testPrintSGLN :: Spec
--- testPrintSGLN = error "Not implemented yet"
 testPrintSGLN =
   describe "Location - Testing printURI" $
     describe "SGLN with location reference" $ do

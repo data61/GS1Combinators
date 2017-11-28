@@ -54,7 +54,7 @@ httpObjectID :: String -> Maybe ObjectID
 httpObjectID s =
   let result = maybeResult $ parse segmentNz (C.pack s)
    in
-    fmap (Codec.Binary.UTF8.String.decode) result
+    fmap Codec.Binary.UTF8.String.decode result
 
 
 hexDigit :: Char -> Maybe Char

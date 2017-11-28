@@ -32,9 +32,9 @@ type ParentID = LabelEPC
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-             ObjectDWhat Action [LabelEPC]
+             ObjectDWhat Action [LabelEPC] [Quantity]
            -- AggregationDWhat action parentID childEPC
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+           | AggregationDWhat Action (Maybe ParentID) [LabelEPC] -- should this have [quantity]? @sa
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
            | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
            -- TransformationDWhat transformationID inputEPCList outputEPCList
@@ -48,7 +48,7 @@ instance ToField DWhat where
   toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
-ppDWhat (ObjectDWhat a epcs ) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n"
+ppDWhat (ObjectDWhat a epcs qs) = "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ show qs ++ "\n"
 ppDWhat (AggregationDWhat a pid epcs ) = "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n"
 ppDWhat (TransactionDWhat a s bizT epcs ) = "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n"
 ppDWhat (TransformationDWhat tid inputEpcs outputEpcs ) = "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show inputEpcs ++ "\n" ++ show outputEpcs ++ "\n"

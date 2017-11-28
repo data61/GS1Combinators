@@ -21,8 +21,8 @@ main = do
   hspec testDisposition
 
   -- DWhat
-  -- hspec testBizTransaction
-  -- hspec testMkDWhat
+  hspec testBizTransaction
+  hspec testMkDWhat
 
   -- DWhen
   hspec testParseTime
