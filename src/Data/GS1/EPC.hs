@@ -142,17 +142,29 @@ instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
 
+-- GS1_EPC_TDS_i1_11.pdf Page 28
+sgtinPadLen :: Int
+sgtinPadLen = 13
+
+-- GS1_EPC_TDS_i1_11.pdf Page 29
+ssccPadLen :: Int
+ssccPadLen = 17
 
 readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Just $ GIAI gs1CompanyPrefix individualAssetReference
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  Just $ SSCC gs1CompanyPrefix serialNumber
-    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
+  | length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen =
+    Just $ SSCC gs1CompanyPrefix serialNumber
+  | otherwise = Nothing
+      where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
+  | length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen =
+    Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+  | otherwise = Nothing
+      where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
 -- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
 readURIInstanceLabelEPC _ = Nothing
 
@@ -236,18 +248,18 @@ hasCoord s = isJust obj
     obj = parseCoord $ splitOn "-" s
 
 -- GS1_EPC_TDS_i1_11.pdf Page 29
-sglnPaddedComponentLength :: Int
-sglnPaddedComponentLength = 12
+sglnPadLen :: Int
+sglnPadLen = 12
 
 readURILocationEPC :: [String] -> Maybe LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+  | length (companyPrefix ++ locationStr) == sglnPadLen
     = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
   | otherwise = Nothing
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
+  | length (companyPrefix ++ locationStr) == sglnPadLen
     = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
   | otherwise = Nothing
 readURILocationEPC _ = Nothing -- error condition / invalid input
@@ -314,20 +326,20 @@ printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
 -- used for the purposes of validation
 
 -- GS1_EPC_TDS_i1_11.pdf Page 31
-gsrnPaddedComponentLength :: Int
-gsrnPaddedComponentLength = 17
+gsrnPadLen :: Int
+gsrnPadLen = 17
 
 -- GS1_EPC_TDS_i1_11.pdf Page 32
-gdtiPaddedComponentLength :: Int
-gdtiPaddedComponentLength = 12
+gdtiPadLen :: Int
+gdtiPadLen = 12
 
 readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
 readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
-  | length (gs1CompanyPrefix ++ serialReference) == gsrnPaddedComponentLength
+  | length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
     = Just $ GSRN gs1CompanyPrefix serialReference
   | otherwise = Nothing
 readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
-  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPaddedComponentLength
+  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
     = Just $ GDTI documentType documentType serialNumber
   | otherwise = Nothing
 readURIBusinessTransactionEPC _ = Nothing
