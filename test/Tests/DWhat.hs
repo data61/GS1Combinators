@@ -2,28 +2,62 @@
 
 module Tests.DWhat where
 
-import           Data.Maybe()
+import           Data.Maybe
 import           Test.Hspec
 
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
-import           Data.GS1.Object()
+import           Data.GS1.Object
+
+testBizStep :: Spec
+testBizStep = do
+  describe "BusinessStep" $ do
+    it "produces correct URI" $
+      printURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
+    it "produces correct URI" $
+      printURI CycleCounting `shouldBe` "urn:epcglobal:cbv:bizstep:cycle_counting"
+    it "produces correct URI" $
+      printURI CreatingClassInstance `shouldBe` "urn:epcglobal:cbv:bizstep:creating_class_instance"
+  
+  describe "parseBizStep" $ do
+    it "parse valid uri to bizstep" $
+      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
+
+    it "parse valid uri to bizstep" $
+      readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Just Accepting
+  
+  describe "Invalid urns" $ do
+    it "parse valid uri but invalid step to Nothing" $
+      (readURI :: String -> Maybe BizStep) "urn:epcglobal:cbv:bizstep:s" `shouldBe` Nothing
+
+    it "parse invalid uri to Nothing" $
+      (readURI :: String -> Maybe BizStep) "urn:invalidns:cbv:bizstep:void_shipping"
+        `shouldBe` Nothing
+    it "A component of the urn missing" $
+      (readURI :: String -> Maybe BizStep) "urn:epc:cbv:bizstep"
+        `shouldBe` Nothing
 
 testBizTransaction :: Spec
-testBizTransaction =
+testBizTransaction = do
   describe "Parse BizTransactionID" $ do
     it "parse the valid uri to BizTransactionID" $
       readURI "urn:epcglobal:cbv:btt:po" `shouldBe` Just Po
+
+  describe "Invalid urns" $ do
     it "parse the invalid uri to Nothing" $
       (readURI :: String -> Maybe BizTransactionType) "urn:epcglobal:cbv:btt:somethingelse"
         `shouldBe` Nothing
     it "parse the empty uri to Nothing" $
       (readURI :: String -> Maybe BizTransactionType) "" `shouldBe` Nothing
+    it "parse a rubbish uri with : to Nothing" $
+      (readURI :: String -> Maybe BizTransactionType) "urn:epcglobal:cbv:foo" `shouldBe` Nothing
+    it "parse a rubbish uri with no : to Nothing" $
+      (readURI :: String -> Maybe BizTransactionType) "fooblahjaja" `shouldBe` Nothing
 
 -- TODO = FIXME. commented following out because stops from compiling --> Fixed @sa
 
-testMkDWhat :: Spec
-testMkDWhat = do
+testPpDWhat :: Spec
+testPpDWhat = do
   describe "create valid ObjectDWhat" $
     it "creates ObjectDWhat from valid input" $
       ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
