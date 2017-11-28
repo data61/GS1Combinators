@@ -44,7 +44,7 @@ testMkDWhat = do
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
         `shouldBe`
-          "AGGREGATION WHAT\n" ++ "Observe\n" ++
+          "AGGREGATION WHAT\nObserve\n" ++
           "Just \"urn:epc:id:sscc:0614141.1234567890\"\n" ++ 
           "[urn:epc:id:sgtin:0614141.107346.2017," ++
           "urn:epc:id:sgtin:0614141.107346.2018]\n" ++
