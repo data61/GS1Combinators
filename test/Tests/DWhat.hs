@@ -50,4 +50,3 @@ testMkDWhat = do
           --"urn:epc:id:sgtin:0614141.107346.2018]\n" ++
           --"[QuantityElement (EPCClass \"urn:epc:idpat:sgtin:4012345.098765.*\") 10.0 Nothing," ++
           --"QuantityElement (EPCClass \"urn:epc:class:lgtin:4012345.012345.998877\") 200.5 (Just \"KGM\")]"
-          
