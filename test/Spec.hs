@@ -37,4 +37,4 @@ main = do
   -- DWhat
   hspec testBizStep
   hspec testBizTransaction
-  hspec test_ppDWhat
+  hspec testPpDWhat
