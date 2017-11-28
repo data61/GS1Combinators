@@ -54,8 +54,7 @@ testBizTransaction = do
     it "parse a rubbish uri with no : to Nothing" $
       (readURI :: String -> Maybe BizTransactionType) "fooblahjaja" `shouldBe` Nothing
 
--- TODO = FIXME. commented following out because stops from compiling --> Fixed @sa
-
+-- TODO test for quantity
 testPpDWhat :: Spec
 testPpDWhat = do
   describe "create valid ObjectDWhat" $
