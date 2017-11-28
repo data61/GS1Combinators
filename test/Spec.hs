@@ -5,7 +5,7 @@ import           Tests.DWhen
 import           Tests.DWhere
 import           Tests.DWhy
 import           Tests.Object
-import           Tests.Parser
+--import           Tests.Parser -- DELETEME
 import           Tests.Utils
 
 import           Test.Hspec   (hspec)
@@ -20,20 +20,22 @@ main = do
   hspec testBizStep
   hspec testDisposition
 
-  -- DWhat
-  hspec testBizTransaction
-  hspec testMkDWhat
-
+  
   -- DWhen
   hspec testParseTime
   hspec testMkDWhen
-
+  
   -- Object
   hspec testObjectID
-
+  
   -- Parser
-  -- hspec testParser
-
+  -- hspec testParser -- DELETEME
+  
   -- Utils
   hspec testRevertCamelCase
   hspec testMkCamelCase
+  hspec testParseURI
+  
+  -- DWhat
+  hspec testBizTransaction
+  hspec testMkDWhat
