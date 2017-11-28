@@ -17,10 +17,8 @@ main = do
   hspec testPrintSGLN
 
   -- -- DWhy
-  hspec testBizStep
   hspec testDisposition
 
-  
   -- DWhen
   hspec testParseTime
   hspec testMkDWhen
@@ -37,5 +35,6 @@ main = do
   hspec testParseURI
   
   -- DWhat
+  hspec testBizStep
   hspec testBizTransaction
-  hspec testMkDWhat
+  hspec test_ppDWhat
