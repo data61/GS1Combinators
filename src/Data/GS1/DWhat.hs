@@ -26,6 +26,8 @@ data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
+instance ToField LabelEPC where
+    toField = toField . pack . show
 -- | ParentID
 type ParentID = LabelEPC
 
