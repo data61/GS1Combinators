@@ -5,7 +5,7 @@ import           Tests.DWhen
 import           Tests.DWhere
 import           Tests.DWhy
 import           Tests.Object
---import           Tests.Parser -- DELETEME
+import           Tests.Parser -- it's not being used right now
 import           Tests.Utils
 
 import           Test.Hspec   (hspec)
@@ -29,7 +29,7 @@ main = do
   hspec testObjectID
   
   -- Parser
-  -- hspec testParser -- DELETEME
+  -- hspec testParser
   
   -- Utils
   hspec testRevertCamelCase
