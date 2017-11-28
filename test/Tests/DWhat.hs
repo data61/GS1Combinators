@@ -39,7 +39,7 @@ testBizStep = do
 
 testBizTransaction :: Spec
 testBizTransaction = do
-  describe "Parse BizTransactionID" $ do
+  describe "Parse BizTransactionID" $
     it "parse the valid uri to BizTransactionID" $
       readURI "urn:epcglobal:cbv:btt:po" `shouldBe` Just Po
 
