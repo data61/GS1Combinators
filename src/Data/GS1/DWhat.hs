@@ -34,7 +34,7 @@ type ParentID = LabelEPC
 data DWhat = -- ObjectDWhat action epcList quantityList
              ObjectDWhat Action [LabelEPC] [Quantity]
            -- AggregationDWhat action parentID childEPC
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+           | AggregationDWhat Action (Maybe ParentID) [LabelEPC] -- should this have [quantity]? @sa
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
            | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
            -- TransformationDWhat transformationID inputEPCList outputEPCList
