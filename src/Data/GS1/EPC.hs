@@ -155,16 +155,20 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Just $ GIAI gs1CompanyPrefix individualAssetReference
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
-  | length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen =
-    Just $ SSCC gs1CompanyPrefix serialNumber
+  | isCorrectLen = Just $ SSCC gs1CompanyPrefix serialNumber
   | otherwise = Nothing
-      where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+      where
+        [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+        isCorrectLen = length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
-  | length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen =
-    Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
+  | isCorrectLen = Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
+--                                               Nothing, for the moment
   | otherwise = Nothing
-      where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+      where
+        [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+        isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
+
 -- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
 readURIInstanceLabelEPC _ = Nothing
 
@@ -174,11 +178,7 @@ printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
   "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
   "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just _ ) itemReference serialNumber) =
-                                          --  sgtinFilterValue -> not used yet
-  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
-    --FIXME: add Maybe SGTINFilterValue
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
 
@@ -254,14 +254,16 @@ sglnPadLen = 12
 readURILocationEPC :: [String] -> Maybe LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | length (companyPrefix ++ locationStr) == sglnPadLen
-    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
-  | otherwise = Nothing
+  | isCorrectLen = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise    = Nothing
+    where
+      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | length (companyPrefix ++ locationStr) == sglnPadLen
-    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
-  | otherwise = Nothing
+  | isCorrectLen = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise    = Nothing
+    where
+      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 readURILocationEPC _ = Nothing -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
