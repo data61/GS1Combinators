@@ -218,12 +218,11 @@ parseTransactionDWhat c = do
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
-parseEventList' et l = case l of
-                         []     -> []
-                         (x:xs) -> let (i, w1, w2, w3, w4) = x in
-                                       if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
-                                          Nothing : parseEventList' et xs      else
-                                          Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+parseEventList' et [] = []
+parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
+                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
+                                Nothing : parseEventList' et xs      else
+                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
