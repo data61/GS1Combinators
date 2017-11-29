@@ -498,9 +498,6 @@ mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType)
 -- | TransformationID
 type TransformationID = String
 
--- -- | ParentID
--- type ParentID = LabelEPC
-
 data Action = Add
             | Observe
             | Delete
