@@ -21,7 +21,6 @@ import           Data.GS1.EventID
 import           Data.GS1.Object
 
 
-
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
@@ -58,12 +57,13 @@ parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
 parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML' [] = Nothing
 parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
-                              case l of
-                                (x:_) -> let rx = readMaybe x :: Maybe Int in
-                                             case rx of
-                                               Just t'  -> Just $ hoursToTimeZone t'
-                                               Nothing  -> Nothing
-                                _      -> Nothing
+                            case l of
+                              (x:_) ->
+                                let rx = readMaybe x :: Maybe Int in
+                                    case rx of
+                                      Just t'  -> Just $ hoursToTimeZone t'
+                                      Nothing  -> Nothing
+                              _     -> Nothing
 
 -- |The name of the current cursor stays at ObjectEvent
 parseDWhen :: Cursor -> Maybe DWhen
@@ -72,7 +72,6 @@ parseDWhen c = do
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
-
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
     Just et' -> Just (DWhen et' rt (fromJust tz))
@@ -104,13 +103,15 @@ parseQuantity c = do
   let uom = c $/ element "uom" &/ content
   case ec of
     []    -> Nothing
-    (e:_) -> case qt of
-               []    -> Nothing
-               (q:_) -> case uom of
-                          []    -> let [e', q'] = T.unpack <$> [e, q] in
-                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-                          (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+    (e:_) ->
+      case qt of
+        []    -> Nothing
+        (q:_) ->
+          case uom of
+            []    -> let [e', q'] = T.unpack <$> [e, q] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+            (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 
 
@@ -172,7 +173,9 @@ parseBizTransaction c = do
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
   let z = zip attrs texts
   parseBizTransactionHelp <$> z
-    where parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
+    where
+      parseBizTransactionHelp (a, b) =
+        mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
