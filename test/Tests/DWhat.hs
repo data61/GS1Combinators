@@ -70,36 +70,36 @@ testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
     it "creates ObjectDWhat from valid input, Observe" $
       ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")] [])
+        IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nObserve\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
-            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n[]\n"
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
             -- DELETEME
             --"OBJECT WHAT\nObserve\n[urn:epc:id:sgtin:0614141.107346.2017,urn:epc:id:sgtin:0614141.107346.2018]\n[]"
 
     it "creates ObjectDWhat from valid input, Add" $
       ppDWhat (ObjectDWhat Add [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")] [])
+        IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nAdd\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
-            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n[]\n"
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "creates ObjectDWhat from valid input, Delete" $
       ppDWhat (ObjectDWhat Delete [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")] [])
+        IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nDelete\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
-            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n[]\n"
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
   describe "create from empty epcs" $ do
     it "creates DWhat from empty epc list, Add" $
-      ppDWhat (ObjectDWhat Add [][]) `shouldBe` "OBJECT WHAT\nAdd\n[]\n[]\n"
+      ppDWhat (ObjectDWhat Add []) `shouldBe` "OBJECT WHAT\nAdd\n[]\n"
     it "creates DWhat from empty epc list, Delete" $
-      ppDWhat (ObjectDWhat Delete [][]) `shouldBe` "OBJECT WHAT\nDelete\n[]\n[]\n"
+      ppDWhat (ObjectDWhat Delete []) `shouldBe` "OBJECT WHAT\nDelete\n[]\n"
     it "creates DWhat from empty epc list Observe" $
-      ppDWhat (ObjectDWhat Observe [][]) `shouldBe` "OBJECT WHAT\nObserve\n[]\n[]\n"
+      ppDWhat (ObjectDWhat Observe []) `shouldBe` "OBJECT WHAT\nObserve\n[]\n"
      
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
