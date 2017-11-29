@@ -465,7 +465,7 @@ ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
 instance URI BizTransactionType where
-  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
+  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ ppBizTransactionType btt
   readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
                         parseURI s uri :: Maybe BizTransactionType
 
