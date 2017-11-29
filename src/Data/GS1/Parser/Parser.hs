@@ -20,7 +20,6 @@ import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Object
 
-{-
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -29,9 +28,8 @@ getCursorsByName n c = c $// element n
 -- |Given a list of Text for a given element
 -- Only return the first one
 parseSingleElem' :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElem' f t = case t of
-                         (x:_) -> f . T.unpack $ x
-                         _     -> Nothing
+parseSingleElem' f (x:_) = f . T.unpack $ x
+parseSingleElem' _ _     = Nothing
 
 -- |Parse a list of Text to a list of type a
 parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
@@ -48,22 +46,25 @@ parseTimeXML = parseSingleElem' parseTimeHelper'
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
-                       where parseTimeZoneHelper' x = let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                               case ptz of
-                                 Left _  -> Nothing
-                                 Right a -> Just a
+                      where
+                        parseTimeZoneHelper' x =
+                          let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
+                            case ptz of
+                              Left _  -> Nothing
+                              Right a -> Just a
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
 parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML' [] = Nothing
 parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
-                              case l of
-                                (x:_) -> let rx = readMaybe x :: Maybe Int in
-                                             case rx of
-                                               Just t'  -> Just $ hoursToTimeZone t'
-                                               Nothing  -> Nothing
-                                _      -> Nothing
+                            case l of
+                              (x:_) ->
+                                let rx = readMaybe x :: Maybe Int in
+                                    case rx of
+                                      Just t'  -> Just $ hoursToTimeZone t'
+                                      Nothing  -> Nothing
+                              _     -> Nothing
 
 -- |The name of the current cursor stays at ObjectEvent
 parseDWhen :: Cursor -> Maybe DWhen
@@ -72,7 +73,6 @@ parseDWhen c = do
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
-
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
     Just et' -> Just (DWhen et' rt (fromJust tz))
@@ -104,19 +104,21 @@ parseQuantity c = do
   let uom = c $/ element "uom" &/ content
   case ec of
     []    -> Nothing
-    (e:_) -> case qt of
-               []    -> Nothing
-               (q:_) -> case uom of
-                          []    -> let [e', q'] = T.unpack <$> [e, q] in
-                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-                          (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-                                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+    (e:_) ->
+      case qt of
+        []    -> Nothing
+        (q:_) ->
+          case uom of
+            []    -> let [e', q'] = T.unpack <$> [e, q] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+            (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
---}
+
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
-{- XXX - EPC is no longer a type, but a type class.
+-- XXX - EPC is no longer a type, but a type class.
 parseEPCList :: [T.Text] -> [EPC]
 parseEPCList = parseListElem' (mkEPC "EPC")
 
@@ -124,8 +126,8 @@ parseEPCList = parseListElem' (mkEPC "EPC")
 -- name="childEPCs" type="epcis:EPCListType"
 parseChildEPCList :: [T.Text] -> [EPC]
 parseChildEPCList = parseEPCList
--}
-  {-
+
+
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Maybe BizStep
 parseBizStep = parseSingleElem' mkBizStep
@@ -172,7 +174,9 @@ parseBizTransaction c = do
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
   let z = zip attrs texts
   parseBizTransactionHelp <$> z
-    where parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
+    where
+      parseBizTransactionHelp (a, b) =
+        mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
@@ -185,9 +189,9 @@ parseAggregationDWhat c = do
   case act of
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p pid childEPCs qt
--}
+
 -- |parse QuantityDWhat dimension
-{-
+
 parseQuantityDWhat :: Cursor -> Maybe DWhat
 parseQuantityDWhat c = do
   let ec = parseEPCClass (c $/ element "epcClass" &/ content)
@@ -196,8 +200,7 @@ parseQuantityDWhat c = do
   if isNothing ec || isNothing qt
      then Nothing
      else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
--}
-  {-
+
 parseTransactionDWhat :: Cursor -> Maybe DWhat
 parseTransactionDWhat c = do
   let bizT = fromJust <$> filter isJust (parseBizTransaction c)
@@ -253,4 +256,3 @@ parseEventByType c et = do
   let dwhere = parseDWhere <$> eCursors
   let zipd = zip5 eid dwhat dwhen dwhy dwhere
   parseEventList' et zipd
-  -}
