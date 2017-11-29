@@ -37,8 +37,7 @@ testBizStep = do
       (readURI :: String -> Maybe BizStep) "urn:epc:cbv:bizstep"
         `shouldBe` Nothing
     it "empty" $
-      (readURI :: String -> Maybe BizStep) ""
-        `shouldBe` Nothing
+      (readURI :: String -> Maybe BizStep) "" `shouldBe` Nothing
 
 testBizTransaction :: Spec
 testBizTransaction = do
@@ -162,7 +161,8 @@ testPpDWhat = do
             "TRANSACTION WHAT\nAdd\n" ++
             "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Observe" $
       ppDWhat (TransactionDWhat Observe
         (Just (IL (SSCC "0614141" "1234567890")))
@@ -173,7 +173,8 @@ testPpDWhat = do
             "TRANSACTION WHAT\nObserve\n" ++
             "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-           "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Delete" $
       ppDWhat (TransactionDWhat Delete
         (Just (IL (SSCC "0614141" "1234567890")))
@@ -184,7 +185,8 @@ testPpDWhat = do
             "TRANSACTION WHAT\nDelete\n" ++
             "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+            "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+            "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
     it "empty TransactionDWhat with empty, Add" $
       ppDWhat (TransactionDWhat Add Nothing [] [])
@@ -206,8 +208,10 @@ testPpDWhat = do
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
           "TRANSFORMATION WHAT\nJust \"12345\"\n" ++
-          "[IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2017__\"),IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2018__\")]\n" ++
-          "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\"),IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
+          "[IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2017__\")," ++
+          "IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2018__\")]\n" ++
+          "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
+          "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     
     it "create TransformationDWhat, empty" $
       ppDWhat (TransformationDWhat Nothing [] [])
