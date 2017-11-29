@@ -46,10 +46,12 @@ parseTimeXML = parseSingleElem' parseTimeHelper'
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
-                       where parseTimeZoneHelper' x = let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                               case ptz of
-                                 Left _  -> Nothing
-                                 Right a -> Just a
+                      where
+                        parseTimeZoneHelper' x =
+                          let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
+                            case ptz of
+                              Left _  -> Nothing
+                              Right a -> Just a
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
