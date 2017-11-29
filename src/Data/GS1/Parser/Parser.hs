@@ -28,9 +28,8 @@ getCursorsByName n c = c $// element n
 -- |Given a list of Text for a given element
 -- Only return the first one
 parseSingleElem' :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElem' f t = case t of
-                         (x:_) -> f . T.unpack $ x
-                         _     -> Nothing
+parseSingleElem' f (x:_) = f . T.unpack $ x
+parseSingleElem' _ _     = Nothing
 
 -- |Parse a list of Text to a list of type a
 parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
