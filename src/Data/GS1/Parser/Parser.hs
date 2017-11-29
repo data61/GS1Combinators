@@ -38,20 +38,22 @@ parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
 parseTimeXML = parseSingleElem' parseTimeHelper'
-                 where parseTimeHelper' x = let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
-                         case pt of
-                           Left _  -> Nothing
-                           Right a -> Just a
+                where
+                  parseTimeHelper' x =
+                    let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
+                        case pt of
+                          Left _  -> Nothing
+                          Right a -> Just a
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
                       where
-                        parseTimeZoneHelper' x =
+                        parseTimeZoneHelper' x = 
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                            case ptz of
-                              Left _  -> Nothing
-                              Right a -> Just a
+                              case ptz of
+                                Left _  -> Nothing
+                                Right a -> Just a
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
