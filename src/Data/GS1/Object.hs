@@ -14,6 +14,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           GHC.Generics
 import           Data.Swagger
+import           Data.Maybe
 
 -- |TODO expand it to the proper implementation when necessary
 -- EPCIS Page 29
@@ -64,22 +65,9 @@ pctEncoded' :: Char -> Char -> Maybe String
 pctEncoded' a b = form <$> hexDigit a <*> hexDigit b where
   form a' b' = ['%', a', b']
 
--- XXX you probably want to pattern here instead of using length
 isPctEncoded :: String -> Bool
-isPctEncoded s
-  | length s == 3 = isPctEncoded' s
-  | otherwise     = False
-  where
-    isPctEncoded' s' = case s' of
-                         -- XXX these three lines can be rewritten using the _Just prism and the function has (an excellent first exercise!)
-                         [x, a, b] -> case x of
-                                        '%' -> let ec = pctEncoded' a b in
-                                                   case ec of
-                                                     Just _  -> True
-                                                     Nothing -> False
-                                        _   -> False
-                         _         -> False
-
+isPctEncoded ['%', a, b] = isJust $ pctEncoded' a b
+isPctEncoded _           = False
 
 unreserved :: String
 unreserved = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "-._~"
