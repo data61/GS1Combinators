@@ -64,6 +64,8 @@ testBizTransaction = do
       printURI Prodorder `shouldBe` "urn:epcglobal:cbv:btt:prodorder"
 
 -- FIXME - ppDWhat needs a spec. These tests have been based on current output and checking ppDWhat preserves information in output.
+
+-- TODO test for quantity
 testPpDWhat :: Spec
 testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
