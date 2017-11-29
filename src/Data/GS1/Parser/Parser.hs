@@ -20,6 +20,8 @@ import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Object
 
+import Control.Lens
+
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -216,12 +218,11 @@ parseTransactionDWhat c = do
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
-parseEventList' et l = case l of
-                         []     -> []
-                         (x:xs) -> let (i, w1, w2, w3, w4) = x in
-                                       if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
-                                          Nothing : parseEventList' et xs      else
-                                          Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+parseEventList' _ [] = []
+parseEventList' et [x:xs] = let (i, w1, w2, w3, w4) = x in
+                            if any isNothing ((^..each) x) then
+                              Nothing : parseEventList' et xs else
+                              Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
