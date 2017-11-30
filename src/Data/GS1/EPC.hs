@@ -41,6 +41,7 @@ type URIPayload = String
 type Reason = String
 -- add more types to this if need be
 data ParseFailure = InvalidLength --Length is not correct
+                  -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
                   | InvalidFormat -- Components Missing, incorrectly structured
                   | Misc Reason -- Miscellaneous - fall back on this
                   deriving (Show, Eq)
@@ -439,10 +440,15 @@ ppBizStep = revertCamelCase . show
 bizstepPrefixStr :: String
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
+readURIBizStep :: Maybe BizStep -> Either ParseFailure BizStep
+readURIBizStep Nothing = Left InvalidFormat
+readURIBizStep (Just bizstep) = Right bizstep
+
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 16
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI  s   = let uri = "urn:epcglobal:cbv:bizstep" in
-                    parseURI s uri :: Maybe BizStep
+  readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
+                   in readURIBizStep pURI
 
 {-
   Example:
@@ -474,10 +480,15 @@ instance ToSchema BizTransactionType
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
+readURIBizTransactionType :: Maybe BizTransactionType -> Either ParseFailure BizTransactionType
+readURIBizTransactionType Nothing = Left InvalidFormat
+readURIBizTransactionType (Just btt) = Right btt
+
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 28
 instance URI BizTransactionType where
   printURI   btt  = "urn:epcglobal:cbv:btt:" ++ ppBizTransactionType btt
-  readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
-                        parseURI s uri :: Maybe BizTransactionType
+  readURI    s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
+                      in readURIBizTransactionType pURI
 
 -- DELETEME since redundant
 -- mkBizTransactionType :: String -> Maybe BizTransactionType
@@ -495,12 +506,13 @@ instance ToSchema BizTransaction
 
 makeClassy ''BizTransaction
 
+-- DELETEME since not used anymore
 -- | TransactionType, TransactionID
-mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
-                           case bt' of
-                             Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
-                             _       -> Nothing
+-- mkBizTransaction :: String -> String -> Maybe BizTransaction
+-- mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
+--                            case bt' of
+--                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
+--                              _        -> Nothing
 
 
 -- | TransformationID
@@ -564,10 +576,15 @@ ppDisposition = revertCamelCase . show
 -- mkDisposition' :: String -> Maybe Disposition
 -- mkDisposition' = mkByName
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 24
+readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
+readURIDisposition Nothing = Left InvalidFormat
+readURIDisposition (Just disp) = Right disp
+
 instance URI Disposition where
   printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
-                      parseURI s uri :: Maybe Disposition
+  readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
+                    in readURIDisposition pURI
 
 ---------------------------
 -- WHEN  -------------------
