@@ -112,7 +112,7 @@ testPpDWhat = do
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nObserve\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nObserve\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
@@ -122,7 +122,7 @@ testPpDWhat = do
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nAdd\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nAdd\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
@@ -132,7 +132,7 @@ testPpDWhat = do
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nDelete\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nDelete\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
@@ -156,7 +156,7 @@ testPpDWhat = do
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nAdd\n" ++
-            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
@@ -168,7 +168,7 @@ testPpDWhat = do
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nObserve\n" ++
-            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
@@ -180,7 +180,7 @@ testPpDWhat = do
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nDelete\n" ++
-            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
@@ -204,7 +204,7 @@ testPpDWhat = do
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-          "TRANSFORMATION WHAT\nRight \"12345\"\n" ++
+          "TRANSFORMATION WHAT\nJust \"12345\"\n" ++
           "[IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2017__\")," ++
           "IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2018__\")]\n" ++
           "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
