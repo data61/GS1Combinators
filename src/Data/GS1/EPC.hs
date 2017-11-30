@@ -39,8 +39,11 @@ type URIQuantifier = String
 type URIPayload = String
 
 type Reason = String
-data ParseFailure = InvalidLength | Misc Reason
---          Length is not correct | Miscellaneous
+-- add more types to this if need be
+data ParseFailure = InvalidLength --Length is not correct
+                  | InvalidFormat -- Components Missing, incorrectly structured
+                  | Misc Reason -- Miscellaneous - fall back on this
+                  deriving (Show, Eq)
 
 -- |Anything that could be converted into URI
 class URI a where
@@ -122,7 +125,7 @@ readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIClassLabelEPC _ = Left $ Misc "Invalid URI"
+readURIClassLabelEPC _ = Left InvalidFormat
 
 
 printURIClassLabelEPC :: ClassLabelEPC -> String
@@ -174,7 +177,7 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
         isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
 
 -- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIInstanceLabelEPC _ = Left $ Misc "Invalid URI"
+readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
@@ -232,7 +235,7 @@ instance URI LocationEPC where
   readURI epcStr
    | isLocationEPC (splitOn ":" epcStr) =
       readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
-   | otherwise            = Left $ Misc "Invalid URI"
+   | otherwise            = Left InvalidFormat
 
 isLocationEPC :: [String] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -268,7 +271,7 @@ readURILocationEPC [companyPrefix, locationStr, ext]
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
-readURILocationEPC _ = Left $ Misc "Invalid URI" -- error condition / invalid input
+readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -299,7 +302,7 @@ readSrcDestURI :: String -> Either ParseFailure SourceDestType
 readSrcDestURI "owning_party" = Right SDOwningParty
 readSrcDestURI "processing_party" = Right SDProcessingParty
 readSrcDestURI "location" = Right SDLocation
-readSrcDestURI _ = Left $ Misc "Invalid URI"
+readSrcDestURI _ = Left InvalidFormat
 
 {-
 mkSourceDestType :: String -> Maybe SourceDestType
@@ -349,7 +352,7 @@ readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
   | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
     = Right $ GDTI documentType documentType serialNumber
   | otherwise = Left InvalidLength
-readURIBusinessTransactionEPC _ = Left $ Misc "Invalid URI"
+readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
