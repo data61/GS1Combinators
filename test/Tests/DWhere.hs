@@ -15,18 +15,26 @@ testReadSGLN =
         readURI "urn:epc:id:sgln:0614141.12345" `shouldBe`
           Just (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
       it "Invalid URI" $
-        (readURI :: String -> Maybe LocationEPC) "this:is:invalid" `shouldBe` Nothing
+        (readURI :: String -> Either ParseFailure LocationEPC)
+          "this:is:invalid"
+            `shouldBe` Nothing
       it "Some other valid uri" $
-        (readURI :: String -> Maybe LocationEPC) "urn:epc:class:lgtin:4012345.012345.998877" `shouldBe` Nothing
+        (readURI :: String -> Either ParseFailure LocationEPC)
+          "urn:epc:class:lgtin:4012345.012345.998877"
+            `shouldBe` Nothing
       it "Empty string" $
-        (readURI :: String -> Maybe LocationEPC) "" `shouldBe` Nothing
+        (readURI :: String -> Either ParseFailure LocationEPC) ""
+          `shouldBe` Nothing
       it "Some components missing" $
-        (readURI :: String -> Maybe LocationEPC) "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
+        (readURI :: String -> Either ParseFailure LocationEPC)
+          "urn:epc:sgln:0614141.12345.400" `shouldBe` Nothing
       describe "Invalid length" $ do
         it "Shorter length" $
-          (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing
+          (readURI :: String -> Either ParseFailure LocationEPC)
+            "urn:epc:id:sgln:06.12.4" `shouldBe` Nothing
         it "Longer length" $
-          (readURI :: String -> Maybe LocationEPC) "urn:epc:id:sgln:06534590.123234322.4" `shouldBe` Nothing
+          (readURI :: String -> Either ParseFailure LocationEPC)
+            "urn:epc:id:sgln:06534590.123234322.4" `shouldBe` Nothing
 
 testPrintSGLN :: Spec
 testPrintSGLN =
