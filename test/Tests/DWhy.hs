@@ -17,10 +17,13 @@ testDisposition =
 
     describe "parse Disposition where invalid" $ do
       it "parse the valid uri to disposition" $
-        readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Just Active
+        readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Right Active
       it "parses the invalid uri to Nothing" $
-        (readURI :: String -> Maybe Disposition) "urn:epcglobal:cbv:disp:active2" `shouldBe` Nothing
+        (readURI :: String -> Maybe Disposition) "urn:epcglobal:cbv:disp:active2"
+          `shouldBe` Left InvalidFormat
       it "parse invalid string to Nothing" $
-        (readURI :: String -> Maybe Disposition) "somerandomstring" `shouldBe` Nothing
+        (readURI :: String -> Maybe Disposition) "somerandomstring"
+          `shouldBe` Left InvalidFormat
       it "parse empty string to Nothing" $
-        (readURI :: String -> Maybe Disposition) "" `shouldBe` Nothing
+        (readURI :: String -> Maybe Disposition) ""
+          `shouldBe` Left InvalidFormat

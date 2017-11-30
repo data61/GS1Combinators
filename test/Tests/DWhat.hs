@@ -9,6 +9,9 @@ import           Data.GS1.DWhat
 import           Data.GS1.EPC
 import           Data.GS1.Object
 
+-- change all the nothings
+-- change all the type signatures
+
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
@@ -18,43 +21,49 @@ testBizStep = do
       printURI CycleCounting `shouldBe` "urn:epcglobal:cbv:bizstep:cycle_counting"
     it "produces correct URI" $
       printURI CreatingClassInstance `shouldBe` "urn:epcglobal:cbv:bizstep:creating_class_instance"
-  
+
   describe "parseBizStep" $ do
     it "parse valid uri to bizstep" $
-      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Just VoidShipping
+      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Right VoidShipping
 
     it "parse valid uri to bizstep" $
-      readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Just Accepting
+      readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Right Accepting
   
   describe "Invalid urns" $ do
     it "parse valid uri but invalid step to Nothing" $
-      (readURI :: String -> Maybe BizStep) "urn:epcglobal:cbv:bizstep:s" `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizStep) "urn:epcglobal:cbv:bizstep:s"
+        `shouldBe` Left InvalidFormat
 
     it "parse invalid uri to Nothing" $
-      (readURI :: String -> Maybe BizStep) "urn:invalidns:cbv:bizstep:void_shipping"
-        `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizStep) "urn:invalidns:cbv:bizstep:void_shipping"
+        `shouldBe` Left InvalidFormat
     it "A component of the urn missing" $
-      (readURI :: String -> Maybe BizStep) "urn:epc:cbv:bizstep"
-        `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizStep) "urn:epc:cbv:bizstep"
+        `shouldBe` Left InvalidFormat
     it "empty" $
-      (readURI :: String -> Maybe BizStep) "" `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizStep) "" `shouldBe` Left InvalidFormat
 
 testBizTransaction :: Spec
 testBizTransaction = do
   describe "Parse BizTransactionID" $
     it "parse the valid uri to BizTransactionID" $
-      readURI "urn:epcglobal:cbv:btt:po" `shouldBe` Just Po
+      readURI "urn:epcglobal:cbv:btt:po" `shouldBe` Right Po
 
   describe "Invalid urns" $ do
     it "parse the invalid uri to Nothing" $
-      (readURI :: String -> Maybe BizTransactionType) "urn:epcglobal:cbv:btt:somethingelse"
-        `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizTransactionType)
+        "urn:epcglobal:cbv:btt:somethingelse"
+          `shouldBe` Left InvalidFormat
     it "parse the empty uri to Nothing" $
-      (readURI :: String -> Maybe BizTransactionType) "" `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizTransactionType)
+        "" `shouldBe` Left InvalidFormat
     it "parse a uri missing component with to Nothing" $
-      (readURI :: String -> Maybe BizTransactionType) "urn:epcglobal:cbv:po" `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizTransactionType)
+        "urn:epcglobal:cbv:po"
+          `shouldBe` Left InvalidFormat
     it "parse a rubbish uri with no : to Nothing" $
-      (readURI :: String -> Maybe BizTransactionType) "fooblahjaja" `shouldBe` Nothing
+      (readURI :: String -> Either ParseFailure BizTransactionType)
+        "fooblahjaja" `shouldBe` Left InvalidFormat
 
   describe "print BizTransaction" $ do
     it "print BizTransaction 1" $
@@ -75,8 +84,6 @@ testPpDWhat = do
             "OBJECT WHAT\nObserve\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
-            -- DELETEME
-            --"OBJECT WHAT\nObserve\n[urn:epc:id:sgtin:0614141.107346.2017,urn:epc:id:sgtin:0614141.107346.2018]\n[]"
 
     it "creates ObjectDWhat from valid input, Add" $
       ppDWhat (ObjectDWhat Add [IL (SGTIN "0614141" Nothing "107346" "2017"),
@@ -104,38 +111,31 @@ testPpDWhat = do
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
       ppDWhat (AggregationDWhat Observe 
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nObserve\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nObserve\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
-          -- DELETEME
-          --"AGGREGATION WHAT\n" ++ "Observe\n" ++
-          --"Just \"urn:epc:id:sscc:0614141.1234567890\"\n" ++ 
-          --"[urn:epc:id:sgtin:0614141.107346.2017," ++
-          --"urn:epc:id:sgtin:0614141.107346.2018]\n" ++
-          --"[QuantityElement (EPCClass \"urn:epc:idpat:sgtin:4012345.098765.*\") 10.0 Nothing," ++
-          --"QuantityElement (EPCClass \"urn:epc:class:lgtin:4012345.012345.998877\") 200.5 (Just \"KGM\")]"
 
     it "creates AggregationDWhat from valid input, Add" $
       ppDWhat (AggregationDWhat Add
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nAdd\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nAdd\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
     it "creates AggregationDWhat from valid input, Delete" $
       ppDWhat (AggregationDWhat Delete
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nDelete\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nDelete\nRight (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
@@ -153,37 +153,37 @@ testPpDWhat = do
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
       ppDWhat (TransactionDWhat Add
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nAdd\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Observe" $
       ppDWhat (TransactionDWhat Observe
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nObserve\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Delete" $
       ppDWhat (TransactionDWhat Delete
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Right (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nDelete\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Right (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
@@ -201,13 +201,13 @@ testPpDWhat = do
          
   describe "work with a TransformationDWhat" $ do
     it "create TransformationDWhat" $
-      ppDWhat (TransformationDWhat (Just "12345")
+      ppDWhat (TransformationDWhat (Right "12345")
         [IL (SGTIN "0614141__" Nothing "107346__" "2017__"),
         IL (SGTIN "0614141__" Nothing "107346__" "2018__")]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-          "TRANSFORMATION WHAT\nJust \"12345\"\n" ++
+          "TRANSFORMATION WHAT\nRight \"12345\"\n" ++
           "[IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2017__\")," ++
           "IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2018__\")]\n" ++
           "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
