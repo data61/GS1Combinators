@@ -38,10 +38,14 @@ type URIQuantifier = String
 -- URI Payload
 type URIPayload = String
 
+type Reason = String
+data ParseFailure = InvalidLength | Misc Reason
+--          Length is not correct | Miscellaneous
+
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> Maybe a
+  readURI       :: String -> Either ParseFailure a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -110,15 +114,15 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
-readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
+readURIClassLabelEPC :: [String] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  Just $ LGTIN gs1CompanyPrefix itemReference lot
+  Right $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
 readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
-  Just $ GRAI gs1CompanyPrefix assetType serialNumber
+  Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIClassLabelEPC _ = Nothing
+readURIClassLabelEPC _ = Left $ Misc "Invalid URI"
 
 
 printURIClassLabelEPC :: ClassLabelEPC -> String
@@ -150,27 +154,27 @@ sgtinPadLen = 13
 ssccPadLen :: Int
 ssccPadLen = 17
 
-readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
+readURIInstanceLabelEPC :: [String] -> Either ParseFailure InstanceLabelEPC
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  Just $ GIAI gs1CompanyPrefix individualAssetReference
+  Right $ GIAI gs1CompanyPrefix individualAssetReference
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
-  | isCorrectLen = Just $ SSCC gs1CompanyPrefix serialNumber
-  | otherwise = Nothing
+  | isCorrectLen = Right $ SSCC gs1CompanyPrefix serialNumber
+  | otherwise = Left InvalidLength
       where
         [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
         isCorrectLen = length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
-  | isCorrectLen = Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
+  | isCorrectLen = Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
 --                                               Nothing, for the moment
-  | otherwise = Nothing
+  | otherwise = Left InvalidLength
       where
         [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
         isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
 
 -- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIInstanceLabelEPC _ = Nothing
+readURIInstanceLabelEPC _ = Left $ Misc "Invalid URI"
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
@@ -228,7 +232,7 @@ instance URI LocationEPC where
   readURI epcStr
    | isLocationEPC (splitOn ":" epcStr) =
       readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
-   | otherwise            = Nothing
+   | otherwise            = Left $ Misc "Invalid URI"
 
 isLocationEPC :: [String] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -251,20 +255,20 @@ hasCoord s = isJust obj
 sglnPadLen :: Int
 sglnPadLen = 12
 
-readURILocationEPC :: [String] -> Maybe LocationEPC
+readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | isCorrectLen = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
-  | otherwise    = Nothing
+  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | isCorrectLen = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
-  | otherwise    = Nothing
+  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
-readURILocationEPC _ = Nothing -- error condition / invalid input
+readURILocationEPC _ = Left $ Misc "Invalid URI" -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -291,11 +295,12 @@ printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
 printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
 printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
 
-readSrcDestURI :: String -> Maybe SourceDestType
-readSrcDestURI "owning_party" = Just SDOwningParty
-readSrcDestURI "processing_party" = Just SDProcessingParty
-readSrcDestURI "location" = Just SDLocation
-readSrcDestURI _ = Nothing
+readSrcDestURI :: String -> Either ParseFailure SourceDestType
+readSrcDestURI "owning_party" = Right SDOwningParty
+readSrcDestURI "processing_party" = Right SDProcessingParty
+readSrcDestURI "location" = Right SDLocation
+readSrcDestURI _ = Left $ Misc "Invalid URI"
+
 {-
 mkSourceDestType :: String -> Maybe SourceDestType
 mkSourceDestType = mkByName
@@ -335,16 +340,16 @@ gsrnPadLen = 17
 gdtiPadLen :: Int
 gdtiPadLen = 12
 
-readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
+readURIBusinessTransactionEPC :: [String] -> Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
   | length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
-    = Just $ GSRN gs1CompanyPrefix serialReference
-  | otherwise = Nothing
+    = Right $ GSRN gs1CompanyPrefix serialReference
+  | otherwise = Left InvalidLength
 readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
   | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
-    = Just $ GDTI documentType documentType serialNumber
-  | otherwise = Nothing
-readURIBusinessTransactionEPC _ = Nothing
+    = Right $ GDTI documentType documentType serialNumber
+  | otherwise = Left InvalidLength
+readURIBusinessTransactionEPC _ = Left $ Misc "Invalid URI"
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
