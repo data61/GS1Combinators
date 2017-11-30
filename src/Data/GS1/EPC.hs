@@ -38,10 +38,18 @@ type URIQuantifier = String
 -- URI Payload
 type URIPayload = String
 
+type Reason = String
+-- add more types to this if need be
+data ParseFailure = InvalidLength --Length is not correct
+                  -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
+                  | InvalidFormat -- Components Missing, incorrectly structured
+                  | Misc Reason -- Miscellaneous - fall back on this
+                  deriving (Show, Eq)
+
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> Maybe a
+  readURI       :: String -> Either ParseFailure a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -110,16 +118,15 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
-
-readURIClassLabelEPC :: [String] -> Maybe ClassLabelEPC
+readURIClassLabelEPC :: [String] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
-  Just $ LGTIN gs1CompanyPrefix itemReference lot
+  Right $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) = -- TODO - 
-  Just $ GRAI gs1CompanyPrefix assetType serialNumber
+readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
+  Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 -- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIClassLabelEPC _ = Nothing
+readURIClassLabelEPC _ = Left InvalidFormat
 
 
 printURIClassLabelEPC :: ClassLabelEPC -> String
@@ -139,24 +146,39 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                        --serialsed global trade item number
                        deriving (Show, Read, Eq, Generic)
 
-
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
     readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
 
+-- GS1_EPC_TDS_i1_11.pdf Page 28
+sgtinPadLen :: Int
+sgtinPadLen = 13
 
-readURIInstanceLabelEPC :: [String] -> Maybe InstanceLabelEPC
+-- GS1_EPC_TDS_i1_11.pdf Page 29
+ssccPadLen :: Int
+ssccPadLen = 17
+
+readURIInstanceLabelEPC :: [String] -> Either ParseFailure InstanceLabelEPC
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  Just $ GIAI gs1CompanyPrefix individualAssetReference
+  Right $ GIAI gs1CompanyPrefix individualAssetReference
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest) =
-  Just $ SSCC gs1CompanyPrefix serialNumber
-    where [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest) =
-  Just $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber -- Nothing, for the moment
-    where [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
+  | isCorrectLen = Right $ SSCC gs1CompanyPrefix serialNumber
+  | otherwise = Left InvalidLength
+      where
+        [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
+        isCorrectLen = length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen
+
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
+  | isCorrectLen = Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
+--                                               Nothing, for the moment
+  | otherwise = Left InvalidLength
+      where
+        [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
+        isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
+
 -- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
-readURIInstanceLabelEPC _ = Nothing
+readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
@@ -164,10 +186,7 @@ printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
   "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
   "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix (Just sgtinFilterValue) itemReference serialNumber) =
-  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
-    --FIXME: add Maybe SGTINFilterValue
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix Nothing itemReference serialNumber) =
+printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
 
@@ -180,11 +199,11 @@ instance ToField InstanceLabelEPC where
 
 
 -- this should be moved to src/.../DWhat.hs
-data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
-                deriving (Show, Read, Eq, Generic)
+-- data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
+--                 deriving (Show, Read, Eq, Generic)
 
-$(deriveJSON defaultOptions ''LabelEPC)
-instance ToSchema LabelEPC
+-- $(deriveJSON defaultOptions ''LabelEPC)
+-- instance ToSchema LabelEPC
 
 
 type Lng = Float
@@ -217,7 +236,7 @@ instance URI LocationEPC where
   readURI epcStr
    | isLocationEPC (splitOn ":" epcStr) =
       readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
-   | otherwise            = Nothing
+   | otherwise            = Left InvalidFormat
 
 isLocationEPC :: [String] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -237,27 +256,28 @@ hasCoord s = isJust obj
     obj = parseCoord $ splitOn "-" s
 
 -- GS1_EPC_TDS_i1_11.pdf Page 29
-sglnPaddedComponentLength :: Int
-sglnPaddedComponentLength = 12
+sglnPadLen :: Int
+sglnPadLen = 12
 
-readURILocationEPC :: [String] -> Maybe LocationEPC
+readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
-    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
-  | otherwise = Nothing
+  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | otherwise    = Left InvalidLength
+    where
+      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | length (companyPrefix ++ locationStr) == sglnPaddedComponentLength
-    = Just $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
-  | otherwise = Nothing
-readURILocationEPC _ = Nothing -- error condition / invalid input
+  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | otherwise    = Left InvalidLength
+    where
+      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
+readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
 $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationEPC
-
 
 -- |SourceDestType
 data SourceDestType = SDOwningParty
@@ -279,11 +299,12 @@ printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
 printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
 printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
 
-readSrcDestURI :: String -> Maybe SourceDestType
-readSrcDestURI "owning_party" = Just SDOwningParty
-readSrcDestURI "processing_party" = Just SDProcessingParty
-readSrcDestURI "location" = Just SDLocation
-readSrcDestURI _ = Nothing
+readSrcDestURI :: String -> Either ParseFailure SourceDestType
+readSrcDestURI "owning_party" = Right SDOwningParty
+readSrcDestURI "processing_party" = Right SDProcessingParty
+readSrcDestURI "location" = Right SDLocation
+readSrcDestURI _ = Left InvalidFormat
+
 {-
 mkSourceDestType :: String -> Maybe SourceDestType
 mkSourceDestType = mkByName
@@ -316,23 +337,23 @@ printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
 -- used for the purposes of validation
 
 -- GS1_EPC_TDS_i1_11.pdf Page 31
-gsrnPaddedComponentLength :: Int
-gsrnPaddedComponentLength = 17
+gsrnPadLen :: Int
+gsrnPadLen = 17
 
 -- GS1_EPC_TDS_i1_11.pdf Page 32
-gdtiPaddedComponentLength :: Int
-gdtiPaddedComponentLength = 12
+gdtiPadLen :: Int
+gdtiPadLen = 12
 
-readURIBusinessTransactionEPC :: [String] -> Maybe BusinessTransactionEPC
+readURIBusinessTransactionEPC :: [String] -> Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
-  | length (gs1CompanyPrefix ++ serialReference) == gsrnPaddedComponentLength
-    = Just $ GSRN gs1CompanyPrefix serialReference
-  | otherwise = Nothing
+  | length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
+    = Right $ GSRN gs1CompanyPrefix serialReference
+  | otherwise = Left InvalidLength
 readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
-  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPaddedComponentLength
-    = Just $ GDTI documentType documentType serialNumber
-  | otherwise = Nothing
-readURIBusinessTransactionEPC _ = Nothing
+  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
+    = Right $ GDTI documentType documentType serialNumber
+  | otherwise = Left InvalidLength
+readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
@@ -363,45 +384,46 @@ data LocationError
 -- WHAT -------------------
 ---------------------------
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep = Accepting
-                  | Arriving
-                  | Assembling
-                  | Collecting
-                  | Commissioning
-                  | Consigning
-                  | CreatingClassInstance
-                  | CycleCounting
-                  | Decommissioning
-                  | Departing
-                  | Destroying
-                  | Disassembling
-                  | Dispensing
-                  | Encoding
-                  | EnteringExiting
-                  | Holding
-                  | Inspecting
-                  | Installing
-                  | Killing
-                  | Loading
-                  | Other
-                  | Packing
-                  | Picking
-                  | Receiving
-                  | Removing
-                  | Repackaging
-                  | Repairing
-                  | Replacing
-                  | Reserving
-                  | RetailSelling
-                  | Shipping
-                  | StagingOutbound
-                  | StockTaking
-                  | Stocking
-                  | Storing
-                  | Transporting
-                  | Unloading
-                  | VoidShipping
-                  deriving (Show, Eq, Generic, Read)
+             | Arriving
+             | Assembling
+             | Collecting
+             | Commissioning
+             | Consigning
+             | CreatingClassInstance
+             | CycleCounting
+             | Decommissioning
+             | Departing
+             | Destroying
+             | Disassembling
+             | Dispensing
+             | Encoding
+             | EnteringExiting
+             | Holding
+             | Inspecting
+             | Installing
+             | Killing
+             | Loading
+             | Other
+             | Packing
+             | Picking
+             | Receiving
+             | Removing
+             | Repackaging
+             | Repairing
+             | Replacing
+             | Reserving
+             | RetailSelling
+             | Shipping
+             | StagingOutbound
+             | StockTaking
+             | Stocking
+             | Storing
+             | Transporting
+             | Unloading
+             | VoidShipping
+             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
@@ -415,12 +437,18 @@ makeClassy ''BizStep
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
+bizstepPrefixStr :: String
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
+readURIBizStep :: Maybe BizStep -> Either ParseFailure BizStep
+readURIBizStep Nothing = Left InvalidFormat
+readURIBizStep (Just bizstep) = Right bizstep
+
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 16
 instance URI BizStep where
   printURI epc = bizstepPrefixStr ++ ppBizStep epc
-  readURI s = let uri = "urn:epcglobal:cbv:bizstep" in
-                  parseURI s uri :: Maybe BizStep
+  readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
+                   in readURIBizStep pURI
 
 {-
   Example:
@@ -452,10 +480,15 @@ instance ToSchema BizTransactionType
 ppBizTransactionType :: BizTransactionType -> String
 ppBizTransactionType = revertCamelCase . show
 
+readURIBizTransactionType :: Maybe BizTransactionType -> Either ParseFailure BizTransactionType
+readURIBizTransactionType Nothing = Left InvalidFormat
+readURIBizTransactionType (Just btt) = Right btt
+
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 28
 instance URI BizTransactionType where
-  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ show btt
-  readURI    s    = let uri = "urn:epcglobal:cbv:btt" in
-                        parseURI s uri :: Maybe BizTransactionType
+  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ ppBizTransactionType btt
+  readURI    s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
+                      in readURIBizTransactionType pURI
 
 -- DELETEME since redundant
 -- mkBizTransactionType :: String -> Maybe BizTransactionType
@@ -473,19 +506,17 @@ instance ToSchema BizTransaction
 
 makeClassy ''BizTransaction
 
+-- DELETEME since not used anymore
 -- | TransactionType, TransactionID
-mkBizTransaction :: String -> String -> Maybe BizTransaction
-mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
-                           case bt' of
-                             Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
-                             _       -> Nothing
+-- mkBizTransaction :: String -> String -> Maybe BizTransaction
+-- mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
+--                            case bt' of
+--                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
+--                              _        -> Nothing
 
 
 -- | TransformationID
 type TransformationID = String
-
--- | ParentID
-type ParentID = LabelEPC
 
 data Action = Add
             | Observe
@@ -496,9 +527,6 @@ instance ToSchema Action
 
 mkAction :: String -> Maybe Action
 mkAction s = mkByName . camelCase $ toLower <$> s
-
-
-
 
 
 ---------------------------
@@ -548,10 +576,15 @@ ppDisposition = revertCamelCase . show
 -- mkDisposition' :: String -> Maybe Disposition
 -- mkDisposition' = mkByName
 
+-- CBV-Standard-1-2-r-2016-09-29.pdf page 24
+readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
+readURIDisposition Nothing = Left InvalidFormat
+readURIDisposition (Just disp) = Right disp
+
 instance URI Disposition where
   printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
-  readURI  s    = let uri = "urn:epcglobal:cbv:disp" in
-                      parseURI s uri :: Maybe Disposition
+  readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
+                    in readURIDisposition pURI
 
 ---------------------------
 -- WHEN  -------------------
@@ -601,8 +634,6 @@ parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z"
                         Nothing -> throwing _IllegalTimeFormat ()
 
 
-
-
 instance Eq ZonedTime where
   x == y = show x == show y
 
@@ -618,7 +649,7 @@ instance ToField TimeZone where
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
 named :: T.Text -> Schema -> NamedSchema
-named name = NamedSchema (Just name) -- this function has been Eta reduced
+named n = NamedSchema (Just n) -- this function has been Eta reduced
 
 timeSchema :: T.Text -> Schema
 timeSchema fmt = mempty
