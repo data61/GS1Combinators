@@ -9,9 +9,6 @@ import           Data.GS1.DWhat
 import           Data.GS1.EPC
 import           Data.GS1.Object
 
--- change all the nothings
--- change all the type signatures
-
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
@@ -111,7 +108,7 @@ testPpDWhat = do
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
       ppDWhat (AggregationDWhat Observe 
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
@@ -121,7 +118,7 @@ testPpDWhat = do
 
     it "creates AggregationDWhat from valid input, Add" $
       ppDWhat (AggregationDWhat Add
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
@@ -131,7 +128,7 @@ testPpDWhat = do
 
     it "creates AggregationDWhat from valid input, Delete" $
       ppDWhat (AggregationDWhat Delete
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
@@ -153,7 +150,7 @@ testPpDWhat = do
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
       ppDWhat (TransactionDWhat Add
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -165,7 +162,7 @@ testPpDWhat = do
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Observe" $
       ppDWhat (TransactionDWhat Observe
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -177,7 +174,7 @@ testPpDWhat = do
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Delete" $
       ppDWhat (TransactionDWhat Delete
-        (Right (IL (SSCC "0614141" "1234567890")))
+        (Just (IL (SSCC "0614141" "1234567890")))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -201,7 +198,7 @@ testPpDWhat = do
          
   describe "work with a TransformationDWhat" $ do
     it "create TransformationDWhat" $
-      ppDWhat (TransformationDWhat (Right "12345")
+      ppDWhat (TransformationDWhat (Just "12345")
         [IL (SGTIN "0614141__" Nothing "107346__" "2017__"),
         IL (SGTIN "0614141__" Nothing "107346__" "2018__")]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
