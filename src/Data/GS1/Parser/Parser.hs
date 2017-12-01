@@ -131,13 +131,13 @@ parseQuantity c = do
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
-parseEPCList :: [T.Text] -> [EPC]
-parseEPCList = parseListElem' (mkEPC "EPC")
+-- parseEPCList :: [T.Text] -> [EPC]
+-- parseEPCList = parseListElem' (mkEPC "EPC")
 
--- |Alias to parseEPCList
--- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [EPC]
-parseChildEPCList = parseEPCList
+-- -- |Alias to parseEPCList
+-- -- name="childEPCs" type="epcis:EPCListType"
+-- parseChildEPCList :: [T.Text] -> [EPC]
+-- parseChildEPCList = parseEPCList
 
 
 -- |Parse BizStep by Name
