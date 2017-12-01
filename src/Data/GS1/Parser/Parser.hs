@@ -104,9 +104,9 @@ parseDWhy c = do
 -- |TODO: there must be some more modification on it
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rps = (mkLocation . T.unpack) <$> (c $/ element "readPoint"   &/ element "id" &/ content)
-  let bls = (mkLocation . T.unpack) <$> (c $/ element "bizLocation" &/ element "id" &/ content)
-  Just $ DWhere rps bls [] []
+  let rps = ((readURI :: String -> Either ParseFailure LocationEPC) . T.unpack) <$> (c $/ element "readPoint"   &/ element "id" &/ content)
+  let bls = ((readURI :: String -> Either ParseFailure LocationEPC) . T.unpack) <$> (c $/ element "bizLocation" &/ element "id" &/ content)
+  Just $ DWhere rps bls [] [] -- START HERE TOMORROW
 
 -- |Parse QuantityElement
 parseQuantity :: Cursor -> Maybe QuantityElement
