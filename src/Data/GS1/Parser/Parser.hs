@@ -25,6 +25,8 @@ import           Data.GS1.Object
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
+-- can parseSingleElem be more generalised?
+
 -- |Given a list of Text for a given element
 -- Only return the first one
 -- parseSingleElemM returns a Maybe
@@ -36,6 +38,7 @@ parseSingleElemM _ _     = Nothing
 parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ _     = Left InvalidFormat
+
 
 -- |Parse a list of Text to a list of type a
 -- deprecated
