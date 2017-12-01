@@ -36,33 +36,45 @@ mapTuple = join bimap
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
+-- can parseSingleElem be more generalised?
+
 -- |Given a list of Text for a given element
 -- Only return the first one
-parseSingleElem' :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElem' f (x:_) = f . T.unpack $ x
-parseSingleElem' _ _     = Nothing
+-- parseSingleElemM returns a Maybe
+parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
+parseSingleElemM f (x:_) = f . T.unpack $ x
+parseSingleElemM _ _     = Nothing
+
+-- parseSingleElemM returns an Either
+parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
+parseSingleElemE f (x:_) = f . T.unpack $ x
+parseSingleElemE _ _     = Left InvalidFormat
+
 
 -- |Parse a list of Text to a list of type a
-parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
-parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+-- deprecated
+-- parseListElem' :: (String -> Either ParseFailure a) -> [T.Text] -> [a]
+-- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
-parseTimeXML = parseSingleElem' parseTimeHelper'
-                 where parseTimeHelper' x = let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
-                         case pt of
-                           Left _  -> Nothing
-                           Right a -> Just a
+parseTimeXML = parseSingleElemM parseTimeHelper'
+                where
+                  parseTimeHelper' x =
+                    let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
+                        case pt of
+                          Left _  -> Nothing
+                          Right a -> Just a
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
+parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
                       where
-                        parseTimeZoneHelper' x =
+                        parseTimeZoneHelper' x = 
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                            case ptz of
-                              Left _  -> Nothing
-                              Right a -> Just a
+                              case ptz of
+                                Left _  -> Nothing
+                                Right a -> Just a
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
@@ -113,55 +125,66 @@ parseQuantity c = do
   let ec = c $/ element "epcClass" &/ content
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
-  case ec of
-    []    -> Nothing
-    (e:_) ->
-      case qt of
-        []    -> Nothing
-        (q:_) ->
-          case uom of
-            []    -> let [e', q'] = T.unpack <$> [e, q] in
-                          Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-            (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-                          Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
-
+  let allQuantity = [ec, qt, uom]
+  case allQuantity of
+    [[], _, _] -> Nothing
+    [e:_, [], _] -> Nothing
+    [e : _, q : _, []] ->
+        let [e', q'] = T.unpack <$> [e, q] in
+        Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+    [e : _, q : _, u : _] ->
+        let [e', q', u'] = T.unpack <$> [e, q, u] in
+        Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+    
+    -- this has been refactored above. DELETEME
+    -- []    -> Nothing
+    -- (e:_) ->
+    --   case qt of
+    --     []    -> Nothing
+    --     (q:_) ->
+    --       case uom of
+    --         []    -> let [e', q'] = T.unpack <$> [e, q] in
+    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+    --         (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
-parseEPCList :: [T.Text] -> [EPC]
-parseEPCList = parseListElem' (mkEPC "EPC")
+-- parseEPCList :: [T.Text] -> [EPC]
+-- parseEPCList = parseListElem' (mkEPC "EPC")
 
--- |Alias to parseEPCList
--- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [EPC]
-parseChildEPCList = parseEPCList
+-- -- |Alias to parseEPCList
+-- -- name="childEPCs" type="epcis:EPCListType"
+-- parseChildEPCList :: [T.Text] -> [EPC]
+-- parseChildEPCList = parseEPCList
 
 
 -- |Parse BizStep by Name
-parseBizStep :: [T.Text] -> Maybe BizStep
-parseBizStep = parseSingleElem' mkBizStep
+parseBizStep :: [T.Text] -> Either ParseFailure BizStep
+parseBizStep = parseSingleElemE (readURI :: String -> Either ParseFailure BizStep)
 
 -- |Parse Disposition by Name
-parseDisposition :: [T.Text] -> Maybe Disposition
-parseDisposition = parseSingleElem' mkDisposition
+parseDisposition :: [T.Text] -> Either ParseFailure Disposition
+parseDisposition = parseSingleElemE mkDisposition
 
--- |Parse Action by Name
-parseAction :: [T.Text] -> Maybe Action
-parseAction = parseSingleElem' mkAction
+-- |Parse Action by Name -> perhaps deprecated? -@sa
+parseAction :: [T.Text] -> Either ParseFailure Action
+parseAction = parseSingleElemE mkAction
 
 -- |Parse a single EPCClass
 parseEPCClass :: [T.Text] -> Maybe EPCClass
-parseEPCClass = parseSingleElem' mkEPCClass
+parseEPCClass = parseSingleElemM mkEPCClass
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue x = parseSingleElem' (readMaybe x :: Maybe Integer)
+parseQuantityValue = parseSingleElemM readMaybeInteger where
+                          readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID = parseSingleElem' Just
+parseParentID = parseSingleElemM Just
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
@@ -223,15 +246,21 @@ parseTransactionDWhat c = do
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' _ [] = []
-parseEventList' et [x:xs] = (if any (isNothing ((^..each) x)) then
-                              Nothing : parseEventList' et xs else
-                              Just ((uncurryN (mkEvent et)) (mapTuple fromJust x)))
+-- parseEventList' et [x:xs] = (if any (isNothing ((^..each) x)) then
+--                               Nothing : parseEventList' et xs else
+--                               Just ((uncurryN (mkEvent et)) (mapTuple fromJust x)))
+-- the following has been refactored to the above
+parseEventList' et [] = []
+parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
+                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
+                                Nothing : parseEventList' et xs      else
+                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 -- DELETEME as refactored below
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem' parseEventID' eid where
+  parseSingleElemM parseEventID' eid where
     parseEventID' eid' = let uuid = fromString eid' in
                              case uuid of
                                Nothing -> Nothing
@@ -259,7 +288,7 @@ parseEventByType c et = do
   let dwhat = case et of
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
-                --QuantityEventT    -> parseQuantityDWhat    <$> eCursors
+                -- QuantityEventT    -> parseQuantityDWhat    <$> eCursors
                 TransactionEventT -> parseTransactionDWhat <$> eCursors
                 --TransformationEventT -> parseTransformationWhat <$> eCursors
                 _                 -> const Nothing         <$> eCursors

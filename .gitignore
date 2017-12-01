@@ -22,3 +22,10 @@ cabal.sandbox.config
 .stack-work/
 cabal.project.local
 .HTF/
+
+# A script to collect stats from running tests
+# It was originally named stats.sh. Renamed so that
+# it does not conflict with a future script that can be
+# aptly named stats.sh - @sa
+stats_randnum_4215.sh
+
