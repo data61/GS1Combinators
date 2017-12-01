@@ -19,7 +19,7 @@ import qualified Data.Text.Lazy as TxtL
 
 
 
-
+--        should this be BizStep now? - @sa
 data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
@@ -45,6 +45,6 @@ makeClassy ''DWhy
 
 -- XXX mkDWhy can be rewritten as:
 --mkDWhy = liftA2 DWhy
-mkDWhy :: Maybe BizStep -> Maybe Disposition -> Maybe DWhy
-mkDWhy step disp = if isNothing step || isNothing disp then Nothing
-                     else Just $ DWhy step disp
+mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition -> Maybe DWhy
+mkDWhy (Right step) (Right disp) = Just $ DWhy (Just step) (Just disp)
+mkDWhy _ _                       = Nothing
