@@ -148,8 +148,8 @@ parseQuantity c = do
 
 
 -- |Parse BizStep by Name
-parseBizStep :: [T.Text] -> Maybe BizStep
-parseBizStep = parseSingleElem' mkBizStep
+parseBizStep :: [T.Text] -> Either ParseFailure BizStep
+parseBizStep = parseSingleElemE (readURI :: String -> Either ParseFailure BizStep)
 
 -- |Parse Disposition by Name
 parseDisposition :: [T.Text] -> Either ParseFailure Disposition
