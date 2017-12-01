@@ -27,7 +27,7 @@ instance FromHttpApiData EventID where
 instance ToField EventID where
   toField = toField . pack . show
 
-$(deriveJSON defaultOptions ''UUID.UUID)
+
 --instance ToSchema UUID
 $(deriveJSON defaultOptions ''EventID)
 instance ToSchema EventID
