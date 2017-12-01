@@ -256,16 +256,23 @@ parseEventList' et [x:xs] = (if any (isNothing ((^..each) x)) then
 --                                 Nothing : parseEventList' et xs      else
 --                                 Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
--- DELETEME as refactored below
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElemM parseEventID' eid where
-    parseEventID' eid' = let uuid = fromString eid' in
-                             case uuid of
-                               Nothing -> Nothing
-                               Just u  -> Just $ EventID u
+  parseSingleElemM parseEventID' (case fromString eid of
+                                   Nothing -> Nothing
+                                   Just u  -> Just $ EventID u)
 
+-- DELETEME as refactored above
+-- parseEventID :: Cursor -> Maybe EventID
+-- parseEventID c = do
+--   let eid = c $/ element "eventID" &/ content
+--   parseSingleElemM parseEventID' eid where
+--     parseEventID' eid' = let uuid = fromString eid' in
+--                              case uuid of
+--                                Nothing -> Nothing
+--                                Just u  -> Just $ EventID u
+-- DELETEME
 -- parseEventID :: Cursor -> Maybe EventID
 -- parseEventID c = do
 --   let eid = c $/ element "eventID" &/ content
