@@ -27,17 +27,24 @@ getCursorsByName n c = c $// element n
 
 -- |Given a list of Text for a given element
 -- Only return the first one
-parseSingleElem' :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElem' f (x:_) = f . T.unpack $ x
-parseSingleElem' _ _     = Nothing
+-- parseSingleElemM returns a Maybe
+parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
+parseSingleElemM f (x:_) = f . T.unpack $ x
+parseSingleElemM _ _     = Nothing
+
+-- parseSingleElemM returns an Either
+parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
+parseSingleElemE f (x:_) = f . T.unpack $ x
+parseSingleElemE _ _     = Left InvalidFormat
 
 -- |Parse a list of Text to a list of type a
-parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
-parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+-- deprecated
+-- parseListElem' :: (String -> Either ParseFailure a) -> [T.Text] -> [a]
+-- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
-parseTimeXML = parseSingleElem' parseTimeHelper'
+parseTimeXML = parseSingleElemM parseTimeHelper'
                 where
                   parseTimeHelper' x =
                     let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
@@ -47,7 +54,7 @@ parseTimeXML = parseSingleElem' parseTimeHelper'
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML = parseSingleElem' parseTimeZoneHelper'
+parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
                       where
                         parseTimeZoneHelper' x = 
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
@@ -145,25 +152,25 @@ parseBizStep :: [T.Text] -> Maybe BizStep
 parseBizStep = parseSingleElem' mkBizStep
 
 -- |Parse Disposition by Name
-parseDisposition :: [T.Text] -> Maybe Disposition
-parseDisposition = parseSingleElem' mkDisposition
+parseDisposition :: [T.Text] -> Either ParseFailure Disposition
+parseDisposition = parseSingleElemE mkDisposition
 
--- |Parse Action by Name
-parseAction :: [T.Text] -> Maybe Action
-parseAction = parseSingleElem' mkAction
+-- |Parse Action by Name -> perhaps deprecated? -@sa
+parseAction :: [T.Text] -> Either ParseFailure Action
+parseAction = parseSingleElemE mkAction
 
 -- |Parse a single EPCClass
 parseEPCClass :: [T.Text] -> Maybe EPCClass
-parseEPCClass = parseSingleElem' mkEPCClass
+parseEPCClass = parseSingleElemM mkEPCClass
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue = parseSingleElem' readMaybeInteger where
+parseQuantityValue = parseSingleElemM readMaybeInteger where
                           readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID = parseSingleElem' Just
+parseParentID = parseSingleElemM Just
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
@@ -237,7 +244,7 @@ parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem' parseEventID' eid where
+  parseSingleElemM parseEventID' eid where
     parseEventID' eid' = let uuid = fromString eid' in
                              case uuid of
                                Nothing -> Nothing
@@ -258,7 +265,7 @@ parseEventByType c et = do
   let dwhat = case et of
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
-                --QuantityEventT    -> parseQuantityDWhat    <$> eCursors
+                -- QuantityEventT    -> parseQuantityDWhat    <$> eCursors
                 TransactionEventT -> parseTransactionDWhat <$> eCursors
                 --TransformationEventT -> parseTransformationWhat <$> eCursors
                 _                 -> const Nothing         <$> eCursors
