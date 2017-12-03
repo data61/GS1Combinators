@@ -201,7 +201,7 @@ parseObjectDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ ObjectDWhat p epc qt
+    Just p  -> Just $ ObjectDWhat p epc
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Maybe BizTransaction]
@@ -224,7 +224,7 @@ parseAggregationDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p pid childEPCs qt
+    Just p  -> Just $ AggregationDWhat p pid childEPCs
 
 -- |parse QuantityDWhat dimension
 
@@ -247,7 +247,7 @@ parseTransactionDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ TransactionDWhat p pid bizT epcs qt
+    Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
