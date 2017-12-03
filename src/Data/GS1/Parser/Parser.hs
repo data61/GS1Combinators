@@ -97,6 +97,14 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
+-- returns the Right value of Either or throws an error
+getRightOrError :: Either ParseFailure a -> a
+getRightOrError (Right val) = val
+getRightOrError (Left  val) = error $ show val
+
+-- TODO add type annotation from GHCi
+extractLocationEPCList = getRightOrError . readURI . T.unpack
+
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -104,9 +112,9 @@ parseDWhy c = do
 -- |TODO: there must be some more modification on it
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rps = ((readURI :: String -> Either ParseFailure LocationEPC) . T.unpack) <$> (c $/ element "readPoint"   &/ element "id" &/ content)
-  let bls = ((readURI :: String -> Either ParseFailure LocationEPC) . T.unpack) <$> (c $/ element "bizLocation" &/ element "id" &/ content)
-  Just $ DWhere rps bls [] [] -- START HERE TOMORROW
+  let rps = extractLocationEPCList <$> (c $/ element "readPoint"   &/ element "id" &/ content)
+  let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
+  Just $ DWhere rps bls [] []
 
 -- |Parse QuantityElement
 parseQuantity :: Cursor -> Maybe QuantityElement
