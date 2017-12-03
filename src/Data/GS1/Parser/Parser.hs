@@ -167,7 +167,7 @@ parseBizStep = parseSingleElemE (readURI :: String -> Either ParseFailure BizSte
 
 -- |Parse Disposition by Name
 parseDisposition :: [T.Text] -> Either ParseFailure Disposition
-parseDisposition = parseSingleElemE mkDisposition
+parseDisposition = parseSingleElemE readURI
 
 -- |Parse Action by Name -> perhaps deprecated? -@sa
 parseAction :: [T.Text] -> Either ParseFailure Action
