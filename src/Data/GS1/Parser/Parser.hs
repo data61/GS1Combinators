@@ -42,8 +42,8 @@ parseSingleElemE _ _     = Left InvalidFormat
 
 -- |Parse a list of Text to a list of type a
 -- deprecated
--- parseListElem' :: (String -> Either ParseFailure a) -> [T.Text] -> [a]
--- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
+parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
@@ -152,13 +152,12 @@ parseQuantity c = do
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
--- parseEPCList :: [T.Text] -> [EPC]
--- parseEPCList = parseListElem' (mkEPC "EPC")
+parseEPCList :: [T.Text] -> [LabelEPC]
+parseEPCList = parseListElem' (mkEPC "EPC")
 
--- -- |Alias to parseEPCList
--- -- name="childEPCs" type="epcis:EPCListType"
--- parseChildEPCList :: [T.Text] -> [EPC]
--- parseChildEPCList = parseEPCList
+-- |Alias to parseEPCList
+-- name="childEPCs" type="epcis:EPCListType"
+parseChildEPCList = parseEPCList
 
 
 -- |Parse BizStep by Name
