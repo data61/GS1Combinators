@@ -170,8 +170,11 @@ parseDisposition :: [T.Text] -> Either ParseFailure Disposition
 parseDisposition = parseSingleElemE readURI
 
 -- |Parse Action by Name -> perhaps deprecated? -@sa
-parseAction :: [T.Text] -> Either ParseFailure Action
-parseAction = parseSingleElemE mkAction
+-- Action is not a URI, so I am making parseAction return a Maybe Action
+-- as opposed to any of the other parse[a] functions,
+-- which return Either ParseFailure a.
+parseAction :: [T.Text] -> Maybe Action
+parseAction = parseSingleElemM mkAction
 
 -- |Parse a single EPCClass
 parseEPCClass :: [T.Text] -> Maybe EPCClass
