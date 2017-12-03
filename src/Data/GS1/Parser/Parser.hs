@@ -123,27 +123,28 @@ parseQuantity c = do
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
   let allQuantity = [ec, qt, uom]
-  case allQuantity of
-    [[], _, _] -> Nothing
-    [e:_, [], _] -> Nothing
-    [e : _, q : _, []] ->
-        let [e', q'] = T.unpack <$> [e, q] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-    [e : _, q : _, u : _] ->
-        let [e', q', u'] = T.unpack <$> [e, q, u] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+  -- case allQuantity of
+  --   [[], _, _] -> Nothing
+  --   [e:_, [], _] -> Nothing
+  --   [e : _, q : _, []] ->
+  --       let [e', q'] = T.unpack <$> [e, q] in
+  --       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+  --   [e : _, q : _, u : _] ->
+  --       let [e', q', u'] = T.unpack <$> [e, q, u] in
+  --       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
     
-    -- this has been refactored above. DELETEME
-    -- []    -> Nothing
-    -- (e:_) ->
-    --   case qt of
-    --     []    -> Nothing
-    --     (q:_) ->
-    --       case uom of
-    --         []    -> let [e', q'] = T.unpack <$> [e, q] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-    --         (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+  -- this has been refactored above. DELETEME
+  case ec of 
+    []    -> Nothing
+    (e:_) ->
+      case qt of
+        []    -> Nothing
+        (q:_) ->
+          case uom of
+            []    -> let [e', q'] = T.unpack <$> [e, q] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+            (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+                          Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 
 -- |Parse a List of EPCs
