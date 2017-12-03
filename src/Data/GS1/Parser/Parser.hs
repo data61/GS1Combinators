@@ -172,7 +172,7 @@ parseDisposition = parseSingleElemE readURI
 -- |Parse Action by Name -> perhaps deprecated? -@sa
 -- Action is not a URI, so I am making parseAction return a Maybe Action
 -- as opposed to any of the other parse[a] functions,
--- which return Either ParseFailure a.
+-- which returns Either ParseFailure a.
 parseAction :: [T.Text] -> Maybe Action
 parseAction = parseSingleElemM mkAction
 
@@ -225,17 +225,6 @@ parseAggregationDWhat c = do
   case act of
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p pid childEPCs
-
--- |parse QuantityDWhat dimension
--- commented out because could find neither the definition nor the use of this type anywhere
--- parseQuantityDWhat :: Cursor -> Maybe DWhat
--- parseQuantityDWhat c = do
---   let ec = parseEPCClass (c $/ element "epcClass" &/ content)
---   let qt = parseQuantityValue (c $/ element "quantity" &/ content)
-
---   if isNothing ec || isNothing qt
---      then Nothing
---      else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
 
 parseTransactionDWhat :: Cursor -> Maybe DWhat
 parseTransactionDWhat c = do
