@@ -128,11 +128,13 @@ parseQuantity c = do
     [e:_, [], _] -> Nothing
     [e : _, q : _, []] ->
         let [e', q'] = T.unpack <$> [e, q] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+        Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
+        --                                    needs refactoring
     [e : _, q : _, u : _] ->
         let [e', q', u'] = T.unpack <$> [e, q, u] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
-    
+        Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
+        --                                    needs refactoring                   is uom necessary?
+
   -- this has been refactored above. DELETEME
   -- case ec of 
   --   []    -> Nothing
