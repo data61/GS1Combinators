@@ -137,11 +137,11 @@ describe "parse DWhat" $ do
     let aeCursors = getCursorsByName "AggregationEvent" cursor
     parseAggregationDWhat <$> aeCursors `shouldBe` [Just $ AggregationDWhat Observe (Just "urn:epc:id:sscc:0614141.1234567890") [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] [QuantityElement (EPCClass "urn:epc:idpat:sgtin:4012345.098765.*") (10 :: Double) Nothing, QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") (200.5 :: Double) (Just "KGM")]]
 
-  it "parses a valid QuantityDWhat" $ do
-    doc <- Text.XML.readFile def "test/test-xml/QuantityEvent.xml"
-    let cursor = fromDocument doc
-    let qeCursors = getCursorsByName "QuantityEvent" cursor
-    parseQuantityDWhat <$> qeCursors `shouldBe` [Just (QuantityDWhat (EPCClass "http://data61.csiro.au:epcClass:hey") 100)]
+  -- it "parses a valid QuantityDWhat" $ do
+  --   doc <- Text.XML.readFile def "test/test-xml/QuantityEvent.xml"
+  --   let cursor = fromDocument doc
+  --   let qeCursors = getCursorsByName "QuantityEvent" cursor
+  --   parseQuantityDWhat <$> qeCursors `shouldBe` [Just (QuantityDWhat (EPCClass "http://data61.csiro.au:epcClass:hey") 100)]
 
   it "parses a valid TransactionDWhat" $ do
     doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
