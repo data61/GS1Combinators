@@ -108,6 +108,14 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
+-- returns the Right value of Either or throws an error
+getRightOrError :: Either ParseFailure a -> a
+getRightOrError (Right val) = val
+getRightOrError (Left  val) = error $ show val
+
+-- TODO add type annotation from GHCi
+extractLocationEPCList = getRightOrError . readURI . T.unpack
+
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -115,8 +123,8 @@ parseDWhy c = do
 -- |TODO: there must be some more modification on it
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rps = (mkLocation . T.unpack) <$> (c $/ element "readPoint"   &/ element "id" &/ content)
-  let bls = (mkLocation . T.unpack) <$> (c $/ element "bizLocation" &/ element "id" &/ content)
+  let rps = extractLocationEPCList <$> (c $/ element "readPoint"   &/ element "id" &/ content)
+  let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
 -- |Parse QuantityElement
@@ -131,22 +139,25 @@ parseQuantity c = do
     [e:_, [], _] -> Nothing
     [e : _, q : _, []] ->
         let [e', q'] = T.unpack <$> [e, q] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+        Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
+        --                                    needs refactoring
     [e : _, q : _, u : _] ->
         let [e', q', u'] = T.unpack <$> [e, q, u] in
-        Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
-    
-    -- this has been refactored above. DELETEME
-    -- []    -> Nothing
-    -- (e:_) ->
-    --   case qt of
-    --     []    -> Nothing
-    --     (q:_) ->
-    --       case uom of
-    --         []    -> let [e', q'] = T.unpack <$> [e, q] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-    --         (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+        Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
+        --                                    needs refactoring                   is uom necessary?
+
+  -- this has been refactored above. DELETEME
+  -- case ec of 
+  --   []    -> Nothing
+  --   (e:_) ->
+  --     case qt of
+  --       []    -> Nothing
+  --       (q:_) ->
+  --         case uom of
+  --           []    -> let [e', q'] = T.unpack <$> [e, q] in
+  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+  --           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 
 -- |Parse a List of EPCs
@@ -167,11 +178,14 @@ parseBizStep = parseSingleElemE (readURI :: String -> Either ParseFailure BizSte
 
 -- |Parse Disposition by Name
 parseDisposition :: [T.Text] -> Either ParseFailure Disposition
-parseDisposition = parseSingleElemE mkDisposition
+parseDisposition = parseSingleElemE readURI
 
 -- |Parse Action by Name -> perhaps deprecated? -@sa
-parseAction :: [T.Text] -> Either ParseFailure Action
-parseAction = parseSingleElemE mkAction
+-- Action is not a URI, so I am making parseAction return a Maybe Action
+-- as opposed to any of the other parse[a] functions,
+-- which returns Either ParseFailure a.
+parseAction :: [T.Text] -> Maybe Action
+parseAction = parseSingleElemM mkAction
 
 -- |Parse a single EPCClass
 parseEPCClass :: [T.Text] -> Maybe EPCClass
@@ -198,10 +212,10 @@ parseObjectDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ ObjectDWhat p epc qt
+    Just p  -> Just $ ObjectDWhat p epc
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction]
+parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P about this
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
@@ -217,18 +231,7 @@ parseAggregationDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p pid childEPCs qt
-
--- |parse QuantityDWhat dimension
-
-parseQuantityDWhat :: Cursor -> Maybe DWhat
-parseQuantityDWhat c = do
-  let ec = parseEPCClass (c $/ element "epcClass" &/ content)
-  let qt = parseQuantityValue (c $/ element "quantity" &/ content)
-
-  if isNothing ec || isNothing qt
-     then Nothing
-     else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
+    Just p  -> Just $ AggregationDWhat p pid childEPCs
 
 parseTransactionDWhat :: Cursor -> Maybe DWhat
 parseTransactionDWhat c = do
@@ -240,7 +243,7 @@ parseTransactionDWhat c = do
 
   case act of
     Nothing -> Nothing
-    Just p  -> Just $ TransactionDWhat p pid bizT epcs qt
+    Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
