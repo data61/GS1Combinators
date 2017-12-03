@@ -133,17 +133,18 @@ parseQuantity c = do
         let [e', q', u'] = T.unpack <$> [e, q, u] in
         Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
     
-    -- this has been refactored above. DELETEME
-    -- []    -> Nothing
-    -- (e:_) ->
-    --   case qt of
-    --     []    -> Nothing
-    --     (q:_) ->
-    --       case uom of
-    --         []    -> let [e', q'] = T.unpack <$> [e, q] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-    --         (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-    --                       Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+  -- this has been refactored above. DELETEME
+  -- case ec of 
+  --   []    -> Nothing
+  --   (e:_) ->
+  --     case qt of
+  --       []    -> Nothing
+  --       (q:_) ->
+  --         case uom of
+  --           []    -> let [e', q'] = T.unpack <$> [e, q] in
+  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
+  --           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
+  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
 
 
 -- |Parse a List of EPCs
