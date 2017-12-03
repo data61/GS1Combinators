@@ -227,15 +227,15 @@ parseAggregationDWhat c = do
     Just p  -> Just $ AggregationDWhat p pid childEPCs
 
 -- |parse QuantityDWhat dimension
+-- commented out because could find neither the definition nor the use of this type anywhere
+-- parseQuantityDWhat :: Cursor -> Maybe DWhat
+-- parseQuantityDWhat c = do
+--   let ec = parseEPCClass (c $/ element "epcClass" &/ content)
+--   let qt = parseQuantityValue (c $/ element "quantity" &/ content)
 
-parseQuantityDWhat :: Cursor -> Maybe DWhat
-parseQuantityDWhat c = do
-  let ec = parseEPCClass (c $/ element "epcClass" &/ content)
-  let qt = parseQuantityValue (c $/ element "quantity" &/ content)
-
-  if isNothing ec || isNothing qt
-     then Nothing
-     else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
+--   if isNothing ec || isNothing qt
+--      then Nothing
+--      else Just $ QuantityDWhat (fromJust ec) (fromJust qt)
 
 parseTransactionDWhat :: Cursor -> Maybe DWhat
 parseTransactionDWhat c = do
