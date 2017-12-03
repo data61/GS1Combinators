@@ -204,7 +204,7 @@ parseObjectDWhat c = do
     Just p  -> Just $ ObjectDWhat p epc
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction]
+parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P about this
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
