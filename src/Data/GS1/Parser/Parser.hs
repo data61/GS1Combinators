@@ -97,11 +97,6 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
--- returns the Right value of Either or throws an error
-getRightOrError :: Either ParseFailure a -> a
-getRightOrError (Right val) = val
-getRightOrError (Left  val) = error $ show val
-
 -- TODO add type annotation from GHCi
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
@@ -147,25 +142,12 @@ parseQuantityElement c = do
         let [e', q', u'] = T.unpack <$> [e, q, u] in
         Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
 
-  -- this has been refactored above. DELETEME
-  -- case ec of 
-  --   []    -> Nothing
-  --   (e:_) ->
-  --     case qt of
-  --       []    -> Nothing
-  --       (q:_) ->
-  --         case uom of
-  --           []    -> let [e', q'] = T.unpack <$> [e, q] in
-  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-  --           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
-
-
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
 parseEPCList :: [T.Text] -> [LabelEPC]
-parseEPCList = parseListElem' readLabelEPC
+parseEPCList = error "not implemented yet"
+-- parseEPCList = parseListElem' readLabelEPC -- take in a quantity list as well and zip it
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
@@ -208,7 +190,11 @@ parseObjectDWhat c = do
   -- find all epcs below epcList tag
   let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
   -- find all quantityElement, regardless parent tag
-  let qt  = fromJust <$> filter isJust (parseQuantityElement <$> getCursorsByName "quantityElement" c)
+  -- let qt  = fromJust <$> filter isJust $
+  --             parseQuantityElement <$>
+  --               getCursorsByName "quantityElement" c
+  let qt  = parseQuantityElement <$> getCursorsByName "quantityElement" c
+  -- start here tomorrow. write a function that zips qt and epc
 
   case act of
     Nothing -> Nothing
