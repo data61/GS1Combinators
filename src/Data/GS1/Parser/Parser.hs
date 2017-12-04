@@ -20,7 +20,7 @@ import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Object
 
-import Control.Lens
+-- import Control.Lens
 
 -- requires cabal install tuple . Is tuple-0.3.0.2 in yaml
 import Data.Tuple.Curry
