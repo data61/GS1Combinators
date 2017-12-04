@@ -125,6 +125,12 @@ parseQuantity c = do
     [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
+parseQuantityList :: Cursor -> [Maybe Quantity]
+parseQuantityList c = error "not implemented yet"
+  -- case c of
+  --   _ -> error
+
+
 -- this function is not really being used anymore.
 -- use parseQuantity :: Cursor -> Maybe Quantity instead
 -- |Parse QuantityElement
