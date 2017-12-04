@@ -103,7 +103,6 @@ instance ToSchema Quantity
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
-
 --GS1_EPC_TDS_i1_10.pdf (page 27)
 data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
                      -- e.g. olives in a vat, harvested in April 2017
