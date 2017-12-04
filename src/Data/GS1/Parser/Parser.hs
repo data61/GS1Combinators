@@ -116,6 +116,7 @@ parseDWhere c = do
   let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
+-- this is potentially buggy. look into how Cursor works to figure this out
 parseQuantity :: Cursor -> Maybe Quantity
 parseQuantity c = do
   let qt = c $/ element "quantity" &/ content
