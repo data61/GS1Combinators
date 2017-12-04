@@ -20,17 +20,10 @@ import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Object
 
--- import Control.Lens
+import Control.Lens hiding (element)
 
 -- requires cabal install tuple . Is tuple-0.3.0.2 in yaml
 import Data.Tuple.Curry
-
-import Control.Monad(join)
-import Data.Bifunctor(bimap)
-
--- maps a tuple
--- mapTuple :: Bifunctor p => (a -> b) -> p a a -> p b b
-mapTuple = join bimap
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -218,7 +211,8 @@ parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P abo
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
-  (mapTuple (T.unpack . T.strip)) <$> (zip attrs texts)
+  parseBizTransactionHelp  <$> (zip attrs texts)
+    where parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Maybe DWhat
@@ -248,22 +242,18 @@ parseTransactionDWhat c = do
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' _ [] = []
-parseEventList' et (x:xs) = (if any (isNothing ((^..each) x)) then
-                              Nothing : parseEventList' et xs else
-                              Just ((uncurryN (mkEvent et)) (mapTuple fromJust x))) : parseEventList' et xs
--- the following has been refactored to the above
--- parseEventList' et [] = []
--- parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
---                               if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
---                                 Nothing : parseEventList' et xs      else
---                                 Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
+                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
+                                Nothing : parseEventList' et xs      else
+                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElemM parseEventID' (case fromString eid of
-                                   Nothing -> Nothing
-                                   Just u  -> Just $ EventID u)
+  parseSingleElemM parseEventID' eid where
+    parseEventID' eid' = case fromString eid' of
+                           Nothing -> Nothing
+                           Just u  -> Just $ EventID u
 
 -- DELETEME as refactored above
 -- parseEventID :: Cursor -> Maybe EventID
