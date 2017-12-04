@@ -97,11 +97,6 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
--- returns the Right value of Either or throws an error
-getRightOrError :: Either ParseFailure a -> a
-getRightOrError (Right val) = val
-getRightOrError (Left  val) = error $ show val
-
 -- TODO add type annotation from GHCi
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
@@ -116,59 +111,61 @@ parseDWhere c = do
   let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
--- |Parse QuantityElement
-parseQuantity :: Cursor -> Maybe QuantityElement
+-- this is potentially buggy. why does it return/parse only the first quantity?
+-- look into how Cursor works to figure this out
+parseQuantity :: Cursor -> Maybe Quantity
 parseQuantity c = do
-  let ec = c $/ element "epcClass" &/ content
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
-  let allQuantity = [ec, qt, uom]
-  case allQuantity of
-    [[], _, _] -> Nothing
-    [e:_, [], _] -> Nothing
-    [e : _, q : _, []] ->
-        let [e', q'] = T.unpack <$> [e, q] in
-        Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
-        --                                    needs refactoring
-    [e : _, q : _, u : _] ->
-        let [e', q', u'] = T.unpack <$> [e, q, u] in
-        Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
-        --                                    needs refactoring                   is uom necessary?
 
-  -- this has been refactored above. DELETEME
-  -- case ec of 
-  --   []    -> Nothing
-  --   (e:_) ->
-  --     case qt of
-  --       []    -> Nothing
-  --       (q:_) ->
-  --         case uom of
-  --           []    -> let [e', q'] = T.unpack <$> [e, q] in
-  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) Nothing
-  --           (u:_) -> let [e', q', u'] = T.unpack <$> [e, q, u] in
-  --                         Just $ QuantityElement (EPCClass e') (read q' :: Double) (Just u')
+  case [qt, uom] of
+    [[], _] -> Nothing
+    [q:_, []] -> let q' = T.unpack q in
+        Just $ ItemCount (read q' :: Integer)
+    [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
+        Just $ MeasuredQuantity (read q' :: Amount) u'
+
+
+-- this function is not really being used anymore.
+-- use parseQuantity :: Cursor -> Maybe Quantity instead
+-- |Parse QuantityElement
+-- parseQuantityElement :: Cursor -> Maybe QuantityElement
+-- parseQuantityElement c = do
+--   let ec = c $/ element "epcClass" &/ content
+--   let qt = c $/ element "quantity" &/ content
+--   let uom = c $/ element "uom" &/ content
+--   case [ec, qt, uom] of
+--     [[], _, _] -> Nothing
+--     [e:_, [], _] -> Nothing
+--     [e : _, q : _, []] ->
+--         let [e', q'] = T.unpack <$> [e, q] in
+--         Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
+--     [e : _, q : _, u : _] ->
+--         let [e', q', u'] = T.unpack <$> [e, q, u] in
+--         Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
 
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
-parseEPCList :: [T.Text] -> [LabelEPC]
-parseEPCList = parseListElem' readLabelEPC
+parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+parseEPCList [] _ = []
+parseEPCList _ [] = []
+parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs 
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
 parseChildEPCList = parseEPCList
 
-
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
-parseBizStep = parseSingleElemE (readURI :: String -> Either ParseFailure BizStep)
+parseBizStep = parseSingleElemE readURI
 
 -- |Parse Disposition by Name
 parseDisposition :: [T.Text] -> Either ParseFailure Disposition
 parseDisposition = parseSingleElemE readURI
 
--- |Parse Action by Name -> perhaps deprecated? -@sa
+-- |Parse Action by Name ---> perhaps deprecated? -@sa
 -- Action is not a URI, so I am making parseAction return a Maybe Action
 -- as opposed to any of the other parse[a] functions,
 -- which returns Either ParseFailure a.
@@ -182,11 +179,12 @@ parseEPCClass = parseSingleElemM mkEPCClass
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
 parseQuantityValue = parseSingleElemM readMaybeInteger where
-                          readMaybeInteger x = readMaybe x :: Maybe Integer
+                        readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 parseParentID :: [T.Text] -> Maybe ParentID
 parseParentID = parseSingleElemM Just
+-- this definitely wouldn't work. needs a (text -> URI a) function or something
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
@@ -194,13 +192,41 @@ parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
   -- find all epcs below epcList tag
-  let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
+  let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
+  let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
   -- find all quantityElement, regardless parent tag
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  -- let qt  = fromJust <$> filter isJust $
+  --             parseQuantityElement <$>
+  --               getCursorsByName "quantityElement" c
 
   case act of
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p epc
+
+
+-- |parse and construct AggregationDWhat dimension
+parseAggregationDWhat :: Cursor -> Maybe DWhat
+parseAggregationDWhat c = do
+  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
+  let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content) qt
+  let act = parseAction (c $/ element "action" &/ content)
+
+  case act of
+    Nothing -> Nothing
+    Just p  -> Just $ AggregationDWhat p pid childEPCs
+
+parseTransactionDWhat :: Cursor -> Maybe DWhat
+parseTransactionDWhat c = do
+  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
+  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let qt = parseQuantity <$> getCursorsByName "quantityElement" c
+  let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+  let act = parseAction (c $/ element "action" &/ content)
+
+  case act of
+    Nothing -> Nothing
+    Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P about this
@@ -212,30 +238,6 @@ parseBizTransaction c = do
     where
       parseBizTransactionHelp (a, b) =
         mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
-
--- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Maybe DWhat
-parseAggregationDWhat c = do
-  let pid = parseParentID (c $/ element "parentID" &/ content)
-  let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content)
-  let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
-
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p pid childEPCs
-
-parseTransactionDWhat :: Cursor -> Maybe DWhat
-parseTransactionDWhat c = do
-  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
-  let pid = parseParentID (c $/ element "parentID" &/ content)
-  let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
-  let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
-
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing

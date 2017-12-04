@@ -107,7 +107,7 @@ describe "parse QuantityElement" $
     doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
     let cursor = fromDocument doc
     let oeCursors = getCursorsByName "quantityElement" cursor
-    parseQuantity <$> oeCursors `shouldBe` [Just $ QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") 200 (Just "KGM")]
+    parseQuantityElement <$> oeCursors `shouldBe` [Just $ QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") 200 (Just "KGM")]
 
 describe "parse BizTransaction" $ do
   it "parse BizTransaction element" $ do
