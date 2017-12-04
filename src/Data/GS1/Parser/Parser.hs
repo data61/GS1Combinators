@@ -136,18 +136,15 @@ parseQuantityElement c = do
   let ec = c $/ element "epcClass" &/ content
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
-  let allQuantity = [ec, qt, uom]
-  case allQuantity of
+  case [ec, qt, uom] of
     [[], _, _] -> Nothing
     [e:_, [], _] -> Nothing
     [e : _, q : _, []] ->
         let [e', q'] = T.unpack <$> [e, q] in
         Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
-        --                                    needs refactoring
     [e : _, q : _, u : _] ->
         let [e', q', u'] = T.unpack <$> [e, q, u] in
         Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
-        --                                    needs refactoring                   is uom necessary?
 
   -- this has been refactored above. DELETEME
   -- case ec of 
