@@ -96,6 +96,12 @@ data Quantity =   MeasuredQuantity Amount Uom
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
+-- returns the Right value of Either or throws an error
+getRightOrError :: Either ParseFailure a -> a
+getRightOrError (Right val) = val
+getRightOrError (Left  val) = error $ show val
+
+
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order

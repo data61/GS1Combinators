@@ -7,6 +7,8 @@ import           Control.Lens
 import           Data.Char
 import           GHC.Generics
 
+import           Data.List.Split
+
 import           Data.GS1.EPC
 import           Data.GS1.Object
 import           Data.GS1.Utils
@@ -37,15 +39,20 @@ instance ToField LabelEPC where
 -- | ParentID
 type ParentID = LabelEPC
 
-readLabelEPC :: String -> Maybe LabelEPC
-readLabelEPC = error "not implemented yet"
--- readLabelEPC epcStr =
---   case epcTokens of
---     ("urn" : "epc" : "class" : "lgtin" : _) -> readURIClassLabelEPC epcTokens
---     ("urn" : "epc" : "id" : "grai" : _) -> readURIClassLabelEPC epcTokens
---     _                                   -> IL $ readURIInstanceLabelEPC epcTokens
---     where
---       epcTokens = splitOn ":" epcStr
+-- applies the string to the correct readURI function
+-- i.e, figures out whether to return InstanceLabel or ClassLabel
+readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
+-- readLabelEPC = error "not implemented yet"
+readLabelEPC epcStr mQt =
+  case epcTokens of
+    ("urn" : "epc" : "class" : "lgtin" : _) ->
+      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+    ("urn" : "epc" : "id" : "grai" : _) ->
+      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+    _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
+    where
+      epcTokens = splitOn ":" epcStr
+
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
