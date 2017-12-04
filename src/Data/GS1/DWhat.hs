@@ -31,6 +31,16 @@ instance ToField LabelEPC where
 -- | ParentID
 type ParentID = LabelEPC
 
+readLabelEPC :: String -> Maybe LabelEPC
+readLabelEPC = error "not implemented yet"
+-- readLabelEPC epcStr =
+--   case epcTokens of
+--     ("urn" : "epc" : "class" : "lgtin" : _) -> readURIClassLabelEPC epcTokens
+--     ("urn" : "epc" : "id" : "grai" : _) -> readURIClassLabelEPC epcTokens
+--     _                                   -> IL $ readURIInstanceLabelEPC epcTokens
+--     where
+--       epcTokens = splitOn ":" epcStr
+
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
