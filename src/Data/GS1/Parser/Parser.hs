@@ -153,7 +153,7 @@ parseQuantity c = do
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
 parseEPCList :: [T.Text] -> [LabelEPC]
-parseEPCList = parseListElem' (mkEPC "EPC")
+parseEPCList = parseListElem' readLabelEPC
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
