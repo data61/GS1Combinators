@@ -103,7 +103,6 @@ instance ToSchema Quantity
 getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
-
 --GS1_EPC_TDS_i1_10.pdf (page 27)
 data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
                      -- e.g. olives in a vat, harvested in April 2017
@@ -125,7 +124,6 @@ readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
 readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
--- readURIClassLabelEPC _ = error "Invalid Label string or type not implemented yet"
 readURIClassLabelEPC _ = Left InvalidFormat
 
 
@@ -196,14 +194,6 @@ instance ToSchema InstanceLabelEPC
 
 instance ToField InstanceLabelEPC where
     toField = toField . pack . show
-
-
--- this should be moved to src/.../DWhat.hs
--- data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
---                 deriving (Show, Read, Eq, Generic)
-
--- $(deriveJSON defaultOptions ''LabelEPC)
--- instance ToSchema LabelEPC
 
 
 type Lng = Float
