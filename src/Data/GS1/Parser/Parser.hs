@@ -248,7 +248,7 @@ parseTransactionDWhat c = do
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' _ [] = []
-parseEventList' et [x:xs] = (if any (isNothing ((^..each) x)) then
+parseEventList' et (x:xs) = (if any (isNothing ((^..each) x)) then
                               Nothing : parseEventList' et xs else
                               Just ((uncurryN (mkEvent et)) (mapTuple fromJust x))) : parseEventList' et xs
 -- the following has been refactored to the above
