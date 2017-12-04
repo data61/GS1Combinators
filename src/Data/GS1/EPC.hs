@@ -498,11 +498,10 @@ makeClassy ''BizTransaction
 
 -- DELETEME since not used anymore
 -- | TransactionType, TransactionID
--- mkBizTransaction :: String -> String -> Maybe BizTransaction
--- mkBizTransaction t i = let bt' = (readURI :: String -> Maybe BizTransactionType) t in
---                            case bt' of
---                              Just t'  -> Just BizTransaction{_btid = i, _bt = t'}
---                              _        -> Nothing
+mkBizTransaction :: String -> String -> Either ParseFailure BizTransaction
+mkBizTransaction t i = case (readURI :: String -> Either ParseFailure BizTransactionType) t of
+                         Right t'  -> Right BizTransaction{_btid = i, _bt = t'}
+                         Left e        -> Left e
 
 
 -- | TransformationID
