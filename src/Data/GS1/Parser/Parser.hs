@@ -117,8 +117,8 @@ parseDWhere c = do
   Just $ DWhere rps bls [] []
 
 -- |Parse QuantityElement
-parseQuantity :: Cursor -> Maybe QuantityElement
-parseQuantity c = do
+parseQuantityElement :: Cursor -> Maybe QuantityElement
+parseQuantityElement c = do
   let ec = c $/ element "epcClass" &/ content
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
@@ -196,7 +196,7 @@ parseObjectDWhat c = do
   -- find all epcs below epcList tag
   let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
   -- find all quantityElement, regardless parent tag
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  let qt  = fromJust <$> filter isJust (parseQuantityElement <$> getCursorsByName "quantityElement" c)
 
   case act of
     Nothing -> Nothing
@@ -219,7 +219,7 @@ parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content)
   let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  let qt  = fromJust <$> filter isJust (parseQuantityElement <$> getCursorsByName "quantityElement" c)
 
   case act of
     Nothing -> Nothing
@@ -231,7 +231,7 @@ parseTransactionDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
   let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  let qt  = fromJust <$> filter isJust (parseQuantityElement <$> getCursorsByName "quantityElement" c)
 
   case act of
     Nothing -> Nothing
