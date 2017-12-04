@@ -20,6 +20,8 @@ import           Data.GS1.Event
 import           Data.GS1.EventID
 import           Data.GS1.Object
 
+import Data.Either
+
 import Control.Lens hiding (element)
 
 -- requires cabal install tuple . Is tuple-0.3.0.2 in yaml
@@ -121,7 +123,7 @@ parseDWhere c = do
   Just $ DWhere rps bls [] []
 
 -- |Parse QuantityElement
-parseQuantity :: Cursor -> Maybe QuantityElement
+parseQuantity :: Cursor -> Either ParseFailure QuantityElement
 parseQuantity c = do
   let ec = c $/ element "epcClass" &/ content
   let qt = c $/ element "quantity" &/ content
@@ -215,37 +217,38 @@ parseBizTransaction c = do
     where parseBizTransactionHelp (a, b) = mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
 
 -- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Maybe DWhat
+parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content)
   let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  let qt  = fromRight <$> filter isRight (parseQuantity <$> getCursorsByName "quantityElement" c)
 
   case act of
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p pid childEPCs
 
-parseTransactionDWhat :: Cursor -> Maybe DWhat
+parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
-  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
+  let bizT = fromRight <$> filter isRight (parseBizTransaction c)
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content)
   let act = parseAction (c $/ element "action" &/ content)
-  let qt  = fromJust <$> filter isJust (parseQuantity <$> getCursorsByName "quantityElement" c)
+  let qt  = fromRight <$> filter isRight (parseQuantity <$> getCursorsByName "quantityElement" c)
 
   case act of
     Nothing -> Nothing
     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
+-- NOTE parseEventList' produces Maybes since could have several different ParseFailures - difficult to choose 1 in particular
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
-parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
+parseEventList' :: EventType -> [(Either ParseFailure EventID, Either ParseFailure DWhat, Either ParseFailure DWhen, Either ParseFailure DWhy, Either ParseFailure DWhere)] -> [Maybe Event]
 parseEventList' _ [] = []
 parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
-                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
+                              if isLeft i  || isLeft w1 || isLeft w2 || isLeft w3 || isLeft w4 then
                                 Nothing : parseEventList' et xs      else
-                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+                                Just (mkEvent et (fromRight i) (fromRight w1) (fromRight w2) (fromRight w3) (fromRight w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
