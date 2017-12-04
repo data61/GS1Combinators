@@ -144,11 +144,12 @@ instance ToSchema ClassLabelEPC
 
 
 data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
-                       -- Global Individual Asset Identifier, e.g. bucket for olives
-                       |SSCC GS1CompanyPrefix SerialNumber --serial shipping container code
-                       |SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
+                      -- Global Individual Asset Identifier, e.g. bucket for olives
+                      | SSCC GS1CompanyPrefix SerialNumber
+                      --serial shipping container code
+                      | SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
                        --serialsed global trade item number
-                       deriving (Show, Read, Eq, Generic)
+                      deriving (Show, Read, Eq, Generic)
 
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
@@ -342,13 +343,15 @@ gdtiPadLen = 12
 
 readURIBusinessTransactionEPC :: [String] -> Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
-  | length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
-    = Right $ GSRN gs1CompanyPrefix serialReference
+  | isCorrectLen = Right $ GSRN gs1CompanyPrefix serialReference
   | otherwise = Left InvalidLength
+  where
+    isCorrectLen = length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
 readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
-  | length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
-    = Right $ GDTI documentType documentType serialNumber
+  | isCorrectLen = Right $ GDTI documentType documentType serialNumber
   | otherwise = Left InvalidLength
+  where
+    isCorrectLen = length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
 readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)

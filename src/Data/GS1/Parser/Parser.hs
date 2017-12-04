@@ -111,12 +111,13 @@ parseDWhere c = do
   let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
--- this is potentially buggy. look into how Cursor works to figure this out
+-- this is potentially buggy. why does it return/parse only the first quantity?
+-- look into how Cursor works to figure this out
 parseQuantity :: Cursor -> Maybe Quantity
 parseQuantity c = do
   let qt = c $/ element "quantity" &/ content
   let uom = c $/ element "uom" &/ content
-  
+
   case [qt, uom] of
     [[], _] -> Nothing
     [q:_, []] -> let q' = T.unpack q in
@@ -176,11 +177,12 @@ parseEPCClass = parseSingleElemM mkEPCClass
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
 parseQuantityValue = parseSingleElemM readMaybeInteger where
-                          readMaybeInteger x = readMaybe x :: Maybe Integer
+                        readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 parseParentID :: [T.Text] -> Maybe ParentID
 parseParentID = parseSingleElemM Just
+-- this definitely wouldn't work. needs a text -> URI function or something
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat

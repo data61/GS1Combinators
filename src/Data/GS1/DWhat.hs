@@ -59,7 +59,7 @@ readLabelEPC epcStr mQt =
 data DWhat = -- ObjectDWhat action epcList quantityList
              ObjectDWhat Action [LabelEPC]
            -- AggregationDWhat action parentID childEPC
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC] -- should this have [quantity]? @sa
+           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
            | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
            -- TransformationDWhat transformationID inputEPCList outputEPCList
