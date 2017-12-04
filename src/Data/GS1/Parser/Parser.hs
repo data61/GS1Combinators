@@ -116,6 +116,20 @@ parseDWhere c = do
   let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] []
 
+parseQuantity :: Cursor -> Maybe Quantity
+parseQuantity c = do
+  let qt = c $/ element "quantity" &/ content
+  let uom = c $/ element "uom" &/ content
+  
+  case [qt, uom] of
+    [[], _] -> Nothing
+    [q:_, []] -> let q' = T.unpack q in
+        Just $ ItemCount (read q' :: Integer)
+    [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
+        Just $ MeasuredQuantity (read q' :: Amount) u'
+
+-- this function is not really being used anymore.
+-- use parseQuantity :: Cursor -> Maybe Quantity instead
 -- |Parse QuantityElement
 parseQuantityElement :: Cursor -> Maybe QuantityElement
 parseQuantityElement c = do
