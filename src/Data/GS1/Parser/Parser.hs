@@ -147,25 +147,21 @@ parseQuantityValue = parseSingleElemM readMaybeInteger where
 
 -- |parse group of text to obtain ParentID
 -- a sample usage of this function would have been nice
+
+-- previous implementation likely wouldn't work.
+-- needs a (text -> URI a) function or something
+-- current implementation might be potentially buggy,
+-- as I am not sure how this function is supposed to work
 parseParentID :: [T.Text] -> Maybe ParentID
 parseParentID [] = Nothing
 parseParentID (t:ts)
   | isJust returnValue = returnValue
   | otherwise          = parseParentID ts
   where returnValue = mkByName $ T.unpack t
--- previous implementation likely wouldn't work.
--- needs a (text -> URI a) function or something
--- current implementation might be potentially buggy,
--- as I am not sure how this function is supposed to work
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
-
--- this needs to be a hook. perhaps an apt name for it would be parseDWhat
--- this function should take in a cursor, figure out what kind of DWhat it is
--- and then call the appropriate parse(.*)DWhat function on the cursor
--- START HERE TOMORROW
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
@@ -214,6 +210,19 @@ parseTransactionDWhat c = do
   case act of
     Nothing -> Nothing
     Just p  -> Just $ TransactionDWhat p pid bizT epcs
+
+parseTransformationWhat :: Cursor -> Maybe DWhat
+parseTransformationWhat c = error "Not implemented yet"
+-- parseTransformationWhat c = do
+--   let bizT = fromJust <$> filter isJust (parseBizTransaction c)
+--   let pid = parseParentID (c $/ element "parentID" &/ content)
+--   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
+--   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+--   let act = parseAction (c $/ element "action" &/ content)
+
+--   case act of
+--     Nothing -> Nothing
+--     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Maybe BizTransaction]
@@ -279,7 +288,7 @@ parseEventByType c et = do
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
                 -- QuantityEventT    -> parseQuantityDWhat    <$> eCursors
                 TransactionEventT -> parseTransactionDWhat <$> eCursors
-                --TransformationEventT -> parseTransformationWhat <$> eCursors
+                TransformationEventT -> parseTransformationWhat <$> eCursors
                 _                 -> const Nothing         <$> eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
