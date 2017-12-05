@@ -11,6 +11,7 @@ import           Data.XML.Types      hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
 
+import           Data.GS1.Utils
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -188,9 +189,18 @@ parseQuantityValue = parseSingleElemM readMaybeInteger where
                         readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
+-- a sample usage of this function would have been nice
 parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID = parseSingleElemM Just
--- this definitely wouldn't work. needs a (text -> URI a) function or something
+parseParentID [] = Nothing
+parseParentID (t:ts)
+  | isJust returnValue = returnValue
+  | otherwise          = parseParentID ts
+  where returnValue = mkByName $ T.unpack t
+-- previous implementation likely wouldn't work.
+-- needs a (text -> URI a) function or something
+-- current implementation might be potentially buggy,
+-- as I am not sure how this function is supposed to work
+
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
@@ -235,7 +245,7 @@ parseTransactionDWhat c = do
     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P about this
+parseBizTransaction :: Cursor -> [Maybe BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
@@ -243,7 +253,9 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
     where
       parseBizTransactionHelp (a, b) =
-        mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
+        Just $ BizTransaction (T.unpack . T.strip $ a) $
+          fromJust $ mkBizTransactionType (T.unpack . T.strip $ b)
+          -- potentially buggy, as it never returns Nothing
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
