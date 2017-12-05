@@ -35,7 +35,7 @@ parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
 parseSingleElemM f (x:_) = f . T.unpack $ x
 parseSingleElemM _ _     = Nothing
 
--- parseSingleElemM returns an Either
+-- parseSingleElemE returns an Either
 parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ _     = Left InvalidFormat
