@@ -126,26 +126,6 @@ parseQuantity c = do
     [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
-
--- this function is not really being used anymore.
--- use parseQuantity :: Cursor -> Maybe Quantity instead
--- |Parse QuantityElement
--- parseQuantityElement :: Cursor -> Maybe QuantityElement
--- parseQuantityElement c = do
---   let ec = c $/ element "epcClass" &/ content
---   let qt = c $/ element "quantity" &/ content
---   let uom = c $/ element "uom" &/ content
---   case [ec, qt, uom] of
---     [[], _, _] -> Nothing
---     [e:_, [], _] -> Nothing
---     [e : _, q : _, []] ->
---         let [e', q'] = T.unpack <$> [e, q] in
---         Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
---     [e : _, q : _, u : _] ->
---         let [e', q', u'] = T.unpack <$> [e, q, u] in
---         Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
-
-
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
@@ -172,10 +152,6 @@ parseDisposition = parseSingleElemE readURI
 -- which returns Either ParseFailure a.
 parseAction :: [T.Text] -> Maybe Action
 parseAction = parseSingleElemM mkAction
-
--- |Parse a single EPCClass
-parseEPCClass :: [T.Text] -> Maybe EPCClass
-parseEPCClass = parseSingleElemM mkEPCClass
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
@@ -204,10 +180,6 @@ parseObjectDWhat c = do
   -- find all epcs below epcList tag
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
   let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
-  -- find all quantityElement, regardless parent tag
-  -- let qt  = fromJust <$> filter isJust $
-  --             parseQuantityElement <$>
-  --               getCursorsByName "quantityElement" c
 
   case act of
     Nothing -> Nothing
