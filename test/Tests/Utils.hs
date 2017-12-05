@@ -61,4 +61,4 @@ testParseURI :: Spec
 testParseURI =
   describe "parse a URI" $
     it "parse TestDataType" $
-      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` (Just Foo)
+      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` Just Foo
