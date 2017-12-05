@@ -4,14 +4,12 @@
 module Data.GS1.DWhat where
 
 import           Control.Lens
-import           Data.Char
+-- import           Data.Char
 import           GHC.Generics
 
 import           Data.List.Split
 
 import           Data.GS1.EPC
-import           Data.GS1.Object
-import           Data.GS1.Utils
 
 import           Data.Aeson
 import           Data.Aeson.TH
@@ -21,12 +19,6 @@ import           Database.SQLite.Simple.ToField
 import           Data.Aeson.Text
 import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
-
--- returns (Just Right) or Nothing
--- this should be in utils
-either2Maybe :: Either a b -> Maybe b
-either2Maybe (Right x) = Just x
-either2Maybe (Left _) = Nothing
 
 data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
                 deriving (Show, Read, Eq, Generic)

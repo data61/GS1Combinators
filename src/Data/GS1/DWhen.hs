@@ -5,20 +5,20 @@
 module Data.GS1.DWhen where
 
 import           Control.Lens
-import           Control.Monad.Error.Lens
-import           Control.Monad.Except     (MonadError)
+-- import           Control.Monad.Error.Lens
+-- import           Control.Monad.Except     (MonadError)
 import           Data.Either.Combinators
 import           Data.Time
 import           GHC.Generics
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
-import qualified Data.Text as T
+-- import qualified Data.Text as T
 
-import Database.SQLite.Simple.ToField
-import Data.Aeson.Text
-import Data.ByteString.Char8 (pack)
-import qualified Data.Text.Lazy as TxtL
+-- import Database.SQLite.Simple.ToField
+-- import Data.Aeson.Text
+-- import Data.ByteString.Char8 (pack)
+-- import qualified Data.Text.Lazy as TxtL
 
 import Data.GS1.EPC
 
@@ -42,11 +42,13 @@ mkDWhen a b = let et = parseStr2Time a :: Either EPCISTimeError EPCISTime
                   rt = parseStr2Time b :: Either EPCISTimeError EPCISTime
                   tz = parseStr2TimeZone a :: Either EPCISTimeError TimeZone in
                   case et of
-                    Right et' -> case rt of
-                                   Right rt' -> let diff = diffUTCTime et' rt' in
-                                                    if diff < 0
-                                                    then Just $ DWhen et' (Just rt') (fromRight' tz) else Nothing
-                                   _         -> Just $ DWhen et' Nothing (fromRight' tz)
+                    Right et' ->
+                        case rt of
+                        Right rt' ->
+                          let diff = diffUTCTime et' rt' in
+                                      if diff < 0
+                                      then Just $ DWhen et' (Just rt') (fromRight' tz) else Nothing
+                        _         -> Just $ DWhen et' Nothing (fromRight' tz)
                     _         -> Nothing
 
 -- |use it when event time and record time are the same

@@ -9,20 +9,20 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Control.Lens
 import           Data.Char
-import           Data.Either.Combinators
+-- import           Data.Either.Combinators
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
-import           Text.Printf
+-- import           Text.Printf
 import           Data.List.Split
 import           Data.Maybe
 import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
-import           Data.GS1.EventID
+-- import           Data.GS1.EventID
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
@@ -357,17 +357,6 @@ readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
-
-
--- |TODO TEMP EPCClass is a String
-newtype EPCClass = EPCClass String
-  deriving (Eq, Show, Generic)
-$(deriveJSON defaultOptions ''EPCClass)
-instance ToSchema EPCClass
-
--- |TODO more restrictions here in the future
-mkEPCClass :: String -> Maybe EPCClass
-mkEPCClass x = Just $ EPCClass x
 
 
 -- |Allocated by the company to a specific location

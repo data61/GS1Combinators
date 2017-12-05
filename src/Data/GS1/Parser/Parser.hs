@@ -19,14 +19,6 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
-import           Data.GS1.Object
-
-import Data.Either
-
-import Control.Lens hiding (element)
-
--- requires cabal install tuple . Is tuple-0.3.0.2 in yaml
-import Data.Tuple.Curry
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -41,7 +33,7 @@ parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
 parseSingleElemM f (x:_) = f . T.unpack $ x
 parseSingleElemM _ _     = Nothing
 
--- parseSingleElemM returns an Either
+-- parseSingleElemE returns an Either
 parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ _     = Left InvalidFormat
@@ -105,6 +97,7 @@ parseDWhy c = do
   mkDWhy biz disp
 
 -- TODO add type annotation from GHCi
+extractLocationEPCList :: T.Text -> ReadPointLocation
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
@@ -132,26 +125,6 @@ parseQuantity c = do
     [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
-
--- this function is not really being used anymore.
--- use parseQuantity :: Cursor -> Maybe Quantity instead
--- |Parse QuantityElement
--- parseQuantityElement :: Cursor -> Maybe QuantityElement
--- parseQuantityElement c = do
---   let ec = c $/ element "epcClass" &/ content
---   let qt = c $/ element "quantity" &/ content
---   let uom = c $/ element "uom" &/ content
---   case [ec, qt, uom] of
---     [[], _, _] -> Nothing
---     [e:_, [], _] -> Nothing
---     [e : _, q : _, []] ->
---         let [e', q'] = T.unpack <$> [e, q] in
---         Just $ QuantityElement (EPCClass e') (ItemCount (read q' :: Integer)) Nothing
---     [e : _, q : _, u : _] ->
---         let [e', q', u'] = T.unpack <$> [e, q, u] in
---         Just $ QuantityElement (EPCClass e') (MeasuredQuantity (read q' :: Amount) u') (Just u')
-
-
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
@@ -162,6 +135,7 @@ parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCLi
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
+parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
 -- |Parse BizStep by Name
@@ -178,10 +152,6 @@ parseDisposition = parseSingleElemE readURI
 -- which returns Either ParseFailure a.
 parseAction :: [T.Text] -> Maybe Action
 parseAction = parseSingleElemM mkAction
-
--- |Parse a single EPCClass
-parseEPCClass :: [T.Text] -> Maybe EPCClass
-parseEPCClass = parseSingleElemM mkEPCClass
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
@@ -210,10 +180,6 @@ parseObjectDWhat c = do
   -- find all epcs below epcList tag
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
   let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
-  -- find all quantityElement, regardless parent tag
-  -- let qt  = fromJust <$> filter isJust $
-  --             parseQuantityElement <$>
-  --               getCursorsByName "quantityElement" c
 
   case act of
     Nothing -> Nothing
