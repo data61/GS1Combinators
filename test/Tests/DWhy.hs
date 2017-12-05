@@ -2,8 +2,7 @@ module Tests.DWhy where
 
 import Test.Hspec
 
-import Data.GS1.DWhy
-import Data.GS1.URI
+-- import Data.GS1.DWhy
 import Data.GS1.EPC
 
 testDisposition :: Spec
