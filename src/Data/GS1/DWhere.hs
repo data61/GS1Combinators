@@ -8,14 +8,12 @@ import           Control.Lens
 import           GHC.Generics
 
 import           Data.GS1.EPC
-import           Data.GS1.Utils
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 
 import           Database.SQLite.Simple.ToField
 import           Data.Aeson.Text
-import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
 -- |Location synonym

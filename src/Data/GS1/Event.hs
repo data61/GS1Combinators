@@ -5,22 +5,20 @@
 
 module Data.GS1.Event where
 
-import           Control.Lens
-import           GHC.Generics
+-- import           Control.Lens
+import GHC.Generics
 
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhere
-import           Data.GS1.DWhy
-import           Data.GS1.EventID
-import           Data.GS1.Utils
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Swagger
+import Data.GS1.DWhat
+import Data.GS1.DWhen
+import Data.GS1.DWhere
+import Data.GS1.DWhy
+import Data.GS1.EventID
+import Data.GS1.Utils
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Swagger
 
-import Data.Aeson.Text
 import Data.ByteString.Char8 (pack)
-import qualified Data.Text.Lazy as TxtL
 import Database.SQLite.Simple.ToField
 
 data EventType = ObjectEventT

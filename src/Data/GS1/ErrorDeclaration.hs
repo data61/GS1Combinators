@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Data.GS1.ErrorDeclaration where
 
 import           Data.GS1.DWhen
