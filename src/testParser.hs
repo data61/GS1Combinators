@@ -7,13 +7,16 @@ import qualified Data.Text              as T
 import           Text.XML
 import           Text.XML.Cursor
 
-main :: IO()
--- main = error "not implemented yet"
-main = do
-  doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent.xml"
+parseCustom :: String -> String -> (Cursor -> Maybe a) -> String
+parseCustom fileName eventName parseFunc = do
+  doc <- Text.XML.readFile def fileName
   let cursor = fromDocument doc
-  let oeCursors = getCursorsByName "ObjectEvent" cursor
-  let et = "2005-04-03T20:33:31.116-06:00"
-  let et1 = "2005-04-04T20:33:31.116-06:00"
-  print $ head $ fromJust . parseDWhen <$> oeCursors
+  let eventCursors = getCursorsByName eventName cursor
+  encodePretty $ head $ fromJust . parseFunc <$> eventCursors
+
+main :: IO()
+main = do
+  print $ parseCustom "../test/test-xml/ObjectEvent.xml" "ObjectEvent" parseDWhen
+  -- print $ parseCustom "../test/test-xml/ObjectEvent.xml"
+
   -- print $ length oeCursors
