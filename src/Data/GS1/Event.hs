@@ -5,7 +5,7 @@
 
 module Data.GS1.Event where
 
-import           Control.Lens
+-- import           Control.Lens
 import           GHC.Generics
 
 import           Data.GS1.DWhat
@@ -18,9 +18,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 
-import Data.Aeson.Text
 import Data.ByteString.Char8 (pack)
-import qualified Data.Text.Lazy as TxtL
 import Database.SQLite.Simple.ToField
 
 data EventType = ObjectEventT

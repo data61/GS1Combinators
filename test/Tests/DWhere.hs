@@ -1,7 +1,7 @@
 module Tests.DWhere where
 
 import           Data.GS1.EPC
-import           Data.GS1.DWhere
+-- import           Data.GS1.DWhere
 import           Test.Hspec
 
 testReadSGLN :: Spec

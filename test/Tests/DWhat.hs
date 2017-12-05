@@ -2,7 +2,7 @@
 
 module Tests.DWhat where
 
-import           Data.Maybe
+-- import           Data.Maybe
 import           Test.Hspec
 
 import           Data.GS1.DWhat

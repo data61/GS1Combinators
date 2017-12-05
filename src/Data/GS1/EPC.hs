@@ -9,20 +9,20 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Control.Lens
 import           Data.Char
-import           Data.Either.Combinators
+-- import           Data.Either.Combinators
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
-import           Text.Printf
+-- import           Text.Printf
 import           Data.List.Split
 import           Data.Maybe
 import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
-import           Data.GS1.EventID
+-- import           Data.GS1.EventID
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
