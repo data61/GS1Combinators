@@ -51,3 +51,8 @@ parseURI s uri = let puri = T.pack uri
                      if T.unpack s' == s
                         then mkByName . last $ splitOn ":" s
                         else Nothing
+
+-- returns (Just Right) or Nothing
+either2Maybe :: Either a b -> Maybe b
+either2Maybe (Right x) = Just x
+either2Maybe (Left _) = Nothing
