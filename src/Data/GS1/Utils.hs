@@ -48,5 +48,6 @@ parseURI :: Read a => String -> String -> Maybe a
 parseURI s uri = let puri = T.pack uri
                      ps = T.pack s
                      (_, s') = T.breakOn puri ps in
-                     if T.unpack s' == s then mkByName . last $ splitOn ":" s
-                                                      else Nothing
+                     if T.unpack s' == s
+                        then mkByName . last $ splitOn ":" s
+                        else Nothing
