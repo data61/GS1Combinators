@@ -125,19 +125,6 @@ parseQuantity c = do
     [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
--- |Parse a List of EPCs
--- name="epcList" type="epcis:EPCListType"
--- XXX - EPC is no longer a type, but a type class.
-parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
-parseEPCList [] _ = []
-parseEPCList _ [] = []
-parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs 
-
--- |Alias to parseEPCList
--- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
-parseChildEPCList = parseEPCList
-
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
 parseBizStep = parseSingleElemE readURI
@@ -170,6 +157,19 @@ parseParentID (t:ts)
 -- needs a (text -> URI a) function or something
 -- current implementation might be potentially buggy,
 -- as I am not sure how this function is supposed to work
+
+-- |Parse a List of EPCs
+-- name="epcList" type="epcis:EPCListType"
+-- XXX - EPC is no longer a type, but a type class.
+parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+parseEPCList [] _ = []
+parseEPCList _ [] = []
+parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs 
+
+-- |Alias to parseEPCList
+-- name="childEPCs" type="epcis:EPCListType"
+parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+parseChildEPCList = parseEPCList
 
 
 -- |parse and construct ObjectDWhat dimension
