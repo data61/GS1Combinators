@@ -4,13 +4,12 @@
 module Data.GS1.DWhat where
 
 import           Control.Lens
-import           Data.Char
+-- import           Data.Char
 import           GHC.Generics
 
 import           Data.List.Split
 
 import           Data.GS1.EPC
-import           Data.GS1.Utils
 
 import           Data.Aeson
 import           Data.Aeson.TH

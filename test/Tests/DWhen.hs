@@ -3,12 +3,11 @@ module Tests.DWhen (
 , testMkDWhen
 ) where
 
-import           Data.Either.Combinators
-import           Data.Time
-import           Test.Hspec
-import           Data.GS1.EPC
-
-import           Data.GS1.DWhen
+import Data.Either.Combinators
+import Data.Time
+import Test.Hspec
+import Data.GS1.EPC
+import Data.GS1.DWhen
 
 type EitherET  = Either EPCISTimeError EPCISTime
 type EitherETZ = Either EPCISTimeError TimeZone

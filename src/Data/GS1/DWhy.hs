@@ -5,10 +5,7 @@
 module Data.GS1.DWhy where
 
 import           Control.Lens
-import           Data.Maybe
 import           GHC.Generics
-
-import           Data.GS1.Utils
 import           Data.GS1.EPC
 import           Data.Aeson
 import           Data.Aeson.TH
