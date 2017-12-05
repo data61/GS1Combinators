@@ -221,7 +221,7 @@ parseObjectDWhat c = do
 
 
 -- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
+parseAggregationDWhat :: Cursor -> Maybe DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
@@ -232,9 +232,9 @@ parseAggregationDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p pid childEPCs
 
-parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransactionDWhat :: Cursor -> Maybe DWhat
 parseTransactionDWhat c = do
-  let bizT = fromRight <$> filter isRight (parseBizTransaction c)
+  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
@@ -259,12 +259,12 @@ parseBizTransaction c = do
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
-parseEventList' :: EventType -> [(Either ParseFailure EventID, Either ParseFailure DWhat, Either ParseFailure DWhen, Either ParseFailure DWhy, Either ParseFailure DWhere)] -> [Maybe Event]
+parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
 parseEventList' _ [] = []
 parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
-                              if isLeft i  || isLeft w1 || isLeft w2 || isLeft w3 || isLeft w4 then
+                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                 Nothing : parseEventList' et xs      else
-                                Just (mkEvent et (fromRight i) (fromRight w1) (fromRight w2) (fromRight w3) (fromRight w4)) : parseEventList' et xs
+                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
