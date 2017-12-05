@@ -7,7 +7,6 @@ import           Test.Hspec
 
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
-import           Data.GS1.Object
 
 testBizStep :: Spec
 testBizStep = do

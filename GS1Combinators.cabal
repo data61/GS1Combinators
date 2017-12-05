@@ -24,7 +24,6 @@ library
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
                      , Data.GS1.EventID
-                     , Data.GS1.Object
                      , Data.GS1.Utils
                      , Data.GS1.Parser.Parser
                      , Data.GS1.URI

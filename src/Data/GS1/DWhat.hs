@@ -10,7 +10,6 @@ import           GHC.Generics
 import           Data.List.Split
 
 import           Data.GS1.EPC
-import           Data.GS1.Object
 import           Data.GS1.Utils
 
 import           Data.Aeson
