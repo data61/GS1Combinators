@@ -71,14 +71,12 @@ test-suite GS1Combinators-test
                      , Data.GS1.ErrorDeclaration
                      , Data.GS1.Event
                      , Data.GS1.EventID
-                     , Data.GS1.Object
                      , Data.GS1.Utils
                      , Data.GS1.Parser.Parser
                      , Tests.DWhat
                      , Tests.DWhen
                      , Tests.DWhere
                      , Tests.DWhy
-                     , Tests.Object
                      , Tests.Utils
                      , Tests.Parser
                      , Data.GS1.URI
