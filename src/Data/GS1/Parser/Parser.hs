@@ -236,10 +236,26 @@ parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
   parseSingleElemM parseEventID' eid where
-    parseEventID' eid' = let uuid = fromString eid' in
-                             case uuid of
-                               Nothing -> Nothing
-                               Just u  -> Just $ EventID u
+    parseEventID' eid' = case fromString eid' of
+                           Nothing -> Nothing
+                           Just u  -> Just $ EventID u
+
+-- DELETEME as refactored above
+-- parseEventID :: Cursor -> Maybe EventID
+-- parseEventID c = do
+--   let eid = c $/ element "eventID" &/ content
+--   parseSingleElemM parseEventID' eid where
+--     parseEventID' eid' = let uuid = fromString eid' in
+--                              case uuid of
+--                                Nothing -> Nothing
+--                                Just u  -> Just $ EventID u
+-- DELETEME
+-- parseEventID :: Cursor -> Maybe EventID
+-- parseEventID c = do
+--   let eid = c $/ element "eventID" &/ content
+--     parseSingleElem' (case fromString eid of
+--                         Nothing -> Nothing
+--                         Just u  -> Just $ EventID u)
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Maybe Event]
