@@ -50,7 +50,8 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let epcs = cursor $// element "epc" &/ content
-      show <$> parseEPCList epcs `shouldBe` ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
+      show <$> parseEPCList epcs `shouldBe`
+        ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
 
     it "finds all child epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
