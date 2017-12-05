@@ -99,6 +99,7 @@ parseDWhy c = do
   mkDWhy biz disp
 
 -- TODO add type annotation from GHCi
+extractLocationEPCList :: T.Text -> ReadPointLocation
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
@@ -156,6 +157,7 @@ parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCLi
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
+parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
 -- |Parse BizStep by Name
@@ -254,7 +256,7 @@ parseBizTransaction c = do
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
 parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
-parseEventList' et [] = []
+parseEventList' _ [] = []
 parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
                               if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                 Nothing : parseEventList' et xs      else
