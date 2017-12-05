@@ -11,6 +11,7 @@ import           Data.XML.Types      hiding (Event)
 import           Text.Read
 import           Text.XML.Cursor
 
+import           Data.GS1.Utils
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -182,9 +183,18 @@ parseQuantityValue = parseSingleElemM readMaybeInteger where
                         readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
+-- a sample usage of this function would have been nice
 parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID = parseSingleElemM Just
--- this definitely wouldn't work. needs a (text -> URI a) function or something
+parseParentID [] = Nothing
+parseParentID (t:ts)
+  | isJust returnValue = returnValue
+  | otherwise          = parseParentID ts
+  where returnValue = mkByName $ T.unpack t
+-- previous implementation likely wouldn't work.
+-- needs a (text -> URI a) function or something
+-- current implementation might be potentially buggy,
+-- as I am not sure how this function is supposed to work
+
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Maybe DWhat
