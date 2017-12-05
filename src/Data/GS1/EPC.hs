@@ -41,10 +41,10 @@ type URIPayload = String
 type Reason = String
 
 -- add more types to this if need be
-data ParseFailure = InvalidLength URIPayload --Length is not correct
+data ParseFailure = InvalidLength --Length is not correct
                   -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
-                  | InvalidFormat URIPayload -- Components Missing, incorrectly structured
-                  | Misc Reason URIPayload -- Miscellaneous - fall back on this
+                  | InvalidFormat -- Components Missing, incorrectly structured
+                  | Misc Reason -- Miscellaneous - fall back on this
                   deriving (Show, Eq)
 
 -- |Anything that could be converted into URI
