@@ -161,6 +161,11 @@ parseParentID (t:ts)
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- XXX - EPC is no longer a type, but a type class.
+
+-- this needs to be a hook. perhaps an apt name for it would be parseDWhat
+-- this function should take in a cursor, figure out what kind of DWhat it is
+-- and then call the appropriate parse(.*)DWhat function on the cursor
+-- START HERE TOMORROW
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
