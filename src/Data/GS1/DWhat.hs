@@ -20,12 +20,6 @@ import           Data.Aeson.Text
 import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
--- returns (Just Right) or Nothing
--- this should be in utils
-either2Maybe :: Either a b -> Maybe b
-either2Maybe (Right x) = Just x
-either2Maybe (Left _) = Nothing
-
 data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
                 deriving (Show, Read, Eq, Generic)
 
