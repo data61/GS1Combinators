@@ -4,7 +4,6 @@ import           Tests.DWhat
 import           Tests.DWhen
 import           Tests.DWhere
 import           Tests.DWhy
-import           Tests.Object
 import           Tests.Parser -- it's not being used right now
 import           Tests.Utils
 
@@ -27,9 +26,6 @@ main = do
   -- DWhen
   hspec testParseTime
   hspec testMkDWhen
-  
-  -- Object
-  hspec testObjectID
   
   -- Parser
   -- hspec testParser
