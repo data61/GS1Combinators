@@ -6,17 +6,17 @@
 module Data.GS1.Event where
 
 -- import           Control.Lens
-import           GHC.Generics
+import GHC.Generics
 
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhere
-import           Data.GS1.DWhy
-import           Data.GS1.EventID
-import           Data.GS1.Utils
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Swagger
+import Data.GS1.DWhat
+import Data.GS1.DWhen
+import Data.GS1.DWhere
+import Data.GS1.DWhy
+import Data.GS1.EventID
+import Data.GS1.Utils
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Swagger
 
 import Data.ByteString.Char8 (pack)
 import Database.SQLite.Simple.ToField
