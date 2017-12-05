@@ -229,7 +229,7 @@ parseTransactionDWhat c = do
     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction] -- talk to Matthew P about this
+parseBizTransaction :: Cursor -> [Maybe BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
@@ -237,7 +237,9 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
     where
       parseBizTransactionHelp (a, b) =
-        mkBizTransaction (T.unpack . T.strip $ a) (T.unpack . T.strip $ b)
+        Just $ BizTransaction (T.unpack . T.strip $ a) $
+          fromJust $ mkBizTransactionType (T.unpack . T.strip $ b)
+          -- potentially buggy, as it never returns Nothing
 
 -- |parse a list of tuples
 -- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing

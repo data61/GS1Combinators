@@ -489,9 +489,9 @@ instance URI BizTransactionType where
   readURI    s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
                       in readURIBizTransactionType pURI
 
--- DELETEME since redundant
--- mkBizTransactionType :: String -> Maybe BizTransactionType
--- mkBizTransactionType = mkByName
+-- DELETEME since redundant --> it is being used in Parser
+mkBizTransactionType :: String -> Maybe BizTransactionType
+mkBizTransactionType = mkByName
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
