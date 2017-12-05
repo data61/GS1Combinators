@@ -358,17 +358,6 @@ $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
 
 
--- |TODO TEMP EPCClass is a String
-newtype EPCClass = EPCClass String
-  deriving (Eq, Show, Generic)
-$(deriveJSON defaultOptions ''EPCClass)
-instance ToSchema EPCClass
-
--- |TODO more restrictions here in the future
-mkEPCClass :: String -> Maybe EPCClass
-mkEPCClass x = Just $ EPCClass x
-
-
 -- |Allocated by the company to a specific location
 type LocationRef = String
 
