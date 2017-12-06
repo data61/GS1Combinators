@@ -120,7 +120,7 @@ data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
     readURI epcStr = readURIClassLabelEPC $ splitOn ":" epcStr
-  
+
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
@@ -144,7 +144,7 @@ $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 
-data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber 
+data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                       -- Global Individual Asset Identifier, e.g. bucket for olives
                       | SSCC GS1CompanyPrefix SerialNumber
                       --serial shipping container code
@@ -649,7 +649,7 @@ timeSchema fmt = mempty
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
 
--- DELETED ErrorReasonID since incorrect since it 
+-- DELETED ErrorReasonID since incorrect since it
 -- -- |EPCIS 1.2 section 7.5
 -- -- FIXME example should be found to verify the implementation is correct
 -- data ErrorReasonID = DidNotOccur
