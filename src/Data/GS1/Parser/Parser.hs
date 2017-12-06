@@ -244,7 +244,7 @@ parseEventList' _ [] = []
 parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
                               if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
                                 Nothing : parseEventList' et xs      else
-                                Just (mkEvent et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+                                Just (Event et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
