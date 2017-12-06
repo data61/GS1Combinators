@@ -37,8 +37,8 @@ readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
 -- readLabelEPC = error "not implemented yet"
 readLabelEPC epcStr mQt =
   case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
-    Left e -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
-      Left e -> Nothing
+    Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
+      Left _ -> Nothing
       Right il -> Just il
     Right a -> Just a
   where
