@@ -14,7 +14,7 @@ main = do
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
-  
+
   -- DWhat
   hspec testBizStep
   hspec testBizTransaction
@@ -26,10 +26,10 @@ main = do
   -- DWhen
   hspec testParseTime
   hspec testMkDWhen
-  
+
   -- Parser
   -- hspec testParser
-  
+
   -- Utils
   hspec testRevertCamelCase
   hspec testMkCamelCase
