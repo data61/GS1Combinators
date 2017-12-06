@@ -50,8 +50,8 @@ $(deriveJSON defaultOptions ''Event)
 instance ToSchema Event
 
 
-mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Event
-mkEvent = Event
+-- mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Event
+-- mkEvent = Event
 
 {-
    commenting out the lens stuff, we don't use it anyway...
