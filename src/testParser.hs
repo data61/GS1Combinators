@@ -20,8 +20,10 @@ main = do
   -- print $ length oeCursors
 
   -- print $ fromJust . parseDWhen <$> oeCursors
+  print  oeCursors
+  
   -- print $ fromJust . parseDWhy <$> oeCursors
   -- print $ fromJust . parseDWhere <$> oeCursors
   -- print $ fromJust . parseObjectDWhat <$> oeCursors
   -- print $ fromJust . parseAggregationDWhat <$> oeCursors
-  TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromJust . parseDWhen <$> oeCursors
+  -- TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromJust . parseDWhen <$> oeCursors
