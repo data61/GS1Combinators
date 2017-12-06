@@ -36,7 +36,7 @@ type ParentID = LabelEPC
 readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
 -- readLabelEPC = error "not implemented yet"
 readLabelEPC epcStr mQt =
-  case fmap (\clepc -> CL clepc mQt) (readURIClassLabelEPC epcTokens) of
+  case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
     Left e -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
       Left e -> Nothing
       Right il -> Just il
