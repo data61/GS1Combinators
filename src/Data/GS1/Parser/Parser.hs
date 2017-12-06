@@ -58,7 +58,7 @@ parseTimeXML = parseSingleElemM parseTimeHelper'
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
 parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
                       where
-                        parseTimeZoneHelper' x = 
+                        parseTimeZoneHelper' x =
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
                               case ptz of
                                 Left _  -> Nothing
@@ -165,7 +165,7 @@ parseParentID (t:ts)
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
-parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs 
+parseEPCList (t:ts) (q:qs) = fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
