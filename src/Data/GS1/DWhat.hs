@@ -10,7 +10,7 @@ import           GHC.Generics
 import           Data.List.Split
 
 import           Data.GS1.EPC
-
+-- why can't GHCi find these modules?
 import           Data.Aeson
 import           Data.Aeson.TH
 

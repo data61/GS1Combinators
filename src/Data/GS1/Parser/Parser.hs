@@ -96,7 +96,7 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
--- TODO add type annotation from GHCi
+-- should getRightOrError be used here?
 extractLocationEPCList :: T.Text -> ReadPointLocation
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
@@ -109,7 +109,7 @@ parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
   let rps = extractLocationEPCList <$> (c $/ element "readPoint"   &/ element "id" &/ content)
   let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
-  Just $ DWhere rps bls [] []
+  Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
