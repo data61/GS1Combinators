@@ -34,7 +34,6 @@ type ParentID = LabelEPC
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
 readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
--- readLabelEPC = error "not implemented yet"
 readLabelEPC epcStr mQt =
   case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
     Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
@@ -44,6 +43,7 @@ readLabelEPC epcStr mQt =
   where
     epcTokens = splitOn ":" epcStr
 
+  -- DELETEME refactored as above
   -- case epcTokens of
   --   ("urn" : "epc" : "class" : "lgtin" : _) ->
   --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
