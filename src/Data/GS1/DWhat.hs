@@ -36,14 +36,20 @@ type ParentID = LabelEPC
 readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
 -- readLabelEPC = error "not implemented yet"
 readLabelEPC epcStr mQt =
-  case epcTokens of
-    ("urn" : "epc" : "class" : "lgtin" : _) ->
-      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-    ("urn" : "epc" : "id" : "grai" : _) ->
-      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-    _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
-    where
-      epcTokens = splitOn ":" epcStr
+  case fmap (\clepc -> CL clepc mQt) (readURIClassLabelEPC epcTokens) of
+    Left e -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
+      Left e -> Nothing
+      Right il -> Just il
+    Right a -> Just a
+  where
+    epcTokens = splitOn ":" epcStr
+
+  -- case epcTokens of
+  --   ("urn" : "epc" : "class" : "lgtin" : _) ->
+  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+  --   ("urn" : "epc" : "id" : "grai" : _) ->
+  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+  --   _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
 
 
 -- |The What dimension specifies what physical or digital objects
