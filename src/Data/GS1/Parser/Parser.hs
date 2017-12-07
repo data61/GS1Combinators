@@ -97,7 +97,11 @@ parseDWhy c = do
   mkDWhy biz disp
 
 -- should getRightOrError be used here?
-extractLocationEPCList :: T.Text -> ReadPointLocation
+-- use rights :: [Either a b] -> [b]
+-- or, lookup the monadic instance for Either
+-- use do notation
+-- extractLocationEPCList :: T.Text -> Either ParseFailure ReadPointLocation
+-- extractLocationEPCList = readURI . T.unpack
 extractLocationEPCList = getRightOrError . readURI . T.unpack
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
@@ -105,11 +109,33 @@ extractLocationEPCList = getRightOrError . readURI . T.unpack
 -- and there could be no srcDest Type involved
 -- the sgln could be irregular
 -- |TODO: there must be some more modification on it
+
+-- SIDE NOTE:
+-- f :: [Either x y] -> Either [x] [y]
+
+{-
+(>>=) :: m a -> (a -> m b) -> m b
+
+do
+  x <- y
+  f x
+
+  is equivalent to
+  y >>= \x -> f x
+
+-}
 parseDWhere :: Cursor -> Maybe DWhere
 parseDWhere c = do
-  let rps = extractLocationEPCList <$> (c $/ element "readPoint"   &/ element "id" &/ content)
-  let bls = extractLocationEPCList <$> (c $/ element "bizLocation" &/ element "id" &/ content)
+  -- rps <- extractLocationEPCList <$>
+  --   (c $/ element "readPoint"   &/ element "id" &/ content)
+  -- bls <- extractLocationEPCList <$>
+  --   (c $/ element "bizLocation" &/ element "id" &/ content)
+  let rps = extractLocationEPCList <$>
+          (c $/ element "readPoint"   &/ element "id" &/ content)
+  let bls = extractLocationEPCList <$>
+          (c $/ element "bizLocation" &/ element "id" &/ content)
   Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
+-- ^^ use the pure function here
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
