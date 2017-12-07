@@ -33,6 +33,7 @@ type ParentID = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
+-- use <> when this function returns Either
 readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
 readLabelEPC epcStr mQt =
   case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
