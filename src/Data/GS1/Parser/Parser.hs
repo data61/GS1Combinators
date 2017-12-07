@@ -135,7 +135,8 @@ parseDWhere c = do
           (c $/ element "readPoint"   &/ element "id" &/ content)
   let bls = extractLocationEPCList <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
-  Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
+  -- Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
+  pure $ DWhere rps bls [] [] -- why is this always returning empty lists?
 -- ^^ use the pure function here
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
