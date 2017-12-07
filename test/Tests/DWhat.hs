@@ -24,7 +24,7 @@ testBizStep = do
 
     it "parse valid uri to bizstep" $
       readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Right Accepting
-  
+
   describe "Invalid urns" $ do
     it "parse valid uri but invalid step to Nothing" $
       (readURI :: String -> Either ParseFailure BizStep) "urn:epcglobal:cbv:bizstep:s"
@@ -103,10 +103,10 @@ testPpDWhat = do
       ppDWhat (ObjectDWhat Delete []) `shouldBe` "OBJECT WHAT\nDelete\n[]\n"
     it "creates DWhat from empty epc list Observe" $
       ppDWhat (ObjectDWhat Observe []) `shouldBe` "OBJECT WHAT\nObserve\n[]\n"
-     
+
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
-      ppDWhat (AggregationDWhat Observe 
+      ppDWhat (AggregationDWhat Observe
         (Just (IL (SSCC "0614141" "1234567890")))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -144,7 +144,7 @@ testPpDWhat = do
     it "createAggregationDWhat from empty, Observe" $
       ppDWhat (AggregationDWhat Observe Nothing [])
         `shouldBe` "AGGREGATION WHAT\nObserve\nNothing\n[]\n"
-  
+
 
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
@@ -194,7 +194,7 @@ testPpDWhat = do
       ppDWhat (TransactionDWhat Observe Nothing [] [])
         `shouldBe` "TRANSACTION WHAT\nObserve\nNothing\n[]\n[]\n"
 
-         
+
   describe "work with a TransformationDWhat" $ do
     it "create TransformationDWhat" $
       ppDWhat (TransformationDWhat (Just "12345")
@@ -208,7 +208,7 @@ testPpDWhat = do
           "IL (SGTIN \"0614141__\" Nothing \"107346__\" \"2018__\")]\n" ++
           "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
           "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
-    
+
     it "create TransformationDWhat, empty" $
       ppDWhat (TransformationDWhat Nothing [] [])
         `shouldBe` "TRANSFORMATION WHAT\nNothing\n[]\n[]\n"

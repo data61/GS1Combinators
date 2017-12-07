@@ -10,7 +10,7 @@ import           GHC.Generics
 import           Data.List.Split
 
 import           Data.GS1.EPC
-
+-- why can't GHCi find these modules?
 import           Data.Aeson
 import           Data.Aeson.TH
 
@@ -33,17 +33,24 @@ type ParentID = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
+-- use <> when this function returns Either
 readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
--- readLabelEPC = error "not implemented yet"
 readLabelEPC epcStr mQt =
-  case epcTokens of
-    ("urn" : "epc" : "class" : "lgtin" : _) ->
-      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-    ("urn" : "epc" : "id" : "grai" : _) ->
-      Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-    _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
-    where
-      epcTokens = splitOn ":" epcStr
+  case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
+    Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
+      Left _ -> Nothing
+      Right il -> Just il
+    Right a -> Just a
+  where
+    epcTokens = splitOn ":" epcStr
+
+  -- DELETEME refactored as above
+  -- case epcTokens of
+  --   ("urn" : "epc" : "class" : "lgtin" : _) ->
+  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+  --   ("urn" : "epc" : "id" : "grai" : _) ->
+  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
+  --   _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
 
 
 -- |The What dimension specifies what physical or digital objects
