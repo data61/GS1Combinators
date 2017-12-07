@@ -4,13 +4,12 @@
 module Data.GS1.DWhat where
 
 import           Control.Lens
--- import           Data.Char
 import           GHC.Generics
 
 import           Data.List.Split
 import           Data.Either
-import           Data.GS1.EPC
--- why can't GHCi find these modules?
+import           Data.Semigroup
+
 import           Data.Aeson
 import           Data.Aeson.TH
 
@@ -19,6 +18,9 @@ import           Database.SQLite.Simple.ToField
 import           Data.Aeson.Text
 import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
+
+import           Data.GS1.EPC
+-- why can't GHCi find these modules?
 
 data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
                 deriving (Show, Read, Eq, Generic)
@@ -33,27 +35,13 @@ type ParentID = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
--- use <> when this function returns Either
 readLabelEPC :: String -> Maybe Quantity -> Either ParseFailure LabelEPC
 readLabelEPC epcStr mQt =
-  -- case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
-  --   Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
-  --     Left _ -> Nothing
-  --     Right il -> Just il
-  --   Right a -> Just a
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
-    <> fmap IL (readURIInstanceLabelEPC epcTokens)
+    <>
+      fmap IL (readURIInstanceLabelEPC epcTokens)
   where
     epcTokens = splitOn ":" epcStr
-
-  -- DELETEME refactored as above
-  -- case epcTokens of
-  --   ("urn" : "epc" : "class" : "lgtin" : _) ->
-  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-  --   ("urn" : "epc" : "id" : "grai" : _) ->
-  --     Just $ CL (getRightOrError $ readURIClassLabelEPC epcTokens) mQt
-  --   _ -> Just $ IL $ getRightOrError $ readURIInstanceLabelEPC epcTokens
-
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
