@@ -101,9 +101,9 @@ parseDWhy c = do
 -- use rights :: [Either a b] -> [b]
 -- or, lookup the monadic instance for Either
 -- use do notation
--- extractLocationEPCList :: T.Text -> Either ParseFailure ReadPointLocation
--- extractLocationEPCList = readURI . T.unpack
-extractLocationEPCList = getRightOrError . readURI . T.unpack
+extractLocationEPCList :: T.Text -> Either ParseFailure ReadPointLocation
+extractLocationEPCList = readURI . T.unpack
+
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
@@ -181,12 +181,11 @@ parseAction = parseSingleElemM mkAction
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue = parseSingleElemM readMaybeInteger where
-                        readMaybeInteger x = readMaybe x :: Maybe Integer
+parseQuantityValue = parseSingleElemM $ readMaybe x :: Maybe Integer
+
 
 -- |parse group of text to obtain ParentID
 -- a sample usage of this function would have been nice
-
 -- previous implementation likely wouldn't work.
 -- needs a (text -> URI a) function or something
 -- current implementation might be potentially buggy,
@@ -238,9 +237,9 @@ parseAggregationDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ AggregationDWhat p pid childEPCs
 
-parseTransactionDWhat :: Cursor -> Maybe DWhat
+parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
-  let bizT = fromJust <$> filter isJust (parseBizTransaction c)
+  let bizT = fromJust <$> filter isJust $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
@@ -300,23 +299,6 @@ parseEventID c = do
     parseEventID' eid' = case fromString eid' of
                            Nothing -> Nothing
                            Just u  -> Just $ EventID u
-
--- DELETEME as refactored above
--- parseEventID :: Cursor -> Maybe EventID
--- parseEventID c = do
---   let eid = c $/ element "eventID" &/ content
---   parseSingleElemM parseEventID' eid where
---     parseEventID' eid' = let uuid = fromString eid' in
---                              case uuid of
---                                Nothing -> Nothing
---                                Just u  -> Just $ EventID u
--- DELETEME
--- parseEventID :: Cursor -> Maybe EventID
--- parseEventID c = do
---   let eid = c $/ element "eventID" &/ content
---     parseSingleElem' (case fromString eid of
---                         Nothing -> Nothing
---                         Just u  -> Just $ EventID u)
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Maybe Event]
