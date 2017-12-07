@@ -48,6 +48,8 @@ data ParseFailure = InvalidLength
                   -- Components Missing, incorrectly structured
                   | InvalidAction
                   -- When parsing an action failed
+                  | InvalidBizTransaction
+                  -- When parsing a bizTransaction failed
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
@@ -487,8 +489,11 @@ instance URI BizTransactionType where
                       in readURIBizTransactionType pURI
 
 -- DELETEME since redundant --> it is being used in Parser
-mkBizTransactionType :: String -> Maybe BizTransactionType
-mkBizTransactionType = mkByName
+mkBizTransactionType :: String -> Either ParseFailure BizTransactionType
+mkBizTransactionType s =
+  case mkByName s of
+    Nothing -> Left InvalidBizTransaction
+    Just x  -> Right x
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
@@ -508,7 +513,6 @@ mkBizTransaction :: String -> String -> Either ParseFailure BizTransaction
 mkBizTransaction t i = case (readURI :: String -> Either ParseFailure BizTransactionType) t of
                          Right t'  -> Right BizTransaction{_btid = i, _bt = t'}
                          Left e        -> Left e
-
 
 -- | TransformationID
 type TransformationID = String
