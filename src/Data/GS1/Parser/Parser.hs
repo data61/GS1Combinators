@@ -79,7 +79,7 @@ parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
                               _     -> Nothing
 
 -- |The name of the current cursor stays at ObjectEvent
-parseDWhen :: Cursor -> Maybe DWhen
+parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
@@ -91,7 +91,7 @@ parseDWhen c = do
     _        -> Nothing
 
 -- |Parse DWhy
-parseDWhy :: Cursor -> Maybe DWhy
+parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
   let biz = parseBizStep (c $/ element "bizStep" &/ content)
   let disp = parseDisposition (c $/ element "disposition" &/ content)
@@ -213,7 +213,7 @@ parseChildEPCList = parseEPCList
 
 
 -- |parse and construct ObjectDWhat dimension
-parseObjectDWhat :: Cursor -> Maybe DWhat
+parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
@@ -227,7 +227,7 @@ parseObjectDWhat c = do
 
 
 -- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Maybe DWhat
+parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
@@ -250,7 +250,7 @@ parseTransactionDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
-parseTransformationWhat :: Cursor -> Maybe DWhat
+parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
 -- parseTransformationWhat c = do
 --   let bizT = fromJust <$> filter isJust (parseBizTransaction c)
@@ -277,13 +277,21 @@ parseBizTransaction c = do
           -- potentially buggy, as it never returns Nothing
 
 -- |parse a list of tuples
--- each tuple consists of Maybe EventID, Maybe DWhat, Maybe DWhen Maybe DWhy and Maybe DWhere, so they might be Nothing
-parseEventList' :: EventType -> [(Maybe EventID, Maybe DWhat, Maybe DWhen, Maybe DWhy, Maybe DWhere)] -> [Maybe Event]
+-- if we encounter a parsefailure, return the Left listOfParseFailures
+parseEventList' :: EventType
+  -> [(Maybe EventID
+  , Either ParseFailure DWhat
+  , Either ParseFailure DWhen
+  , Either ParseFailure DWhy
+  , Either ParseFailure DWhere)]
+  -> [Either ParseFailure Event]
+parseEventList' = error "not implemented yet"
 parseEventList' _ [] = []
-parseEventList' et (x:xs) = let (i, w1, w2, w3, w4) = x in
-                              if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
-                                Nothing : parseEventList' et xs      else
-                                Just (Event et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+parseEventList' et (x:xs) = do
+  let (i, w1, w2, w3, w4) = x
+  if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
+    Nothing : parseEventList' et xs      else
+    Just (Event et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
 
 parseEventID :: Cursor -> Maybe EventID
 parseEventID c = do
