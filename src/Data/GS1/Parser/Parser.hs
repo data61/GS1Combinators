@@ -245,21 +245,10 @@ parseTransactionDWhat c = do
 
   case (act, bizTErrs, epcErrs) of
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
-    (Left e, _, _)    -> Left $ ChildFailure $ (e : bizTErrs) ++ epcErrs 
-    (Right a, _, _)      -> Left $ ChildFailure $ bizTErrs ++ epcErrs
+    _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
--- parseTransformationWhat c = do
---   let bizT = fromJust <$> filter isJust (parseBizTransaction c)
---   let pid = parseParentID (c $/ element "parentID" &/ content)
---   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
---   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
---   let act = parseAction (c $/ element "action" &/ content)
-
---   case act of
---     Nothing -> Nothing
---     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
