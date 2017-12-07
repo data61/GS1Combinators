@@ -46,8 +46,12 @@ data ParseFailure = InvalidLength
                   -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
                   | InvalidFormat
                   -- Components Missing, incorrectly structured
+                  | InvalidAction
+                  -- When parsing an action failed
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
+                  -- typically applicable to higher level structures,
+                  -- like DWhat, DWhere, etc
                   deriving (Show, Eq)
 
 -- |Anything that could be converted into URI
@@ -516,9 +520,11 @@ data Action = Add
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 
-mkAction :: String -> Maybe Action
-mkAction s = mkByName . camelCase $ toLower <$> s
-
+mkAction :: String -> Either ParseFailure Action
+mkAction s =
+  case mkByName . camelCase $ toLower <$> s of
+    Nothing -> Left InvalidAction
+    Just x  -> Right x
 
 ---------------------------
 -- WHY  -------------------

@@ -131,24 +131,13 @@ parseDWhere c = do
   -- splitEither :: [Either a b] -> ([a], [b])
   let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
-
   let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
 
   case (lRps, lBls) of
     ([], []) -> Right $ DWhere rRps rBls [] []
-    -- why are the last two values always empty lists?
+    -- get the sourceDestType and put it in place of the empty lists
     _        -> Left $ ChildFailure $ lRps ++ lBls
-
-  -- bls <- extractLocationEPCList <$>
-  --   (c $/ element "bizLocation" &/ element "id" &/ content)
-  -- let rps = extractLocationEPCList <$>
-  --         (c $/ element "readPoint"   &/ element "id" &/ content)
-  -- let bls = extractLocationEPCList <$>
-  --         (c $/ element "bizLocation" &/ element "id" &/ content)
-  -- Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
-  -- pure $ DWhere rps bls [] [] -- why is this always returning empty lists?
--- ^^ use the pure function here
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -176,8 +165,8 @@ parseDisposition = parseSingleElemE readURI
 -- Action is not a URI, so I am making parseAction return a Maybe Action
 -- as opposed to any of the other parse[a] functions,
 -- which returns Either ParseFailure a.
-parseAction :: [T.Text] -> Maybe Action
-parseAction = parseSingleElemM mkAction
+parseAction :: [T.Text] -> Either ParseFailure Action
+parseAction = parseSingleElemE mkAction
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
@@ -201,7 +190,6 @@ parseParentID (t:ts)
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
--- not a good time to get out of the Either binding
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
@@ -227,13 +215,13 @@ parseObjectDWhat c = do
     Nothing -> Nothing
     Just p  -> Just $ ObjectDWhat p epc
 
-
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let childEPCs = parseChildEPCList (c $/ element "childEPCs" &/ element "epc" &/ content) qt
+  let (errs, epcs) = parseChildEPCList 
+          (c $/ element "childEPCs" &/ element "epc" &/ content) qt
   let act = parseAction (c $/ element "action" &/ content)
 
   case act of
