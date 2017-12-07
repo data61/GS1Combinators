@@ -4,6 +4,7 @@ module Data.GS1.Parser.Parser where
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
+import           Data.Either
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import           Data.UUID
@@ -125,18 +126,28 @@ do
   y >>= \x -> f x
 
 -}
-parseDWhere :: Cursor -> Maybe DWhere
+parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
-  -- rps <- extractLocationEPCList <$>
-  --   (c $/ element "readPoint"   &/ element "id" &/ content)
+  -- splitEither :: [Either a b] -> ([a], [b])
+  let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
+          (c $/ element "readPoint"   &/ element "id" &/ content)
+
+  let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
+          (c $/ element "bizLocation" &/ element "id" &/ content)
+
+  case (lRps, lBls) of
+    ([], []) -> Right $ DWhere rRps rBls [] []
+    -- why are the last two values always empty lists?
+    _        -> Left $ ChildFailure $ lRps ++ lBls
+
   -- bls <- extractLocationEPCList <$>
   --   (c $/ element "bizLocation" &/ element "id" &/ content)
-  let rps = extractLocationEPCList <$>
-          (c $/ element "readPoint"   &/ element "id" &/ content)
-  let bls = extractLocationEPCList <$>
-          (c $/ element "bizLocation" &/ element "id" &/ content)
+  -- let rps = extractLocationEPCList <$>
+  --         (c $/ element "readPoint"   &/ element "id" &/ content)
+  -- let bls = extractLocationEPCList <$>
+  --         (c $/ element "bizLocation" &/ element "id" &/ content)
   -- Just $ DWhere rps bls [] [] -- why is this always returning empty lists?
-  pure $ DWhere rps bls [] [] -- why is this always returning empty lists?
+  -- pure $ DWhere rps bls [] [] -- why is this always returning empty lists?
 -- ^^ use the pure function here
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
