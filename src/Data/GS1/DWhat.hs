@@ -8,7 +8,7 @@ import           Control.Lens
 import           GHC.Generics
 
 import           Data.List.Split
-
+import           Data.Either
 import           Data.GS1.EPC
 -- why can't GHCi find these modules?
 import           Data.Aeson
@@ -34,13 +34,15 @@ type ParentID = LabelEPC
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
 -- use <> when this function returns Either
-readLabelEPC :: String -> Maybe Quantity -> Maybe LabelEPC
+readLabelEPC :: String -> Maybe Quantity -> Either ParseFailure LabelEPC
 readLabelEPC epcStr mQt =
-  case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
-    Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
-      Left _ -> Nothing
-      Right il -> Just il
-    Right a -> Just a
+  -- case fmap (`CL` mQt) (readURIClassLabelEPC epcTokens) of
+  --   Left _ -> case fmap IL (readURIInstanceLabelEPC epcTokens) of
+  --     Left _ -> Nothing
+  --     Right il -> Just il
+  --   Right a -> Just a
+  fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
+    <> fmap IL (readURIInstanceLabelEPC epcTokens)
   where
     epcTokens = splitOn ":" epcStr
 

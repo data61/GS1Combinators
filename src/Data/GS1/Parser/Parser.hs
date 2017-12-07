@@ -202,15 +202,15 @@ parseParentID (t:ts)
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
 -- not a good time to get out of the Either binding
-parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
 parseEPCList (t:ts) (q:qs) =
-  fromJust (readLabelEPC (T.unpack t) q) : parseEPCList ts qs
+  readLabelEPC (T.unpack t) q : parseEPCList ts qs
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+-- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
 
