@@ -181,8 +181,10 @@ parseAction = parseSingleElemM mkAction
 
 -- |Parse a single Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue = parseSingleElemM $ readMaybe x :: Maybe Integer
-
+-- parseQuantityValue = parseSingleElemM (readMaybe :: Maybe Integer)
+-- why doesn't this work?
+parseQuantityValue = parseSingleElemM readMaybeInteger where
+                        readMaybeInteger x = readMaybe x :: Maybe Integer
 
 -- |parse group of text to obtain ParentID
 -- a sample usage of this function would have been nice
@@ -285,7 +287,7 @@ parseEventList' :: EventType
   , Either ParseFailure DWhy
   , Either ParseFailure DWhere)]
   -> [Either ParseFailure Event]
-parseEventList' = error "not implemented yet"
+-- parseEventList' = error "not implemented yet"
 parseEventList' _ [] = []
 parseEventList' et (x:xs) = do
   let (i, w1, w2, w3, w4) = x
