@@ -128,7 +128,6 @@ do
 -}
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
-  -- splitEither :: [Either a b] -> ([a], [b])
   let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
   let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
@@ -203,34 +202,39 @@ parseChildEPCList = parseEPCList
 
 
 -- |parse and construct ObjectDWhat dimension
+-- Action is not included in ObjectDWhat. is it necessary to ParseAction?
+-- what if it's just not there?
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
   -- find all epcs below epcList tag
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+  let (errs, epcs) = partitionEithers $
+        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ ObjectDWhat p epc
+  case (act, errs) of
+    (Left e, _)   -> Left $ ChildFailure $ e : errs
+    (_, e:es)     -> Left $ ChildFailure errs
+    (Right a, []) -> Right $ ObjectDWhat a epcs
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let (errs, epcs) = parseChildEPCList 
+  let (errs, epcs) = partitionEithers $ parseChildEPCList
           (c $/ element "childEPCs" &/ element "epc" &/ content) qt
   let act = parseAction (c $/ element "action" &/ content)
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p pid childEPCs
+  case (act, errs) of
+    (Left e, _)   -> Left $ ChildFailure $ e : errs
+    (_, e:es)     -> Left $ ChildFailure errs
+    (Right a, []) -> Right $ AggregationDWhat a pid epcs
 
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
-  let bizT = fromJust <$> filter isJust $ parseBizTransaction c
+  let (bizTErrs, bizTVals) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
@@ -254,7 +258,7 @@ parseTransformationWhat c = error "Not implemented yet"
 --     Just p  -> Just $ TransactionDWhat p pid bizT epcs
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction]
+parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
