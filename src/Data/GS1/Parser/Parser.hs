@@ -111,6 +111,7 @@ extractLocationEPCList = getRightOrError . readURI . T.unpack
 -- |TODO: there must be some more modification on it
 
 -- SIDE NOTE:
+-- it might be helpful to write a function like,
 -- f :: [Either x y] -> Either [x] [y]
 
 {-
