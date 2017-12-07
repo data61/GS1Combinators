@@ -200,6 +200,9 @@ parseEPCList (t:ts) (q:qs) =
 -- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
+-- returnLeftErrors :: (Either ParseFailure a, [Either ParseFailure b])
+--   -> [ParseFailure]
+-- returnLeftErrors (Left act, errs) = act : errs
 
 -- |parse and construct ObjectDWhat dimension
 -- Action is not included in ObjectDWhat. is it necessary to ParseAction?
@@ -214,9 +217,9 @@ parseObjectDWhat c = do
         parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
 
   case (act, errs) of
-    (Left e, _)   -> Left $ ChildFailure $ e : errs
-    (_, e:es)     -> Left $ ChildFailure errs
-    (Right a, []) -> Right $ ObjectDWhat a epcs
+    (Right a, [])   -> Right $ ObjectDWhat a epcs
+    (Left e, _)     -> Left $ ChildFailure $ e : errs
+    (Right a, e:es) -> Left $ ChildFailure errs
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
@@ -228,21 +231,24 @@ parseAggregationDWhat c = do
   let act = parseAction (c $/ element "action" &/ content)
 
   case (act, errs) of
-    (Left e, _)   -> Left $ ChildFailure $ e : errs
-    (_, e:es)     -> Left $ ChildFailure errs
     (Right a, []) -> Right $ AggregationDWhat a pid epcs
+    (Left e, _)     -> Left $ ChildFailure $ e : errs
+    (Right a, e:es) -> Left $ ChildFailure errs
+    -- _             -> returnLeftErrors (act, [errs])
 
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
-  let (bizTErrs, bizTVals) = partitionEithers $ parseBizTransaction c
+  let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
-  let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+  let (epcErrs, epcs) = partitionEithers $
+        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
   let act = parseAction (c $/ element "action" &/ content)
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ TransactionDWhat p pid bizT epcs
+  case (act, bizTErrs, epcErrs) of
+    (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
+    (Left e, _, _)    -> Left $ ChildFailure $ (e : bizTErrs) ++ epcErrs 
+    (Right a, _, _)      -> Left $ ChildFailure $ bizTErrs ++ epcErrs
 
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
