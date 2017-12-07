@@ -200,9 +200,10 @@ parseEPCList (t:ts) (q:qs) =
 -- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
--- returnLeftErrors :: (Either ParseFailure a, [Either ParseFailure b])
---   -> [ParseFailure]
--- returnLeftErrors (Left act, errs) = act : errs
+returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
+  -> ParseFailure
+returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
+returnLeftErrors (Right act, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
 -- Action is not included in ObjectDWhat. is it necessary to ParseAction?
@@ -218,8 +219,7 @@ parseObjectDWhat c = do
 
   case (act, errs) of
     (Right a, [])   -> Right $ ObjectDWhat a epcs
-    (Left e, _)     -> Left $ ChildFailure $ e : errs
-    (Right a, e:es) -> Left $ ChildFailure errs
+    _             -> Left $ returnLeftErrors (act, [errs])
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
@@ -232,9 +232,7 @@ parseAggregationDWhat c = do
 
   case (act, errs) of
     (Right a, []) -> Right $ AggregationDWhat a pid epcs
-    (Left e, _)     -> Left $ ChildFailure $ e : errs
-    (Right a, e:es) -> Left $ ChildFailure errs
-    -- _             -> returnLeftErrors (act, [errs])
+    _             -> Left $ returnLeftErrors (act, [errs])
 
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
