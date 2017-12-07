@@ -199,7 +199,7 @@ parseParentID (t:ts)
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
--- XXX - EPC is no longer a type, but a type class.
+-- not a good time to get out of the Either binding
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseEPCList [] _ = []
 parseEPCList _ [] = []
