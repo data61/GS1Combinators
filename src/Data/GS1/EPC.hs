@@ -46,6 +46,8 @@ data ParseFailure = InvalidLength
                   -- When parsing a bizTransaction failed
                   | InvalidEvent
                   -- When parsing an event failed
+                  | TimeZoneError
+                  -- error in parsing timezone
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,

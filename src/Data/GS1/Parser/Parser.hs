@@ -89,8 +89,8 @@ parseDWhen c = do
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
-    Just et' -> Just (DWhen et' rt (fromJust tz))
-    _        -> Nothing
+    Just et' -> Right $ DWhen et' rt (fromJust tz)
+    _        -> Left TimeZoneError
 
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
