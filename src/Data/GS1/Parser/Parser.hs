@@ -305,10 +305,10 @@ parseEventByType c et = do
   let dwhat = case et of
                 ObjectEventT      -> parseObjectDWhat      <$> eCursors
                 AggregationEventT -> parseAggregationDWhat <$> eCursors
-                -- QuantityEventT    -> parseQuantityDWhat    <$> eCursors
                 TransactionEventT -> parseTransactionDWhat <$> eCursors
                 TransformationEventT -> parseTransformationWhat <$> eCursors
-                _                 -> const Nothing         <$> eCursors
+                _                 -> [Left InvalidEvent]
+  -- unless (Data.List.null $ lefts dwhat) dwhat
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
   let dwhere = parseDWhere <$> eCursors
