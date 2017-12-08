@@ -31,12 +31,12 @@ getCursorsByName n c = c $// element n
 -- |Given a list of Text for a given element
 -- Only return the first one
 -- parseSingleElemM returns a Maybe
-parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
+parseSingleElemM :: URI a => (String -> Maybe a) -> [T.Text] -> Maybe a
 parseSingleElemM f (x:_) = f . T.unpack $ x
 parseSingleElemM _ _     = Nothing
 
 -- parseSingleElemE returns an Either
-parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
+parseSingleElemE :: URI a => (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ _     = Left InvalidFormat
 

@@ -55,7 +55,7 @@ data ParseFailure = InvalidLength
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> Either ParseFailure a
+  readURI       :: URI a => String -> Either ParseFailure a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
