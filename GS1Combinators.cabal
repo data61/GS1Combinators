@@ -48,6 +48,7 @@ library
                      , sqlite-simple
                      , http-api-data
                      , tuple
+                     , validation
   default-language:    Haskell2010
 
 executable GS1Combinators-exe
