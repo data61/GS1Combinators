@@ -9,40 +9,34 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Control.Lens
 import           Data.Char
--- import           Data.Either.Combinators
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
--- import           Text.Printf
 import           Data.List.Split
 import           Data.Maybe
 import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
--- import           Data.GS1.EventID
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
 
+-- TODO add typeclass URI constraint to all the `a`s
+
 -- More Refernce: TDS 1.9
-
--- URI Prefix
 type URIPrefix = String
-
--- URI Quantifier
 type URIQuantifier = String
-
--- URI Payload
 type URIPayload = String
 
 type Reason = String
+type XMLSnippet = T.Text
 
--- add more types to this if need be
+-- add more type values to this if need be
 data ParseFailure = InvalidLength
-                  --Length is not correct
+                  -- Length is not correct
                   -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
                   | InvalidFormat
                   -- Components Missing, incorrectly structured
@@ -100,18 +94,11 @@ type Uom = String
 type Amount = Float
 type AssetType = String
 
-data Quantity =   MeasuredQuantity Amount Uom
-                | ItemCount Integer
+data Quantity = MeasuredQuantity Amount Uom
+              | ItemCount Integer
                 deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
-
--- returns the Right value of Either or throws an error
-getRightOrError :: Either ParseFailure a -> a
-getRightOrError (Right val) = val
-getRightOrError (Left  val) = error $ show val
-
-
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
