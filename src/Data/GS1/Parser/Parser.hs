@@ -290,6 +290,12 @@ parseEventID c = do
                            Nothing -> Left InvalidEvent
                            Just u  -> Right $ EventID u
 
+parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
+parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
+parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
+parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
+parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
+
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
@@ -302,13 +308,7 @@ parseEventByType c et = do
   let eCursors = c $// element tagS
   let eid = parseEventID <$> eCursors
   -- TODO Finish the implementation of the other event types
-  let dwhat = case et of
-                ObjectEventT      -> parseObjectDWhat      <$> eCursors
-                AggregationEventT -> parseAggregationDWhat <$> eCursors
-                TransactionEventT -> parseTransactionDWhat <$> eCursors
-                TransformationEventT -> parseTransformationWhat <$> eCursors
-                _                 -> [Left InvalidEvent]
-  -- unless (Data.List.null $ lefts dwhat) dwhat
+  let dwhat = parseDWhat et eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
   let dwhere = parseDWhere <$> eCursors
