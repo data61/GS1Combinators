@@ -27,7 +27,6 @@ import           Data.GS1.EventID
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
-
 -- can parseSingleElem be more generalised?
 -- |Given a list of Text for a given element
 -- Only return the first one
