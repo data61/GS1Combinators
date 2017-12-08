@@ -10,6 +10,7 @@ import           Data.Time.LocalTime
 import           Data.UUID
 import           Data.XML.Types      hiding (Event)
 import           Text.Read
+import           Control.Monad
 import           Text.XML.Cursor
 import           Data.Validation (toEither, validationNel)
 
@@ -21,7 +22,6 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
-
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
@@ -199,6 +199,7 @@ parseEPCList (t:ts) (q:qs) =
 -- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
+-- returns all the errors that occur in Action and [[ParseFailure]]
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
   -> ParseFailure
 returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
