@@ -266,54 +266,21 @@ parseBizTransaction c = do
   let z = zip attrs texts
   parseBizTransactionHelp <$> z
 
--- |parse a list of tuples
--- if we encounter a parsefailure, return the Left listOfParseFailures
--- parseEventList = error "not implemented yet"
--- this is a good problem to solve. the implementation
--- would require knowledge of the implementation of
--- partitionEithers :: [Either a b] -> ([a], [b])
--- parseEventList :: EventType
---   -> [(Either ParseFailure EventID
---   , Either ParseFailure DWhat
---   , Either ParseFailure DWhen
---   , Either ParseFailure DWhy
---   , Either ParseFailure DWhere)]
---   -> [Either ParseFailure Event]
--- parseEventList _ [] = []
--- parseEventList et (x:xs) = do
---   let (i, w1, w2, w3, w4) = x
---   -- let argList = [i, w1, w2, w3, w4]
---   let x = (,,,,) <$> validationNel i
---                <*> validationNel w1
---                <*> validationNel w2
---                <*> validationNel w3
---                <*> validationNel w4
-
---   case x of
---     AccFailure errs -> Left (ChildFailure errs) : parseEventList et xs
---     -- errs is non-empty list of errors
---     AccSuccess (a,b,c,d,e) ->
---       Right (Event et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList et xs
---     -- a,b,c,d,e are now all the rights
-
-
---   if isLeft i  || isLeft w1 || isLeft w2 || isLeft w3 || isLeft w4
---     then Left InvalidEvent : parseEventList et xs
---     else [Left InvalidEvent]
-
-
-parseEventList :: EventType -> [(Either ParseFailure EventID, Either ParseFailure DWhat, Either ParseFailure DWhen, Either ParseFailure DWhy, Either ParseFailure DWhere)] -> [Either (NonEmpty ParseFailure) Event]
+parseEventList :: EventType
+  -> [(Either ParseFailure EventID,
+       Either ParseFailure DWhat,
+       Either ParseFailure DWhen,
+       Either ParseFailure DWhy,
+       Either ParseFailure DWhere)]
+  -> [Either ParseFailure Event]
 parseEventList t = fmap asEvent
   where
-    asEvent :: (Either ParseFailure EventID, Either ParseFailure DWhat, Either ParseFailure DWhen, Either ParseFailure DWhy, Either ParseFailure DWhere) -> Either (NonEmpty ParseFailure) Event
+    asEvent :: (Either ParseFailure EventID,
+      Either ParseFailure DWhat,
+      Either ParseFailure DWhen,
+      Either ParseFailure DWhy,
+      Either ParseFailure DWhere) -> Either ParseFailure Event
     asEvent (i, w1, w2, w3, w4) = Event t <$>  i <*> w1 <*> w2 <*> w3 <*> w4
-                        -- Event t <$> validationNel i
-                        --  <*> validationNel w1
-                        --  <*> validationNel w2
-                        --  <*> validationNel w3
-                        --  <*> validationNel w4
-
-
 
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
@@ -324,7 +291,7 @@ parseEventID c = do
                            Just u  -> Right $ EventID u
 
 -- | Find all events and put them into an event list
-parseEventByType :: Cursor -> EventType -> [Either (NonEmpty ParseFailure) Event]
+parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
   let tagS = case et of
                ObjectEventT         -> "ObjectEvent"
