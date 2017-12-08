@@ -22,6 +22,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
@@ -105,7 +106,6 @@ parseDWhy c = do
 extractLocationEPCList :: T.Text -> Either ParseFailure ReadPointLocation
 extractLocationEPCList = readURI . T.unpack
 
-
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -138,6 +138,7 @@ parseDWhere c = do
     ([], []) -> Right $ DWhere rRps rBls [] []
     -- get the sourceDestType and put it in place of the empty lists
     _        -> Left $ ChildFailure $ lRps ++ lBls
+
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -267,19 +268,19 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
-  -> [(Either ParseFailure EventID,
-       Either ParseFailure DWhat,
-       Either ParseFailure DWhen,
-       Either ParseFailure DWhy,
-       Either ParseFailure DWhere)]
+  -> [(Either ParseFailure EventID
+       , Either ParseFailure DWhat
+       , Either ParseFailure DWhen
+       , Either ParseFailure DWhy
+       , Either ParseFailure DWhere)]
   -> [Either ParseFailure Event]
 parseEventList t = fmap asEvent
   where
-    asEvent :: (Either ParseFailure EventID,
-      Either ParseFailure DWhat,
-      Either ParseFailure DWhen,
-      Either ParseFailure DWhy,
-      Either ParseFailure DWhere) -> Either ParseFailure Event
+    asEvent :: (Either ParseFailure EventID
+      , Either ParseFailure DWhat
+      , Either ParseFailure DWhen
+      , Either ParseFailure DWhy
+      , Either ParseFailure DWhere) -> Either ParseFailure Event
     asEvent (i, w1, w2, w3, w4) = Event t <$>  i <*> w1 <*> w2 <*> w3 <*> w4
 
 parseEventID :: Cursor -> Either ParseFailure EventID
