@@ -168,11 +168,9 @@ parseAction :: [T.Text] -> Either ParseFailure Action
 parseAction = parseSingleElemE mkAction
 
 -- |Parse a single Maybe Integer
+-- readMaybe x :: Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
--- parseQuantityValue = parseSingleElemM (readMaybe :: Maybe Integer)
--- why doesn't this work?
-parseQuantityValue = parseSingleElemM readMaybeInteger where
-                        readMaybeInteger x = readMaybe x :: Maybe Integer
+parseQuantityValue = parseSingleElemM readMaybe
 
 -- |parse group of text to obtain ParentID
 -- a sample usage of this function would have been nice
@@ -249,6 +247,14 @@ parseTransactionDWhat c = do
 
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
+
+-- TODO add type signature after running `stack test`
+parseBizTransactionHelp (a, b) = do
+  let tId   = T.unpack . T.strip $ a
+  let tType = mkBizTransactionType (T.unpack . T.strip $ b)
+  case tType of
+    Right t -> Right $ BizTransaction tId t
+    _       -> Left InvalidBizTransaction
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
