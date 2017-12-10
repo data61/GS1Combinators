@@ -10,6 +10,7 @@ import           Data.Time.LocalTime
 import           Data.UUID
 import           Data.XML.Types      hiding (Event)
 import           Text.Read
+import           Control.Monad
 import           Text.XML.Cursor
 
 import           Data.GS1.Utils
@@ -24,7 +25,6 @@ import           Data.GS1.EventID
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
-
 
 -- can parseSingleElem be more generalised?
 -- |Given a list of Text for a given element
@@ -87,8 +87,8 @@ parseDWhen c = do
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
-    Just et' -> Just (DWhen et' rt (fromJust tz))
-    _        -> Nothing
+    Just et' -> Right $ DWhen et' rt (fromJust tz)
+    _        -> Left TimeZoneError
 
 extractBizstepList :: T.Text -> Either ParseFailure BizStep
 extractBizstepList = readURI . T.unpack
@@ -114,7 +114,6 @@ parseDWhy c = do
 extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
 extractLocationEPCList = readURI . T.unpack
 
-
 -- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
@@ -138,7 +137,6 @@ do
 -}
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
-  -- splitEither :: [Either a b] -> ([a], [b])
   let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
   let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
@@ -148,6 +146,7 @@ parseDWhere c = do
     ([], []) -> Right $ DWhere rRps rBls [] []
     -- get the sourceDestType and put it in place of the empty lists
     _        -> Left $ ChildFailure $ lRps ++ lBls
+
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -179,11 +178,9 @@ parseAction :: [T.Text] -> Either ParseFailure Action
 parseAction = parseSingleElemE mkAction
 
 -- |Parse a single Maybe Integer
+-- readMaybe x :: Maybe Integer
 parseQuantityValue :: [T.Text] -> Maybe Integer
--- parseQuantityValue = parseSingleElemM (readMaybe :: Maybe Integer)
--- why doesn't this work?
-parseQuantityValue = parseSingleElemM readMaybeInteger where
-                        readMaybeInteger x = readMaybe x :: Maybe Integer
+parseQuantityValue = parseSingleElemM readMaybe
 
 -- |parse group of text to obtain ParentID
 -- a sample usage of this function would have been nice
@@ -211,98 +208,105 @@ parseEPCList (t:ts) (q:qs) =
 -- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
 parseChildEPCList = parseEPCList
 
+-- returns all the errors that occur in Action and [[ParseFailure]]
+returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
+  -> ParseFailure
+returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
+returnLeftErrors (Right act, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
+-- Action is not included in ObjectDWhat. is it necessary to ParseAction?
+-- what if it's just not there?
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
   -- find all epcs below epcList tag
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let epc = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+  let (errs, epcs) = partitionEithers $
+        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ ObjectDWhat p epc
+  case (act, errs) of
+    (Right a, []) -> Right $ ObjectDWhat a epcs
+    _             -> Left $ returnLeftErrors (act, [errs])
 
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let (errs, epcs) = parseChildEPCList 
+  let (errs, epcs) = partitionEithers $ parseChildEPCList
           (c $/ element "childEPCs" &/ element "epc" &/ content) qt
   let act = parseAction (c $/ element "action" &/ content)
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ AggregationDWhat p pid childEPCs
+  case (act, errs) of
+    (Right a, []) -> Right $ AggregationDWhat a pid epcs
+    _             -> Left $ returnLeftErrors (act, [errs])
 
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
-  let bizT = fromJust <$> filter isJust $ parseBizTransaction c
+  let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
-  let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+  let (epcErrs, epcs) = partitionEithers $
+        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
   let act = parseAction (c $/ element "action" &/ content)
 
-  case act of
-    Nothing -> Nothing
-    Just p  -> Just $ TransactionDWhat p pid bizT epcs
+  case (act, bizTErrs, epcErrs) of
+    (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
+    _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
--- parseTransformationWhat c = do
---   let bizT = fromJust <$> filter isJust (parseBizTransaction c)
---   let pid = parseParentID (c $/ element "parentID" &/ content)
---   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
---   let epcs = parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
---   let act = parseAction (c $/ element "action" &/ content)
 
---   case act of
---     Nothing -> Nothing
---     Just p  -> Just $ TransactionDWhat p pid bizT epcs
+-- TODO add type signature after running `stack test`
+parseBizTransactionHelp (a, b) = do
+  let tId   = T.unpack . T.strip $ a
+  let tType = mkBizTransactionType (T.unpack . T.strip $ b)
+  case tType of
+    Right t -> Right $ BizTransaction tId t
+    _       -> Left InvalidBizTransaction
 
 -- |BizTransactionList element
-parseBizTransaction :: Cursor -> [Maybe BizTransaction]
+parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
   let z = zip attrs texts
   parseBizTransactionHelp <$> z
-    where
-      parseBizTransactionHelp (a, b) =
-        Just $ BizTransaction (T.unpack . T.strip $ a) $
-          fromJust $ mkBizTransactionType (T.unpack . T.strip $ b)
-          -- potentially buggy, as it never returns Nothing
 
--- |parse a list of tuples
--- if we encounter a parsefailure, return the Left listOfParseFailures
-parseEventList' :: EventType
-  -> [(Maybe EventID
-  , Either ParseFailure DWhat
-  , Either ParseFailure DWhen
-  , Either ParseFailure DWhy
-  , Either ParseFailure DWhere)]
+parseEventList :: EventType
+  -> [(Either ParseFailure EventID
+       , Either ParseFailure DWhat
+       , Either ParseFailure DWhen
+       , Either ParseFailure DWhy
+       , Either ParseFailure DWhere)]
   -> [Either ParseFailure Event]
--- parseEventList' = error "not implemented yet"
-parseEventList' _ [] = []
-parseEventList' et (x:xs) = do
-  let (i, w1, w2, w3, w4) = x
-  if isNothing i  || isNothing w1 || isNothing w2 || isNothing w3 || isNothing w4 then
-    Nothing : parseEventList' et xs      else
-    Just (Event et (fromJust i) (fromJust w1) (fromJust w2) (fromJust w3) (fromJust w4)) : parseEventList' et xs
+parseEventList t = fmap asEvent
+  where
+    asEvent :: (Either ParseFailure EventID
+      , Either ParseFailure DWhat
+      , Either ParseFailure DWhen
+      , Either ParseFailure DWhy
+      , Either ParseFailure DWhere) -> Either ParseFailure Event
+    asEvent (i, w1, w2, w3, w4) = Event t <$>  i <*> w1 <*> w2 <*> w3 <*> w4
 
-parseEventID :: Cursor -> Maybe EventID
+parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElemM parseEventID' eid where
+  parseSingleElemE parseEventID' eid where
     parseEventID' eid' = case fromString eid' of
-                           Nothing -> Nothing
-                           Just u  -> Just $ EventID u
+                           Nothing -> Left InvalidEvent
+                           Just u  -> Right $ EventID u
+
+parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
+parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
+parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
+parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
+parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
 
 -- | Find all events and put them into an event list
-parseEventByType :: Cursor -> EventType -> [Maybe Event]
+parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
   let tagS = case et of
                ObjectEventT         -> "ObjectEvent"
@@ -313,15 +317,9 @@ parseEventByType c et = do
   let eCursors = c $// element tagS
   let eid = parseEventID <$> eCursors
   -- TODO Finish the implementation of the other event types
-  let dwhat = case et of
-                ObjectEventT      -> parseObjectDWhat      <$> eCursors
-                AggregationEventT -> parseAggregationDWhat <$> eCursors
-                -- QuantityEventT    -> parseQuantityDWhat    <$> eCursors
-                TransactionEventT -> parseTransactionDWhat <$> eCursors
-                TransformationEventT -> parseTransformationWhat <$> eCursors
-                _                 -> const Nothing         <$> eCursors
+  let dwhat = parseDWhat et eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
   let dwhere = parseDWhere <$> eCursors
   let zipd = zip5 eid dwhat dwhen dwhy dwhere
-  parseEventList' et zipd
+  parseEventList et zipd
