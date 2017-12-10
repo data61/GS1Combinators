@@ -218,7 +218,7 @@ parseObjectDWhat c = do
         parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
 
   case (act, errs) of
-    (Right a, [])   -> Right $ ObjectDWhat a epcs
+    (Right a, []) -> Right $ ObjectDWhat a epcs
     _             -> Left $ returnLeftErrors (act, [errs])
 
 -- |parse and construct AggregationDWhat dimension
