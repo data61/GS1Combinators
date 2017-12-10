@@ -14,8 +14,6 @@ import           Data.Swagger
 import           Database.SQLite.Simple.ToField
 import qualified Data.Text.Lazy as TxtL
 
-
-
 --        should this be BizStep now? - @sa
 data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
@@ -42,6 +40,7 @@ makeClassy ''DWhy
 
 -- XXX mkDWhy can be rewritten as:
 --mkDWhy = liftA2 DWhy
-mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition -> Maybe DWhy
-mkDWhy (Right step) (Right disp) = Just $ DWhy (Just step) (Just disp)
-mkDWhy _ _                       = Nothing
+mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition -> Either ParseFailure DWhy
+mkDWhy (Right step) (Right disp) = Right $ DWhy (Just step) (Just disp)
+mkDWhy _ _                       = undefined -- not implemented yet
+

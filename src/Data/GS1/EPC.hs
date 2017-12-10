@@ -9,45 +9,45 @@ import           Control.Monad.Error.Lens
 import           Control.Monad.Except     (MonadError)
 import           Control.Lens
 import           Data.Char
--- import           Data.Either.Combinators
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
--- import           Text.Printf
 import           Data.List.Split
 import           Data.Maybe
 import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
--- import           Data.GS1.EventID
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
 
+-- TODO add typeclass URI constraint to all the `a`s
+
 -- More Refernce: TDS 1.9
-
--- URI Prefix
 type URIPrefix = String
-
--- URI Quantifier
 type URIQuantifier = String
-
--- URI Payload
 type URIPayload = String
 
 type Reason = String
+type XMLSnippet = T.Text
 
--- add more types to this if need be
+-- add more type values to this if need be
 data ParseFailure = InvalidLength
-                  --Length is not correct
+                  -- Length is not correct
                   -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
                   | InvalidFormat
                   -- Components Missing, incorrectly structured
                   | InvalidAction
                   -- When parsing an action failed
+                  | InvalidBizTransaction
+                  -- When parsing a bizTransaction failed
+                  | InvalidEvent
+                  -- When parsing an event failed
+                  | TimeZoneError
+                  -- error in parsing timezone
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
@@ -57,7 +57,7 @@ data ParseFailure = InvalidLength
 -- |Anything that could be converted into URI
 class URI a where
   printURI      :: a -> String
-  readURI       :: String -> Either ParseFailure a
+  readURI       :: URI a => String -> Either ParseFailure a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = String
@@ -98,18 +98,11 @@ type Uom = String
 type Amount = Float
 type AssetType = String
 
-data Quantity =   MeasuredQuantity Amount Uom
-                | ItemCount Integer
+data Quantity = MeasuredQuantity Amount Uom
+              | ItemCount Integer
                 deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
-
--- returns the Right value of Either or throws an error
-getRightOrError :: Either ParseFailure a -> a
-getRightOrError (Right val) = val
-getRightOrError (Left  val) = error $ show val
-
-
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
@@ -487,8 +480,11 @@ instance URI BizTransactionType where
                       in readURIBizTransactionType pURI
 
 -- DELETEME since redundant --> it is being used in Parser
-mkBizTransactionType :: String -> Maybe BizTransactionType
-mkBizTransactionType = mkByName
+mkBizTransactionType :: String -> Either ParseFailure BizTransactionType
+mkBizTransactionType s =
+  case mkByName s of
+    Nothing -> Left InvalidBizTransaction
+    Just x  -> Right x
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
@@ -508,7 +504,6 @@ mkBizTransaction :: String -> String -> Either ParseFailure BizTransaction
 mkBizTransaction t i = case (readURI :: String -> Either ParseFailure BizTransactionType) t of
                          Right t'  -> Right BizTransaction{_btid = i, _bt = t'}
                          Left e        -> Left e
-
 
 -- | TransformationID
 type TransformationID = String

@@ -4,6 +4,7 @@ module Data.GS1.Utils (
 , mkCamelCase
 , mkByName
 , parseURI
+, flatten
 ) where
 
 import           Data.Char
@@ -56,3 +57,6 @@ parseURI s uri = let puri = T.pack uri
 either2Maybe :: Either a b -> Maybe b
 either2Maybe (Right x) = Just x
 either2Maybe (Left _) = Nothing
+
+flatten :: [[a]] -> [a]         
+flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
