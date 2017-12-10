@@ -90,22 +90,13 @@ parseDWhen c = do
     Just et' -> Right $ DWhen et' rt (fromJust tz)
     _        -> Left TimeZoneError
 
-extractBizstepList :: T.Text -> Either ParseFailure BizStep
-extractBizstepList = readURI . T.unpack
-
-extractDispositionList :: T.Text -> Either ParseFailure Disposition
-extractDispositionList = readURI . T.unpack
-
 -- TODO = CHECK
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
-  let (lBs, RBs) = partitionEithers $ extractBizstepList <$> (c $/ element "bizStep" &/ content)
-  let (lDp, rDp) = partitionEithers $ extractDispositionList <$> (c $/ element "disposition" &/ content)
-  case (lBs, lDp) of
-    ([], []) -> Right $ DWhy RBs rDp [] []
-    -- get the sourceDestType and put it in place of the empty lists
-    _        -> Left $ ChildFailure $ lBs ++ lDp
+  let biz = parseBizStep (c $/ element "bizStep" &/ content)
+  let disp = parseDisposition (c $/ element "disposition" &/ content)
+  mkDWhy biz disp
 
 -- should getRightOrError be used here?
 -- use rights :: [Either a b] -> [b]
