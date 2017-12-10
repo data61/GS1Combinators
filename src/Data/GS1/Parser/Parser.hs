@@ -12,7 +12,6 @@ import           Data.XML.Types      hiding (Event)
 import           Text.Read
 import           Control.Monad
 import           Text.XML.Cursor
-import           Data.Validation (toEither, validationNel)
 
 import           Data.GS1.Utils
 import           Data.GS1.DWhat
