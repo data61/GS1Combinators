@@ -49,10 +49,6 @@ data Event = Event
 $(deriveJSON defaultOptions ''Event)
 instance ToSchema Event
 
-
--- mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Event
--- mkEvent = Event
-
 {-
    commenting out the lens stuff, we don't use it anyway...
 instance HasEventID (Eventish a) where
@@ -89,16 +85,4 @@ newtype Event = Event (Eventish EventType)
   deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''Event)
-
-
-mkEvent :: EventType -> EventID -> DWhat -> DWhen -> DWhy -> DWhere -> Maybe Event
-mkEvent t i w1 w2 w3 w4 = let e = (Just . Event) $ Eventish t i w1 w2 w3 w4 in
-                              case (t, w1) of
-                                (ObjectEventT, ObjectDWhat{})                 -> e
-                                (AggregationEventT, AggregationDWhat{})       -> e
-                                (QuantityEventT, QuantityDWhat{})             -> e
-                                (TransactionEventT, TransactionDWhat{})       -> e
-                                (TransformationEventT, TransformationDWhat{}) -> e
-                                _                                             -> Nothing
-
 -}
