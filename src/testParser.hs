@@ -20,23 +20,42 @@ extractList (c:cs) s = extractStuff c s : extractList cs s
 myName :: Name
 myName = "destination"
 
+sourceList :: Name
+sourceList = "sourceList"
+
+source :: Name
+source = "source"
+
+dest :: Name
+dest = "destination"
+
+destList :: Name
+destList = "destinationList"
+
+typeAttr :: Name
+typeAttr = "type"
+
 parseDest c = c $/ element myName &/ content
 
 main :: IO()
 main = do
   doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent2.xml"
   let cursor = fromDocument doc
-  let cursorList = getCursorsByName myName cursor
-  let extractedList = extractList cursorList myName
+  -- let cursorList = getCursorsByName myName cursor
+  -- let extractedList = extractList cursorList myName
   -- let src = cursor $/ element "source" &/ content
   -- print $ parseDWhen <$> oeCursors
 
 
   -- look at src/.../Parser.hs:272. they extracted attributes there
   -- print $ cursor $// element "destinationList" >=> parseDest
-  print $ cursor $// element "destination" &| attribute "type"
-  print $ cursor $// element "source" &| attribute "type"
+  print $ cursor $// element sourceList &/ element source &/ content -- location
+  print $ cursor $// element sourceList &/ element source &| attribute typeAttr 
+  -- print $ cursor $// element "source" &| attribute "type"
   
+  print $ cursor $// element destList &/ element dest &/ content -- location
+  print $ cursor $// element destList &/ element dest &| attribute typeAttr 
+
   -- print extractedList
 
   -- print $ fromJust . parseDWhy <$> oeCursors
