@@ -287,7 +287,7 @@ instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   printURI = printSrcDestURI
-  readURI epc = readSrcDestURI $ last $ splitOn ":" epc --FIXME - fixed @SA
+  readURI epc = readSrcDestURI $ last $ splitOn ":" epc
 
 srcDestPrefixStr :: String
 srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"

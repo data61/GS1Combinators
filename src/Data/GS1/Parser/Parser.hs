@@ -97,7 +97,6 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
--- should getRightOrError be used here?
 -- use rights :: [Either a b] -> [b]
 -- or, lookup the monadic instance for Either
 -- use do notation
@@ -205,8 +204,6 @@ returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
 returnLeftErrors (Right act, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
--- Action is not included in ObjectDWhat. is it necessary to ParseAction?
--- what if it's just not there?
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
