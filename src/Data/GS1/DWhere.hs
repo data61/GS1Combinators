@@ -50,8 +50,8 @@ data DWhere = DWhere
   {
     _readPoint   :: [ReadPointLocation]
   , _bizLocation :: [BizLocation]
-  , _srcType     :: [SourceDestType] -- include LocationEPC here
-  , _destType    :: [SourceDestType]
+  , _srcType     :: [(SourceDestType, LocationEPC)]
+  , _destType    :: [(SourceDestType, LocationEPC)]
   }
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhere)
