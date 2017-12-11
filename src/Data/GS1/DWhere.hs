@@ -50,7 +50,7 @@ data DWhere = DWhere
   {
     _readPoint   :: [ReadPointLocation]
   , _bizLocation :: [BizLocation]
-  , _srcType     :: [SourceDestType]
+  , _srcType     :: [SourceDestType] -- include LocationEPC here
   , _destType    :: [SourceDestType]
   }
   deriving (Show, Eq, Generic)
