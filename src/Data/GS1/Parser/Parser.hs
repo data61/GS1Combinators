@@ -85,6 +85,12 @@ parseDWhen c = do
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
+  -- ^^^ this line is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
+  -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
+  -- which is equivalent to returning Nothing.
+  -- if tz == Nothing, (fromJust tz) would throw a run-time exception
+  -- this needs a closer look and more robust error handling
+
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
     Just et' -> Right $ DWhen et' rt (fromJust tz)
