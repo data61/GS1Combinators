@@ -44,22 +44,26 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      parseDWhen <$> oeCursors `shouldBe` [Nothing]
+      parseDWhen <$> oeCursors `shouldBe` [Left InvalidFormat]
 
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEvent XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let actions = cursor $// element "action" &/ content
-      parseAction actions `shouldBe` Just Observe
+      parseAction actions `shouldBe` Right Observe
 
+      -- TODO = check... [Just (ItemCount 1), Just (ItemCount 1)]. CHECK!!!
   describe "parse XML to obtain EPC List" $ do
     it "finds all epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let epcs = cursor $// element "epc" &/ content
-      show <$> parseEPCList epcs `shouldBe`
+      --show <$> parseEPCList epcs Nothing `shouldBe`
+      show <$> parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
         ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
+        -- [(Right (IL (SGTIN "0614141" Nothing "107346" "2017"))),
+        --  (Right (IL (SGTIN "0614141" Nothing "107346" "2018")))]
 
     it "finds all child epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
