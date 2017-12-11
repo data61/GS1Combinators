@@ -29,3 +29,5 @@ cabal.project.local
 # aptly named stats.sh - @sa
 stats_randnum_4215.sh
 
+*.out
+
