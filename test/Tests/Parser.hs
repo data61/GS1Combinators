@@ -17,6 +17,9 @@ import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Parser.Parser
 
+import Data.Time.LocalTime
+import Data.Either.Combinators
+
 testParser :: Spec
 testParser = do
 
@@ -30,7 +33,12 @@ testParser = do
       --mapM_ print $ parseDWhen <$> oeCursors
       let et = "2005-04-03T20:33:31.116-06:00"
       let et1 = "2005-04-04T20:33:31.116-06:00"
-      parseDWhen <$> oeCursors `shouldBe` [mkDWhen' et, mkDWhen et1 ""]
+      let t = parseStr2Time et :: Either EPCISTimeError EPCISTime
+      let t1 = parseStr2Time et1 :: Either EPCISTimeError EPCISTime
+      let tz = parseStr2TimeZone et :: Either EPCISTimeError TimeZone
+      let tz1 = parseStr2TimeZone et1 :: Either EPCISTimeError TimeZone
+      parseDWhen <$> oeCursors `shouldBe` [(Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))),
+                                           (Right (DWhen (fromRight' t1) (Just (fromRight' t1)) (fromRight' tz1)))]
 
     it "creates Nothing from Single ObjectEvent XML without Event Time" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
