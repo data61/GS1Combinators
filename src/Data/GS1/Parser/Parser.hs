@@ -130,6 +130,11 @@ do
   y >>= \x -> f x
 
 -}
+
+-- test/test-xml/ObjectEvent2.xml can be used to test the parser function
+parseSourceDestType :: Cursor -> Either ParseFailure SourceDestType
+parseSourceDestType = error "not implemented yet"
+
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
   let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
