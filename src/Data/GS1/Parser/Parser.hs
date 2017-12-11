@@ -132,8 +132,9 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-parseSourceDestType :: Cursor -> Either ParseFailure SourceDestType
-parseSourceDestType = error "not implemented yet"
+-- find the hint in testParser.hs:52
+parseSourceDestLocation :: Cursor -> [Either ParseFailure SrcDestLocation]
+parseSourceDestLocation c = error "not implemented yet"
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
