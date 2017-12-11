@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import           Data.Aeson.Encode.Pretty
-import           Data.GS1.Parser.Parser
+-- import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Data.Either
 import qualified Data.Text as T
