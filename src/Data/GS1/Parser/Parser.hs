@@ -142,12 +142,15 @@ parseDWhere c = do
           (c $/ element "readPoint"   &/ element "id" &/ content)
   let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
+  -- let (srcTypeErrs, srcTypes) = partitionEithers $ parseSourceDestLocation <$>
+  --         (c $/ element "sourceList" &/ element "source" &| attribute "type") -- FIXME
+  -- let (destTypeErrs, destTypes) = partitionEithers $ parseSourceDestLocation <$>
+  --         (c $/ element "readPoint"   &/ element "id" &/ content) -- FIXME
 
   case (lRps, lBls) of
     ([], []) -> Right $ DWhere rRps rBls [] []
     -- get the sourceDestType and put it in place of the empty lists
     _        -> Left $ ChildFailure $ lRps ++ lBls
-
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
