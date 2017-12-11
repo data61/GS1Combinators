@@ -11,10 +11,7 @@ import qualified Data.Text.Lazy.IO as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 
 extractStuff :: Cursor -> Name -> [T.Text]
--- extractStuff (NodeElement a) s = c $/ element s &/ content
 extractStuff c s = error "not implemented yet"
-
--- extractStuff c s = c $/ axis &/ content
 
 extractList :: [Cursor] -> Name -> [[T.Text]]
 extractList [] _ = []
@@ -23,9 +20,7 @@ extractList (c:cs) s = extractStuff c s : extractList cs s
 myName :: Name
 myName = "destination"
 
--- parsePerson :: Cursor -> [Person]
 parseDest c = c $/ element myName &/ content
-
 
 main :: IO()
 main = do
@@ -38,9 +33,11 @@ main = do
 
 
   -- look at src/.../Parser.hs:272. they extracted attributes there
-  print $ cursor $// element "destinationList" >=> parseDest
+  -- print $ cursor $// element "destinationList" >=> parseDest
+  print $ cursor $// element "destination" &| attribute "type"
+  print $ cursor $// element "source" &| attribute "type"
+  
   -- print extractedList
-
 
   -- print $ fromJust . parseDWhy <$> oeCursors
   -- print $ fromJust . parseDWhere <$> oeCursors
