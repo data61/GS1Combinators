@@ -161,6 +161,7 @@ testParser = do
     --   let qeCursors = getCursorsByName "QuantityEvent" cursor
     --   parseQuantityDWhat <$> qeCursors `shouldBe` [Just (QuantityDWhat (EPCClass "http://data61.csiro.au:epcClass:hey") 100)]
 
+    -- TODO = check... may be incorrect!
     it "parses a valid TransactionDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
