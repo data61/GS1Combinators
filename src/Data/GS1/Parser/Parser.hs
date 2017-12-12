@@ -215,14 +215,14 @@ parseEPCList (t:ts) (q:qs) =
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
--- parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [LabelEPC]
+parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseChildEPCList = parseEPCList
 
 -- returns all the errors that occur in Action and [[ParseFailure]]
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
   -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
-returnLeftErrors (Right act, errs) = ChildFailure $ flatten errs
+returnLeftErrors (Left act, errs)  = ChildFailure (act : flatten errs)
+returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
