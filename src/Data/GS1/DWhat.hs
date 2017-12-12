@@ -30,7 +30,9 @@ instance ToSchema LabelEPC
 instance ToField LabelEPC where
     toField = toField . pack . show
 -- | ParentID
-type ParentID = LabelEPC
+type ParentID  = LabelEPC
+type InputEPC  = LabelEPC
+type OutputEPC = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
@@ -49,9 +51,10 @@ data DWhat = -- ObjectDWhat action epcList quantityList
            -- AggregationDWhat action parentID childEPC
            | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
            -- TransactionDWhat action parentID(URI) bizTransactionList epcList
+           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
            | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
            -- TransformationDWhat transformationID inputEPCList outputEPCList
-           | TransformationDWhat (Maybe TransformationID) [LabelEPC]  [LabelEPC]
+           | TransformationDWhat (Maybe TransformationID) [InputEPC] [OutputEPC]
            deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''DWhat)
