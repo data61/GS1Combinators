@@ -9,9 +9,13 @@ import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import           Data.UUID
 import           Data.XML.Types      hiding (Event)
+
 import           Text.Read
-import           Control.Monad
 import           Text.XML.Cursor
+
+import           Control.Applicative
+import           Control.Monad
+import           Control.Arrow
 
 import           Data.GS1.Utils
 import           Data.GS1.DWhat
@@ -21,7 +25,6 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
-import           Control.Applicative
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
