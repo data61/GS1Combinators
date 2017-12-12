@@ -132,9 +132,14 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
--- find the hint in testParser.hs:52
-parseSourceDestLocation :: Cursor -> [Either ParseFailure SrcDestLocation]
-parseSourceDestLocation c = error "not implemented yet"
+parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [Either ParseFailure SrcDestLocation]
+parseSourceDestLocation c lst el attr = do
+  let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
+  let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
+  (\x -> x) . (\(sdType, loc) -> (readURI sdType, readURI loc)) <$> zip srcDestTypes locations
+              -- put this in a function
+  -- ^replace this with a function that takes in (Either Parsefailure a, Either Parsefailure b)
+  -- and returns Either ParseFailure (a, b)
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
