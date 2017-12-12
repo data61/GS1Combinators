@@ -141,7 +141,6 @@ parseSourceDestLocation c lst el attr = do
   let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
-              -- put this in a function
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
@@ -265,6 +264,7 @@ parseTransactionDWhat c = do
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
     _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
+-- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
 
