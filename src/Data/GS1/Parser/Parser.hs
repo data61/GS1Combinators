@@ -266,7 +266,7 @@ parseTransactionDWhat c = do
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
-parseTransformationWhat c = error "Not implemented yet"
+parseTransformationWhat = error "Not implemented yet"
 
 -- TODO add type signature after running `stack test`
 parseBizTransactionHelp (a, b) = do
