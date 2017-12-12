@@ -9,6 +9,8 @@ import           Text.XML
 import           Text.XML.Cursor
 import qualified Data.Text.Lazy.IO as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+-- import           Data.GS1.EPC
+-- import           Data.GS1.DWhere
 
 extractStuff :: Cursor -> Name -> [T.Text]
 extractStuff c s = error "not implemented yet"
@@ -17,6 +19,7 @@ extractList :: [Cursor] -> Name -> [[T.Text]]
 extractList [] _ = []
 extractList (c:cs) s = extractStuff c s : extractList cs s
 
+-- these definitions are there for the sole purpose of using these strings as Names in GHCi
 myName :: Name
 myName = "destination"
 
