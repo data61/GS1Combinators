@@ -34,8 +34,9 @@ testParser = do
       let t1 = parseStr2Time et1 :: Either EPCISTimeError EPCISTime
       let tz = parseStr2TimeZone et :: Either EPCISTimeError TimeZone
       let tz1 = parseStr2TimeZone et1 :: Either EPCISTimeError TimeZone
-      parseDWhen <$> oeCursors `shouldBe` [(Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))),
-                                           (Right (DWhen (fromRight' t1) (Just (fromRight' t1)) (fromRight' tz1)))]
+      parseDWhen <$> oeCursors `shouldBe`
+        [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz)),
+        Right (DWhen (fromRight' t1) (Just (fromRight' t1)) (fromRight' tz1))]
 
     it "creates Nothing from Single ObjectEvent XML without Event Time" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
