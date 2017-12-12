@@ -13,6 +13,8 @@ import           Data.GS1.EPC
 import           Data.GS1.DWhere
 import           Control.Applicative
 
+import           Data.Either.Combinators
+
 extractStuff :: Cursor -> Name -> [T.Text]
 extractStuff c s = error "not implemented yet"
 
@@ -69,11 +71,11 @@ main = do
 
   print  oeCursors
 
-  print $ fromJust . parseDWhen <$> oeCursors
-  print $ fromJust . parseDWhy <$> oeCursors
-  print $ fromJust . parseDWhere <$> oeCursors
-  print $ fromJust . parseObjectDWhat <$> oeCursors
-  print $ fromJust . parseAggregationDWhat <$> oeCursors
+  print $ fromRight' . parseDWhen <$> oeCursors
+  print $ fromRight' . parseDWhy <$> oeCursors
+  print $ fromRight' . parseDWhere <$> oeCursors
+  print $ fromRight' . parseObjectDWhat <$> oeCursors
+  print $ fromRight' . parseAggregationDWhat <$> oeCursors
 
   print $ parseSourceDestLocationT cursor sourceList source typeAttr
   print $ partitionEithers $ parseSourceDestLocation cursor sourceList source typeAttr
