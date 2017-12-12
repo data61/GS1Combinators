@@ -268,7 +268,7 @@ parseTransactionDWhat c = do
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat = error "Not implemented yet"
 
--- TODO add type signature after running `stack test`
+parseBizTransactionHelp :: (T.Text, T.Text) -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
   let tId   = T.unpack . T.strip $ a
   let tType = mkBizTransactionType (T.unpack . T.strip $ b)
