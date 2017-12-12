@@ -45,13 +45,14 @@ parseSourceDestID s = let uri = "urn:epc:id:sgln" in
                           parseURI s uri :: Maybe SourceDestID
 -}
 
+type SrcDestLocation = (SourceDestType, LocationEPC)
 
 data DWhere = DWhere
   {
     _readPoint   :: [ReadPointLocation]
   , _bizLocation :: [BizLocation]
-  , _srcType     :: [SourceDestType]
-  , _destType    :: [SourceDestType]
+  , _srcType     :: [SrcDestLocation]
+  , _destType    :: [SrcDestLocation]
   }
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhere)

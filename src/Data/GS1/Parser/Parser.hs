@@ -21,6 +21,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+import           Control.Applicative
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -85,6 +86,12 @@ parseDWhen c = do
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
   let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
+  -- ^^^ this line is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
+  -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
+  -- which is equivalent to returning Nothing.
+  -- if tz == Nothing, (fromJust tz) would throw a run-time exception
+  -- this needs a closer look and more robust error handling
+
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case et of
     Just et' -> Right $ DWhen et' rt (fromJust tz)
@@ -98,7 +105,6 @@ parseDWhy c = do
   let disp = parseDisposition (c $/ element "disposition" &/ content)
   mkDWhy biz disp
 
--- should getRightOrError be used here?
 -- use rights :: [Either a b] -> [b]
 -- or, lookup the monadic instance for Either
 -- use do notation
@@ -126,18 +132,30 @@ do
   y >>= \x -> f x
 
 -}
+
+-- test/test-xml/ObjectEvent2.xml can be used to test the parser function
+parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [Either ParseFailure SrcDestLocation]
+parseSourceDestLocation c lst el attr = do
+  let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
+  let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
+  uncurry (liftA2 (,)) . (\(sdType, loc) -> (readURI sdType, readURI loc)) <$> zip srcDestTypes locations
+              -- put this in a function
+
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
   let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
   let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
+  -- let (srcTypeErrs, srcTypes) = partitionEithers $ parseSourceDestLocation <$>
+  --         (c $/ element "sourceList" &/ element "source" &| attribute "type") -- FIXME
+  -- let (destTypeErrs, destTypes) = partitionEithers $ parseSourceDestLocation <$>
+  --         (c $/ element "readPoint"   &/ element "id" &/ content) -- FIXME
 
   case (lRps, lBls) of
-    ([], []) -> Right $ DWhere rRps rBls [] []
     -- get the sourceDestType and put it in place of the empty lists
+    ([], []) -> Right $ DWhere rRps rBls [] []
     _        -> Left $ ChildFailure $ lRps ++ lBls
-
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -206,8 +224,6 @@ returnLeftErrors (Left act, errs)  = ChildFailure $ act : flatten errs
 returnLeftErrors (Right act, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
--- Action is not included in ObjectDWhat. is it necessary to ParseAction?
--- what if it's just not there?
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
