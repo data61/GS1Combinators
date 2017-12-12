@@ -277,9 +277,8 @@ $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationEPC
 
--- |SourceDestType
 data SourceDestType = SDOwningParty
-                    | SDProcessingParty
+                    | SDPossessingParty
                     | SDLocation
                     deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''SourceDestType)
@@ -287,19 +286,19 @@ instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   printURI = printSrcDestURI
-  readURI epc = readSrcDestURI $ last $ splitOn ":" epc --FIXME - fixed @SA
+  readURI epc = readSrcDestURI $ last $ splitOn ":" epc
 
 srcDestPrefixStr :: String
 srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
 
 printSrcDestURI :: SourceDestType -> String
 printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
-printSrcDestURI SDProcessingParty = srcDestPrefixStr ++ "processing_party"
+printSrcDestURI SDPossessingParty = srcDestPrefixStr ++ "possessing_party"
 printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
 
 readSrcDestURI :: String -> Either ParseFailure SourceDestType
 readSrcDestURI "owning_party" = Right SDOwningParty
-readSrcDestURI "processing_party" = Right SDProcessingParty
+readSrcDestURI "possessing_party" = Right SDPossessingParty
 readSrcDestURI "location" = Right SDLocation
 readSrcDestURI _ = Left InvalidFormat
 
