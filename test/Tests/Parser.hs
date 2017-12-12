@@ -3,10 +3,13 @@
 
 module Tests.Parser where
 
-import qualified Data.Text              as T
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
+
+import qualified Data.Text              as T
+import           Data.Time.LocalTime
+import           Data.Either.Combinators
 
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
@@ -16,8 +19,6 @@ import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Parser.Parser
 
-import Data.Time.LocalTime
-import Data.Either.Combinators
 
 testParser :: Spec
 testParser = do
@@ -102,26 +103,23 @@ testParser = do
       let cursor = fromDocument doc2
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       --mapM_ print $ parseDWhere <$> oeCursors
-      parseDWhere <$> oeCursors `shouldBe` [Right DWhere {
-                                                  -- _readPoint = [Location $ EPC "urn:epc:id:sgln:0614141.07346.1234"]
-                                                  _readPoint = [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
-                                                  , _bizLocation = []
-                                                  , _srcType = []
-                                                  , _destType = []}
-                                           , Right DWhere {
-                                                  -- _readPoint = [ReadPointLocation $ EPC "urn:epc:id:sgln:0012345.11111.400"]
-                                                  _readPoint = [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
-                                                  -- , _bizLocation = [BizLocation $ EPC "urn:epc:id:sgln:0012345.11111.0"]
-                                                  , _bizLocation = [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
-                                                  , _srcType = []
-                                                  , _destType = []}]
+      parseDWhere <$> oeCursors `shouldBe`
+        [Right DWhere {
+          _readPoint = [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
+          , _bizLocation = []
+          , _srcType = []
+          , _destType = []},
+        Right DWhere {
+          _readPoint = [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
+          , _bizLocation = [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
+          , _srcType = []
+          , _destType = []}]
 
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "quantityElement" cursor
-      -- parseQuantityElement <$> oeCursors `shouldBe` [Just $ QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") 200 (Just "KGM")]
       parseQuantity <$> oeCursors `shouldBe` [Just $ MeasuredQuantity 200 "KGM"]
 
   describe "parse BizTransaction" $ do
@@ -129,9 +127,19 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc
       let btCursor = cursor $// element "bizTransactionList"
-      parseBizTransaction <$> btCursor `shouldBe` [[Right BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po}],
-                                                   [Right BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po},
-                                                     Right BizTransaction {_btid = "urn:epcglobal:cbv:bt:0614141073467:1152", _bt = Desadv}]]
+      parseBizTransaction <$> btCursor `shouldBe`
+        [
+          [Right BizTransaction {
+            _btid = "http://transaction.acme.com/po/12345678",
+            _bt = Po}],
+          [
+            Right BizTransaction {
+              _btid = "http://transaction.acme.com/po/12345678",
+              _bt = Po},
+            Right BizTransaction {
+              _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
+              _bt = Desadv}]
+        ]
 
     it "get all attrs" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -146,26 +154,41 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      -- parseObjectDWhat <$> oeCursors `shouldBe` [Right $ ObjectDWhat Observe [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"]] --[QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") (200 :: Double)  (Just "KGM")]]
       -- TODO = CHECK whether Nothing is appropriate below
-      parseObjectDWhat <$> oeCursors `shouldBe` [Right $ ObjectDWhat Observe [IL $ SGTIN "0614141" Nothing "107346" "2017", IL $ SGTIN "0614141" Nothing "107346" "2018"]]      
+      parseObjectDWhat <$> oeCursors `shouldBe`
+        [Right $ ObjectDWhat Observe [IL $ SGTIN "0614141" Nothing "107346" "2017",
+        IL $ SGTIN "0614141" Nothing "107346" "2018"]]      
 
     it "parses a valid AggregationDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let aeCursors = getCursorsByName "AggregationEvent" cursor
-      -- parseAggregationDWhat <$> aeCursors `shouldBe` [Right $ AggregationDWhat Observe (Just "urn:epc:id:sscc:0614141.1234567890") [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] [QuantityElement (EPCClass "urn:epc:idpat:sgtin:4012345.098765.*") (10 :: Double) Nothing, QuantityElement (EPCClass "urn:epc:class:lgtin:4012345.012345.998877") (200.5 :: Double) (Just "KGM")]]
       -- TODO = check Nothings are appropriate below
-      parseAggregationDWhat <$> aeCursors `shouldBe` [Right $ AggregationDWhat Observe (Just $ IL $ SSCC "0614141" "1234567890") [IL $ SGTIN "0614141" Nothing "107346" "2017", IL $ SGTIN "0614141" Nothing "107346" "2018"]]
+      parseAggregationDWhat <$> aeCursors `shouldBe`
+        [Right $ AggregationDWhat Observe (Just $ IL $ SSCC "0614141" "1234567890")
+          [IL $ SGTIN "0614141" Nothing "107346" "2017",
+          IL $ SGTIN "0614141" Nothing "107346" "2018"]]
 
     it "parses a valid TransactionDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
       let teCursors = getCursorsByName "TransactionEvent" cursor
-      -- parseTransactionDWhat <$> teCursors `shouldBe` [Just (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po}] [EPC "urn:epc:id:sgtin:0614141.107346.2017", EPC "urn:epc:id:sgtin:0614141.107346.2018"] []), Just (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po},BizTransaction {_btid = "urn:epcglobal:cbv:bt:0614141073467:1152", _bt = Desadv}] [EPC "urn:epc:id:sgtin:0614141.107346.2018"] [])]
       -- TODO = check Nothings are appropriate in below
-      parseTransactionDWhat <$> teCursors `shouldBe` [Right (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po}] [IL $ SGTIN "0614141" Nothing "107346" "2017", IL $ SGTIN "0614141" Nothing "107346" "2018"]), 
-                                                      Right (TransactionDWhat Observe Nothing [BizTransaction {_btid = "http://transaction.acme.com/po/12345678", _bt = Po},BizTransaction {_btid = "urn:epcglobal:cbv:bt:0614141073467:1152", _bt = Desadv}] [IL $ SGTIN "0614141" Nothing "107346" "2017"])]
+      parseTransactionDWhat <$> teCursors `shouldBe`
+        [Right (TransactionDWhat Observe Nothing
+          [BizTransaction {
+            _btid = "http://transaction.acme.com/po/12345678",
+            _bt = Po}]
+          [IL $ SGTIN "0614141" Nothing "107346" "2017",
+          IL $ SGTIN "0614141" Nothing "107346" "2018"]), 
+        Right (TransactionDWhat Observe Nothing
+          [BizTransaction {
+            _btid = "http://transaction.acme.com/po/12345678",
+            _bt = Po},
+          BizTransaction {
+            _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
+            _bt = Desadv}]
+          [IL $ SGTIN "0614141" Nothing "107346" "2017"])]
 
   describe "parse ObjectEvent" $
     it "parses a valid object event" $ do
