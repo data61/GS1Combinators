@@ -28,7 +28,7 @@ main = do
   hspec testMkDWhen
 
   -- Parser
-  -- hspec testParser
+  hspec testParser
 
   -- Utils
   hspec testRevertCamelCase
