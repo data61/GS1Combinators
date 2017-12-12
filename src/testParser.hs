@@ -9,8 +9,8 @@ import           Text.XML
 import           Text.XML.Cursor
 import qualified Data.Text.Lazy.IO as TL
 import qualified Data.Text.Lazy.Encoding as TLE
--- import           Data.GS1.EPC
--- import           Data.GS1.DWhere
+import           Data.GS1.EPC
+import           Data.GS1.DWhere
 
 extractStuff :: Cursor -> Name -> [T.Text]
 extractStuff c s = error "not implemented yet"
@@ -41,13 +41,18 @@ typeAttr = "type"
 flatten :: [[a]] -> [a]
 flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
 
--- parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [(Either ParseFailure SourceDestType, Either ParseFailure LocationEPC)]
+parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [(Either ParseFailure SourceDestType, Either ParseFailure LocationEPC)]
 parseSourceDestLocation c lst el attr = do
   let location = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestType = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
-  -- (\(loc, sdType) -> (readURI sdType, readURI loc)) <$> zip location srcDestType
+  (\(loc, sdType) -> (readURI sdType, readURI loc)) <$> zip location srcDestType
+
+parseSourceDestLocationT :: Cursor -> Name -> Name -> Name -> [(T.Text, T.Text)]
+parseSourceDestLocationT c lst el attr = do
+  let location = T.strip <$> (c $// element lst &/ element el &/ content)
+  let srcDestType = T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
   zip location srcDestType
-  
+
 
 main :: IO()
 main = do
@@ -64,7 +69,10 @@ main = do
   -- print $ cursor $// element sourceList &/ element source &/ content -- location
   -- print $ flatten $ cursor $// element sourceList &/ element source &| attribute typeAttr 
   -- print $ cursor $// element "source" &| attribute "type"
+  print $ parseSourceDestLocationT cursor sourceList source typeAttr
   print $ parseSourceDestLocation cursor sourceList source typeAttr
+
+  print $ parseSourceDestLocationT cursor destList dest typeAttr
   print $ parseSourceDestLocation cursor destList dest typeAttr
   
   -- print $ cursor $// element destList &/ element dest &/ content -- location

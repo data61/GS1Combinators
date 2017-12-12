@@ -153,8 +153,8 @@ parseDWhere c = do
   --         (c $/ element "readPoint"   &/ element "id" &/ content) -- FIXME
 
   case (lRps, lBls) of
-    ([], []) -> Right $ DWhere rRps rBls [] []
     -- get the sourceDestType and put it in place of the empty lists
+    ([], []) -> Right $ DWhere rRps rBls [] []
     _        -> Left $ ChildFailure $ lRps ++ lBls
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
