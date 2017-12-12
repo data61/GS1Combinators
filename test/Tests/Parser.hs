@@ -3,7 +3,6 @@
 
 module Tests.Parser where
 
-import           Data.Maybe
 import qualified Data.Text              as T
 import           Test.Hspec
 import           Text.XML
@@ -22,8 +21,6 @@ import Data.Either.Combinators
 
 testParser :: Spec
 testParser = do
-
--- TODO = FIXME. Commented out since break tests
 
   describe "parse XML to obtain DWhen" $ do
     it "creates DWhen from valid XML" $ do
