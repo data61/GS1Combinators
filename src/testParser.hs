@@ -56,7 +56,6 @@ parseSourceDestLocationT c lst el attr = do
   let srcDestType = T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
   zip location srcDestType
 
-
 main :: IO()
 main = do
   doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent2.xml"
@@ -73,7 +72,7 @@ main = do
   -- print $ flatten $ cursor $// element sourceList &/ element source &| attribute typeAttr 
   -- print $ cursor $// element "source" &| attribute "type"
   print $ parseSourceDestLocationT cursor sourceList source typeAttr
-  print $ partitionEithers $ parseSourceDestLocation cursor sourceList source typeAttr
+  print $ parseSourceDestLocation cursor sourceList source typeAttr
 
   print $ parseSourceDestLocationT cursor destList dest typeAttr
   print $ parseSourceDestLocation cursor destList dest typeAttr
