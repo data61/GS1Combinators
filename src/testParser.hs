@@ -38,7 +38,16 @@ destList = "destinationList"
 typeAttr :: Name
 typeAttr = "type"
 
-parseDest c = c $/ element myName &/ content
+flatten :: [[a]] -> [a]
+flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
+
+-- parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [(Either ParseFailure SourceDestType, Either ParseFailure LocationEPC)]
+parseSourceDestLocation c lst el attr = do
+  let location = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
+  let srcDestType = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
+  -- (\(loc, sdType) -> (readURI sdType, readURI loc)) <$> zip location srcDestType
+  zip location srcDestType
+  
 
 main :: IO()
 main = do
@@ -52,12 +61,14 @@ main = do
 
   -- look at src/.../Parser.hs:272. they extracted attributes there
   -- print $ cursor $// element "destinationList" >=> parseDest
-  print $ cursor $// element sourceList &/ element source &/ content -- location
-  print $ cursor $// element sourceList &/ element source &| attribute typeAttr 
+  -- print $ cursor $// element sourceList &/ element source &/ content -- location
+  -- print $ flatten $ cursor $// element sourceList &/ element source &| attribute typeAttr 
   -- print $ cursor $// element "source" &| attribute "type"
+  print $ parseSourceDestLocation cursor sourceList source typeAttr
+  print $ parseSourceDestLocation cursor destList dest typeAttr
   
-  print $ cursor $// element destList &/ element dest &/ content -- location
-  print $ cursor $// element destList &/ element dest &| attribute typeAttr 
+  -- print $ cursor $// element destList &/ element dest &/ content -- location
+  -- print $ flatten $ cursor $// element destList &/ element dest &| attribute typeAttr 
 
   -- print extractedList
 
