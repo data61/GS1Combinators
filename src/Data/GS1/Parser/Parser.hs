@@ -314,7 +314,6 @@ parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
 parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
 parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
 parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
-parseDWhat QuantityEventT eCursors = error "not implemented yet"
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
@@ -322,7 +321,6 @@ parseEventByType c et = do
   let tagS = case et of
                ObjectEventT         -> "ObjectEvent"
                AggregationEventT    -> "AggregationEvent"
-               QuantityEventT       -> "QuantityEvent"
                TransactionEventT    -> "TransactionEvent"
                TransformationEventT -> "TransformationEvent"
   let eCursors = c $// element tagS

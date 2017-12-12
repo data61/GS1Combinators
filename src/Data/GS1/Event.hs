@@ -23,7 +23,6 @@ import Database.SQLite.Simple.ToField
 
 data EventType = ObjectEventT
                | AggregationEventT
-               | QuantityEventT
                | TransactionEventT
                | TransformationEventT
                deriving (Show, Eq, Generic, Read)
