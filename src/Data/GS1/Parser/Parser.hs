@@ -313,6 +313,7 @@ parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
 parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
 parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
 parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
+parseDWhat QuantityEventT eCursors = error "not implemented yet"
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
