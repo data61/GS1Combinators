@@ -100,6 +100,7 @@ parseDWhen c = do
     Just et' -> Right $ DWhen et' rt (fromJust tz)
     _        -> Left TimeZoneError
 
+-- TODO = CHECK
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
@@ -110,7 +111,7 @@ parseDWhy c = do
 -- use rights :: [Either a b] -> [b]
 -- or, lookup the monadic instance for Either
 -- use do notation
-extractLocationEPCList :: T.Text -> Either ParseFailure ReadPointLocation
+extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
 extractLocationEPCList = readURI . T.unpack
 
 -- |TODO: due to lack of data, source destination type might not be implemented for now
