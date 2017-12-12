@@ -45,30 +45,29 @@ main :: IO()
 main = do
   doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent2.xml"
   let cursor = fromDocument doc
-  -- let cursorList = getCursorsByName myName cursor
-  -- let extractedList = extractList cursorList myName
-  -- let src = cursor $/ element "source" &/ content
-  -- print $ parseDWhen <$> oeCursors
+  let oeCursors = getCursorsByName "ObjectEvent" cursor
 
+  print  oeCursors
 
-  -- look at src/.../Parser.hs:272. they extracted attributes there
-  -- print $ cursor $// element "destinationList" >=> parseDest
-  -- print $ cursor $// element sourceList &/ element source &/ content -- location
-  -- print $ flatten $ cursor $// element sourceList &/ element source &| attribute typeAttr 
-  -- print $ cursor $// element "source" &| attribute "type"
+  print $ fromRight' . parseDWhen <$> oeCursors
+  print $ fromRight' . parseDWhy <$> oeCursors
+  print $ fromRight' . parseDWhere <$> oeCursors
+  print $ fromRight' . parseObjectDWhat <$> oeCursors
+  print $ fromRight' . parseAggregationDWhat <$> oeCursors
+
   print $ parseSourceDestLocationT cursor sourceList source typeAttr
-  print $ parseSourceDestLocation cursor sourceList source typeAttr
+  print $ partitionEithers $ parseSourceDestLocation cursor sourceList source typeAttr
 
   print $ parseSourceDestLocationT cursor destList dest typeAttr
   print $ parseSourceDestLocation cursor destList dest typeAttr
-  
-  -- print $ cursor $// element destList &/ element dest &/ content -- location
-  -- print $ flatten $ cursor $// element destList &/ element dest &| attribute typeAttr 
 
-  -- print extractedList
+  print $ blahfoo <$> oeCursors -- this shows that parseBizTransaction is bugged - mkBizTransactionType might not work with fromJust
 
-  -- print $ fromJust . parseDWhy <$> oeCursors
-  -- print $ fromJust . parseDWhere <$> oeCursors
-  -- print $ fromJust . parseObjectDWhat <$> oeCursors
-  -- print $ fromJust . parseAggregationDWhat <$> oeCursors
-  -- TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromJust . parseDWhen <$> oeCursors
+blahfoo c = do
+  let texts = c $// element "bizTransaction" &/ content
+  let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
+  let z = zip attrs texts
+  parseBizTransactionHelp <$> z
+    where
+      parseBizTransactionHelp (a, b) =
+        mkBizTransactionType (T.unpack . T.strip $ b)
