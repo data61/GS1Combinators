@@ -21,6 +21,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+import           Control.Applicative
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -136,10 +137,8 @@ parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [Either ParseFailur
 parseSourceDestLocation c lst el attr = do
   let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
-  (\x -> x) . (\(sdType, loc) -> (readURI sdType, readURI loc)) <$> zip srcDestTypes locations
+  uncurry (liftA2 (,)) . (\(sdType, loc) -> (readURI sdType, readURI loc)) <$> zip srcDestTypes locations
               -- put this in a function
-  -- ^replace this with a function that takes in (Either Parsefailure a, Either Parsefailure b)
-  -- and returns Either ParseFailure (a, b)
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
