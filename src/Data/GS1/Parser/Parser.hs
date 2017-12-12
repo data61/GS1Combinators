@@ -9,9 +9,13 @@ import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import           Data.UUID
 import           Data.XML.Types      hiding (Event)
+
 import           Text.Read
-import           Control.Monad
 import           Text.XML.Cursor
+
+import           Control.Applicative
+import           Control.Monad
+import           Control.Arrow
 
 import           Data.GS1.Utils
 import           Data.GS1.DWhat
@@ -21,7 +25,6 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
-import           Control.Applicative
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -138,24 +141,23 @@ parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [Either ParseFailur
 parseSourceDestLocation c lst el attr = do
   let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
-  uncurry (liftA2 (,)) . (\(sdType, loc) -> (readURI sdType, readURI loc)) <$> zip srcDestTypes locations
-              -- put this in a function
+  uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
-  let (lRps, rRps) = partitionEithers $ extractLocationEPCList <$>
+  let (rpsErrs, rps) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
-  let (lBls, rBls) = partitionEithers $ extractLocationEPCList <$>
+  let (blsErrs, bls) = partitionEithers $ extractLocationEPCList <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
-  -- let (srcTypeErrs, srcTypes) = partitionEithers $ parseSourceDestLocation <$>
-  --         (c $/ element "sourceList" &/ element "source" &| attribute "type") -- FIXME
-  -- let (destTypeErrs, destTypes) = partitionEithers $ parseSourceDestLocation <$>
-  --         (c $/ element "readPoint"   &/ element "id" &/ content) -- FIXME
+  let (srcTypeErrs, srcTypes) = partitionEithers $
+        parseSourceDestLocation c "sourceList" "source" "type"
+  let (destTypeErrs, destTypes) = partitionEithers $
+        parseSourceDestLocation c "destinationList" "destination" "type"
 
-  case (lRps, lBls) of
+  case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists
-    ([], []) -> Right $ DWhere rRps rBls [] []
-    _        -> Left $ ChildFailure $ lRps ++ lBls
+    ([], [], [], []) -> Right $ DWhere rps bls srcTypes destTypes
+    _                -> Left $ ChildFailure $ rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -263,6 +265,7 @@ parseTransactionDWhat c = do
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
     _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
+-- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
 
