@@ -7,7 +7,6 @@ import           Control.Lens
 import           GHC.Generics
 
 import           Data.List.Split
-import           Data.Either
 import           Data.Semigroup
 
 import           Data.Aeson

@@ -14,7 +14,6 @@ import           Text.Read
 import           Text.XML.Cursor
 
 import           Control.Applicative
-import           Control.Monad
 import           Control.Arrow
 
 import           Data.GS1.Utils
