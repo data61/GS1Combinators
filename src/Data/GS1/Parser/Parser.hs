@@ -88,8 +88,10 @@ parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
-  let tz = if isNothing $ parseTimeZoneXML' tzn then parseTimeZoneXML' tzn else parseTimeZoneXML etn
-  -- ^^^ this line is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
+  let tz = if isNothing $ parseTimeZoneXML' tzn
+            then parseTimeZoneXML' tzn
+            else parseTimeZoneXML etn
+  -- ^^^ this statement is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
   -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
   -- which is equivalent to returning Nothing.
   -- if tz == Nothing, (fromJust tz) would throw a run-time exception
@@ -172,9 +174,9 @@ parseQuantity c = do
 
   case [qt, uom] of
     [[], _] -> Nothing
-    [q:_, []] -> let q' = T.unpack q in
+    [[q], []] -> let q' = T.unpack q in
         Just $ ItemCount (read q' :: Integer)
-    [q:_, u:_] -> let [q', u'] = T.unpack <$> [q, u] in
+    [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
 -- |Parse BizStep by Name

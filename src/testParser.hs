@@ -32,7 +32,8 @@ getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
 -- parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 -- parseTransformationWhat c = do
 --   let (iEpcsErrs, iEpcs) = partitionEithers $
---           readLabelEPC <$> (T.unpack <$> getTransformationEPCList c "inputEPCList") Nothing
+--           readLabelEPC <$> 
+--           (T.unpack <$> getTransformationEPCList c "inputEPCList") Nothing
 --   let (oEpcsErrs, oEpcs) = partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . T.unpack <$> getTransformationEPCList c "outputEPCList"
 --   let tId = case c $/ element "transformationID" &/ content of
 --              [] -> Nothing
@@ -43,20 +44,32 @@ getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
 
 main :: IO()
 main = do
-  doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
-  let cursor = fromDocument doc
+  -- doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
+  doc <- Text.XML.readFile def "../test/test-xml/TransformationEvent.xml"
+  
+  let mainCursor = fromDocument doc
+  let tCursors = getCursorsByName "TransformationEvent" mainCursor
+  let classLabelCursors = flatten $ getCursorsByName "inputQuantityList" <$> tCursors
+  let quantityElems = flatten $ getCursorsByName "quantityElement" <$> classLabelCursors
+  print $ parseQuantityElement <$> quantityElems
+
+  -- print 1
+  
+
+
+
   -- let oeCursors = getCursorsByName "TransformationEvent" cursor
   {-print $ getTransformationEPCList cursor "inputEPCList"
   print $ getTransformationEPCList cursor "outputEPCList"
   print $ Main.parseTransformationWhat cursor -}
 
   -- print $ length $ getCursorsByName "quantityElement" cursor
-  let tCursor = head $ getCursorsByName "TransactionEvent" cursor
-  let texts = tCursor $// element "bizTransaction" &/ content
-  let attrs = foldMap id (tCursor $// element "bizTransaction" &| attribute "type")
-  print texts
-  print attrs
-  print $ parseEventByType cursor TransactionEventT
+  -- let tCursor = head $ getCursorsByName "TransactionEvent" cursor
+  -- let texts = tCursor $// element "bizTransaction" &/ content
+  -- let attrs = foldMap id (tCursor $// element "bizTransaction" &| attribute "type")
+  -- print texts
+  -- print attrs
+  -- print $ parseEventByType cursor TransactionEventT
 
 
 
