@@ -275,17 +275,18 @@ parseTransformationWhat c = error "Not implemented yet"
 parseBizTransactionHelp :: (T.Text, T.Text) -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
   let tId   = T.unpack . T.strip $ a
-  let tType = mkBizTransactionType (T.unpack . T.strip $ b)
+  let tType = readURI (T.unpack . T.strip $ b)
   case tType of
     Right t -> Right $ BizTransaction tId t
-    _       -> Left InvalidBizTransaction
+    Left  e -> Left e
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
-  let texts = c $// element "bizTransaction" &/ content
+  let texts = c $// element "bizTransaction" &/ content -- "http://transaction.acme.com/po/12345678\n          "
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
-  let z = zip attrs texts
+  -- urn:epcglobal:cbv:btt:po
+  let z = zip texts attrs
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
