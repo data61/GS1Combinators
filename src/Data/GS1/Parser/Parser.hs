@@ -165,8 +165,6 @@ parseDWhere c = do
     _                -> Left $ ChildFailure $ 
                           rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
 
--- this is potentially buggy. why does it return/parse only the first quantity?
--- look into how Cursor works to figure this out
 parseQuantity :: Cursor -> Maybe Quantity
 parseQuantity c = do
   let qt = c $/ element "quantity" &/ content
