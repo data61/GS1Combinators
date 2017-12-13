@@ -142,14 +142,13 @@ testParser = do
               _bt = Desadv}]
         ]
 
-    -- TODO = fix. This is incorrect. should have been parseBizTransactionType but not available
-    -- it "get all attrs" $ do
-    --   doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
-    --   let cursor = fromDocument doc2
-    --   let btCursor = cursor $// element "bizTransactionList"
-    --   let c = head btCursor
-    --   let attrs = c $/ element "bizTransaction" &| attribute "type"
-    --   mkBizTransactionType . T.unpack <$> foldMap id attrs `shouldBe` [Right Po]
+    it "get all attrs" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+      let cursor = fromDocument doc2
+      let btCursor = cursor $// element "bizTransactionList"
+      let c = head btCursor
+      let attrs = c $/ element "bizTransaction" &| attribute "type"
+      readURI . T.unpack <$> foldMap id attrs `shouldBe` [Right Po]
 
   describe "parse DWhat" $ do
     it "parses a valid ObjectDWhat" $ do

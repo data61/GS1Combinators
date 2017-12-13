@@ -114,7 +114,6 @@ parseDWhy c = do
 extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
 extractLocationEPCList = readURI . T.unpack
 
--- |TODO: due to lack of data, source destination type might not be implemented for now
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
 -- the sgln could be irregular
@@ -137,10 +136,14 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> [Either ParseFailure SrcDestLocation]
+parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> 
+                            [Either ParseFailure SrcDestLocation]
 parseSourceDestLocation c lst el attr = do
-  let locations = T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
-  let srcDestTypes = T.unpack . T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
+  let locations =
+        T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
+  let srcDestTypes =
+        T.unpack . T.strip <$> flatten 
+          (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
@@ -157,7 +160,8 @@ parseDWhere c = do
   case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists
     ([], [], [], []) -> Right $ DWhere rps bls srcTypes destTypes
-    _                -> Left $ ChildFailure $ rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
+    _                -> Left $ ChildFailure $ 
+                          rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
 
 -- this is potentially buggy. why does it return/parse only the first quantity?
 -- look into how Cursor works to figure this out
@@ -208,15 +212,19 @@ parseParentID (t:ts)
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
+-- whoever calls this function should make sure
+-- length of the two arguments are same
+-- pad the [Maybe Quantity] with Nothings
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
-parseEPCList _ [] = []
-parseEPCList (t:ts) (q:qs) =
-  readLabelEPC (T.unpack t) q : parseEPCList ts qs
+parseEPCList (t:ts) [] = readLabelEPC (T.unpack t) Nothing :
+                            parseEPCList ts [Nothing]
+parseEPCList (t:ts) (q:qs) = readLabelEPC (T.unpack t) q : parseEPCList ts qs
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
+parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> 
+                     [Either ParseFailure LabelEPC]
 parseChildEPCList = parseEPCList
 
 -- returns all the errors that occur in Action and [[ParseFailure]]
@@ -256,6 +264,9 @@ parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
+  -- this is potentially buggy. quantity should not be parsed blindly like this
+  -- it just literally goes through any arbitrary instance of quantity
+  -- it does not put the quantity in the approriate LabelEPC
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
   let (epcErrs, epcs) = partitionEithers $
         parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
@@ -269,20 +280,23 @@ parseTransactionDWhat c = do
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationWhat c = error "Not implemented yet"
 
-parseBizTransactionHelp :: (T.Text, T.Text) -> Either ParseFailure BizTransaction
+parseBizTransactionHelp :: (T.Text, T.Text)
+                        -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
   let tId   = T.unpack . T.strip $ a
-  let tType = mkBizTransactionType (T.unpack . T.strip $ b)
+  let tType = readURI (T.unpack . T.strip $ b)
   case tType of
     Right t -> Right $ BizTransaction tId t
-    _       -> Left InvalidBizTransaction
+    Left  e -> Left e
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
+  -- "http://transaction.acme.com/po/12345678\n          "
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
-  let z = zip attrs texts
+  -- urn:epcglobal:cbv:btt:po
+  let z = zip texts attrs
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
@@ -325,7 +339,7 @@ parseEventByType c et = do
                TransformationEventT -> "TransformationEvent"
   let eCursors = c $// element tagS
   let eid = parseEventID <$> eCursors
-  -- TODO Finish the implementation of the other event types
+
   let dwhat = parseDWhat et eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors
