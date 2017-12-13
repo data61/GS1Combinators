@@ -208,6 +208,8 @@ parseParentID (t:ts)
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
+-- whoever calls this function should make sure length of the two arguments are same
+-- so, pad the arguments per necessity, ideally pad the [Maybe Quantity] with Nothings
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
 parseEPCList (t:ts) [] = readLabelEPC (T.unpack t) Nothing : parseEPCList ts [Nothing]
@@ -255,6 +257,8 @@ parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID (c $/ element "parentID" &/ content)
+  -- this is potentially buggy. quantity should not be parsed blindly like this
+  -- it just literally goes through any instance of quantity
   let qt = parseQuantity <$> getCursorsByName "quantityElement" c
   let (epcErrs, epcs) = partitionEithers $
         parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
