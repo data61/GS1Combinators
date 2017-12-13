@@ -147,7 +147,7 @@ testParser = do
       let btCursor = cursor $// element "bizTransactionList"
       let c = head btCursor
       let attrs = c $/ element "bizTransaction" &| attribute "type"
-      mkBizTransactionType . T.unpack <$> foldMap id attrs `shouldBe` [Right Po]
+      readURI . T.unpack <$> foldMap id attrs `shouldBe` [Right Po]
 
   describe "parse DWhat" $ do
     it "parses a valid ObjectDWhat" $ do
