@@ -12,26 +12,10 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import           Data.GS1.EPC
 import           Data.GS1.DWhere
 import           Data.GS1.DWhat
+import           Data.GS1.Event
+
 import           Control.Applicative
 
--- these definitions are there for the sole purpose of using these strings as Names in GHCi
-myName :: Name
-myName = "destination"
-
-sourceList :: Name
-sourceList = "sourceList"
-
-source :: Name
-source = "source"
-
-dest :: Name
-dest = "destination"
-
-destList :: Name
-destList = "destinationList"
-
-typeAttr :: Name
-typeAttr = "type"
 
 flatten :: [[a]] -> [a]
 flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
@@ -45,25 +29,37 @@ parseSourceDestLocationT c lst el attr = do
 getTransformationEPCList :: Cursor -> Name -> [T.Text]
 getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
 
-parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
-parseTransformationWhat c = do
-  let (iEpcsErrs, iEpcs) = partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . T.unpack <$> getTransformationEPCList c "inputEPCList"
-  let (oEpcsErrs, oEpcs) = partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . T.unpack <$> getTransformationEPCList c "outputEPCList"
-  let tId = case c $/ element "transformationID" &/ content of
-             [] -> Nothing
-             t:ts -> Just $ T.unpack t
-  case (iEpcsErrs, oEpcsErrs) of
-    ([], []) -> Right $ TransformationDWhat tId iEpcs oEpcs
-    _        -> Left $ ChildFailure (iEpcsErrs ++ oEpcsErrs)
+-- parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
+-- parseTransformationWhat c = do
+--   let (iEpcsErrs, iEpcs) = partitionEithers $
+--           readLabelEPC <$> (T.unpack <$> getTransformationEPCList c "inputEPCList") Nothing
+--   let (oEpcsErrs, oEpcs) = partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . T.unpack <$> getTransformationEPCList c "outputEPCList"
+--   let tId = case c $/ element "transformationID" &/ content of
+--              [] -> Nothing
+--              t:ts -> Just $ T.unpack t
+--   case (iEpcsErrs, oEpcsErrs) of
+--     ([], []) -> Right $ TransformationDWhat tId iEpcs oEpcs
+--     _        -> Left $ ChildFailure (iEpcsErrs ++ oEpcsErrs)
 
 main :: IO()
 main = do
-  doc <- Text.XML.readFile def "../test/test-xml/TransformationEvent.xml"
+  doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
   let cursor = fromDocument doc
   -- let oeCursors = getCursorsByName "TransformationEvent" cursor
-  print $ getTransformationEPCList cursor "inputEPCList"
+  {-print $ getTransformationEPCList cursor "inputEPCList"
   print $ getTransformationEPCList cursor "outputEPCList"
-  print $ Main.parseTransformationWhat cursor
+  print $ Main.parseTransformationWhat cursor -}
+
+  -- print $ length $ getCursorsByName "quantityElement" cursor
+  let tCursor = head $ getCursorsByName "TransactionEvent" cursor
+  let texts = tCursor $// element "bizTransaction" &/ content
+  let attrs = foldMap id (tCursor $// element "bizTransaction" &| attribute "type")
+  print texts
+  print attrs
+  print $ parseEventByType cursor TransactionEventT
+
+
+
   -- print $ fromRight' . parseDWhen <$> oeCursors
   -- print $ fromRight' . parseDWhy <$> oeCursors
   -- print $ fromRight' . parseDWhere <$> oeCursors
