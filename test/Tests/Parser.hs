@@ -157,7 +157,7 @@ testParser = do
       -- TODO = CHECK whether Nothing is appropriate below
       parseObjectDWhat <$> oeCursors `shouldBe`
         [Right $ ObjectDWhat Observe [IL $ SGTIN "0614141" Nothing "107346" "2017",
-        IL $ SGTIN "0614141" Nothing "107346" "2018"]]      
+        IL $ SGTIN "0614141" Nothing "107346" "2018"]]
 
     it "parses a valid AggregationDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
@@ -180,7 +180,7 @@ testParser = do
             _btid = "http://transaction.acme.com/po/12345678",
             _bt = Po}]
           [IL $ SGTIN "0614141" Nothing "107346" "2017",
-          IL $ SGTIN "0614141" Nothing "107346" "2018"]), 
+          IL $ SGTIN "0614141" Nothing "107346" "2018"]),
         Right (TransactionDWhat Observe Nothing
           [BizTransaction {
             _btid = "http://transaction.acme.com/po/12345678",
