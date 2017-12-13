@@ -325,7 +325,7 @@ parseEventByType c et = do
                TransformationEventT -> "TransformationEvent"
   let eCursors = c $// element tagS
   let eid = parseEventID <$> eCursors
-  -- TODO Finish the implementation of the other event types
+
   let dwhat = parseDWhat et eCursors
   let dwhen = parseDWhen <$> eCursors
   let dwhy = parseDWhy <$> eCursors

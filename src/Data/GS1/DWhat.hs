@@ -29,7 +29,7 @@ instance ToSchema LabelEPC
 
 instance ToField LabelEPC where
     toField = toField . pack . show
--- | ParentID
+
 type ParentID  = LabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
