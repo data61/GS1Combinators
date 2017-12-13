@@ -210,9 +210,8 @@ parseParentID (t:ts)
 -- name="epcList" type="epcis:EPCListType"
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
-parseEPCList _ [] = []
-parseEPCList (t:ts) (q:qs) =
-  readLabelEPC (T.unpack t) q : parseEPCList ts qs
+parseEPCList (t:ts) [] = readLabelEPC (T.unpack t) Nothing : parseEPCList ts [Nothing]
+parseEPCList (t:ts) (q:qs) = readLabelEPC (T.unpack t) q : parseEPCList ts qs
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
