@@ -111,10 +111,9 @@ getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data ClassLabelEPC = LGTIN GS1CompanyPrefix ItemReference Lot
+data ClassLabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot
                      -- e.g. olives in a vat, harvested in April 2017
-                    |GRAI GS1CompanyPrefix AssetType SerialNumber
-                     --Global returnable asset identifier
+                    | CSGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference
                      deriving (Show, Read, Eq, Generic)
 
 instance URI ClassLabelEPC where
@@ -124,21 +123,23 @@ instance URI ClassLabelEPC where
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
+-- move GRAI to InstanceLabel
+-- implement reader for :idpat:sgtin:
 readURIClassLabelEPC :: [String] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Right $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
-readURIClassLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
-  Right $ GRAI gs1CompanyPrefix assetType serialNumber
-    where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
+readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
+  Right $ CSGTIN gs1CompanyPrefix Nothing itemReference
+    where (gs1CompanyPrefix:itemReference:_) = getSuffixTokens rest
 readURIClassLabelEPC _ = Left InvalidFormat
 
 
 printURIClassLabelEPC :: ClassLabelEPC -> String
 printURIClassLabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
   "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
-printURIClassLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
-  "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
+printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
+  "urn:epc:idpat:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
@@ -148,8 +149,11 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                       -- Global Individual Asset Identifier, e.g. bucket for olives
                       | SSCC GS1CompanyPrefix SerialNumber
                       --serial shipping container code
-                      | SGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference SerialNumber
+                      | SGTIN GS1CompanyPrefix 
+                        (Maybe SGTINFilterValue) ItemReference SerialNumber
                        --serialsed global trade item number
+                      | GRAI GS1CompanyPrefix AssetType SerialNumber
+                     --Global returnable asset identifier
                       deriving (Show, Read, Eq, Generic)
 
 instance URI InstanceLabelEPC where
@@ -174,7 +178,9 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
       where
         [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
         isCorrectLen = length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen
-
+readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
+  Right $ GRAI gs1CompanyPrefix assetType serialNumber
+    where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen = Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
 --                                               Nothing, for the moment
@@ -194,6 +200,8 @@ printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
   "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
 printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
+  "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
     --FIXME: add Maybe SGTINFilterValue
 
 
