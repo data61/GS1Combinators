@@ -190,7 +190,7 @@ testParser = do
           BizTransaction {
             _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
             _bt = Desadv}]
-          [IL $ SGTIN "0614141" Nothing "107346" "2017"])]
+          [IL $ SGTIN "0614141" Nothing "107346" "2018"])]
 
   describe "parse ObjectEvent" $
     it "parses a valid object event" $ do
