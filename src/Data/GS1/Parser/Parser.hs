@@ -177,6 +177,13 @@ parseQuantity c = do
     [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
+-- rename to parseLabel
+parseQuantityElement :: Cursor -> Either ParseFailure LabelEPC
+parseQuantityElement c = do
+  let mQt = parseQuantity c
+  let labelStr = T.unpack . head $ c $/ element "epcClass" &/ content
+  readLabelEPC labelStr mQt
+
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
 parseBizStep = parseSingleElemE readURI
