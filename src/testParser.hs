@@ -12,26 +12,10 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import           Data.GS1.EPC
 import           Data.GS1.DWhere
 import           Data.GS1.DWhat
+import           Data.GS1.Event
+
 import           Control.Applicative
 
--- these definitions are there for the sole purpose of using these strings as Names in GHCi
-myName :: Name
-myName = "destination"
-
-sourceList :: Name
-sourceList = "sourceList"
-
-source :: Name
-source = "source"
-
-dest :: Name
-dest = "destination"
-
-destList :: Name
-destList = "destinationList"
-
-typeAttr :: Name
-typeAttr = "type"
 
 flatten :: [[a]] -> [a]
 flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
