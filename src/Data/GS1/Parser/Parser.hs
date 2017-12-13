@@ -38,7 +38,8 @@ parseSingleElemM f (x:_) = f . T.unpack $ x
 parseSingleElemM _ _     = Nothing
 
 -- parseSingleElemE returns an Either
-parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text] -> Either ParseFailure a
+parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text]
+                      -> Either ParseFailure a
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ _     = Left InvalidFormat
 
@@ -266,7 +267,7 @@ parseTransactionDWhat c = do
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
-parseTransformationWhat = error "Not implemented yet"
+parseTransformationWhat c = error "Not implemented yet"
 
 parseBizTransactionHelp :: (T.Text, T.Text) -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
@@ -285,19 +286,19 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
-  -> [(Either ParseFailure EventID
-       , Either ParseFailure DWhat
-       , Either ParseFailure DWhen
-       , Either ParseFailure DWhy
-       , Either ParseFailure DWhere)]
-  -> [Either ParseFailure Event]
+              -> [(Either ParseFailure EventID
+                  , Either ParseFailure DWhat
+                  , Either ParseFailure DWhen
+                  , Either ParseFailure DWhy
+                  , Either ParseFailure DWhere)]
+              -> [Either ParseFailure Event]
 parseEventList t = fmap asEvent
   where
     asEvent :: (Either ParseFailure EventID
-      , Either ParseFailure DWhat
-      , Either ParseFailure DWhen
-      , Either ParseFailure DWhy
-      , Either ParseFailure DWhere) -> Either ParseFailure Event
+              , Either ParseFailure DWhat
+              , Either ParseFailure DWhen
+              , Either ParseFailure DWhy
+              , Either ParseFailure DWhere) -> Either ParseFailure Event
     asEvent (i, w1, w2, w3, w4) = Event t <$>  i <*> w1 <*> w2 <*> w3 <*> w4
 
 parseEventID :: Cursor -> Either ParseFailure EventID
@@ -313,7 +314,6 @@ parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
 parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
 parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
 parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
-parseDWhat QuantityEventT eCursors = error "not implemented yet"
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
@@ -321,7 +321,6 @@ parseEventByType c et = do
   let tagS = case et of
                ObjectEventT         -> "ObjectEvent"
                AggregationEventT    -> "AggregationEvent"
-               QuantityEventT       -> "QuantityEvent"
                TransactionEventT    -> "TransactionEvent"
                TransformationEventT -> "TransformationEvent"
   let eCursors = c $// element tagS
