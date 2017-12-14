@@ -304,7 +304,8 @@ parseTransactionDWhat c = do
 parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
 parseLabelEPCs insName clName c = do
   let instanceCursors = getCursorsByName insName c
-  let classCursors = getCursorsByName clName c
+  let classCursors = flatten $ getCursorsByName "quantityElement" <$>
+                        getCursorsByName clName c
   flatten (parseInstanceLabel <$> instanceCursors) ++
     (parseClassLabel <$> classCursors) -- error. get the quantityElements first
 
