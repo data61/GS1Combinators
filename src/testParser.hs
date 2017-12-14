@@ -26,9 +26,6 @@ parseSourceDestLocationT c lst el attr = do
   let srcDestType = T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
   zip location srcDestType
 
-getTransformationEPCList :: Cursor -> Name -> [T.Text]
-getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
-
 -- parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
 -- parseTransformationWhat c = do
 --   let (iEpcsErrs, iEpcs) = partitionEithers $
@@ -53,7 +50,10 @@ main = do
   let tCursors = getCursorsByName "TransformationEvent" mainCursor
   let classLabelCursors = flatten $ getCursorsByName "inputQuantityList" <$> tCursors
   let quantityElems = flatten $ getCursorsByName "quantityElement" <$> classLabelCursors
-  print $ parseQuantityElement <$> quantityElems
+  -- print $ length tCursors
+  -- print $ parseQuantityElement <$> quantityElems
+
+  print $ parseTransformationWhat <$> tCursors -- causes an exception, unroll
 
   -- let oeCursors = getCursorsByName "TransformationEvent" cursor
   {-print $ getTransformationEPCList cursor "inputEPCList"
