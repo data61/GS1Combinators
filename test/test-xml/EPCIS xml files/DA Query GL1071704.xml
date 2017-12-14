@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:epcisquery="urn:epcglobal:epcis-query:xsd:1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Header />
+  <soap:Body>
+    <epcisquery:Poll>
+      <queryName>SimpleEventQuery</queryName>
+      <params>
+        <param>
+          <name>EQ_action</name>
+          <value xsi:type="epcisquery:ArrayOfString">
+            <string>ADD</string>
+          </value>
+        </param>
+        <param>
+          <name>EQ_bizTransaction_urn:epcglobal:cbv:btt:desadv</name>
+          <value xsi:type="epcisquery:ArrayOfString">
+            <string>urn:epcglobal:cbv:bt:9377778016948:GL1071704</string>
+          </value>
+        </param>
+      </params>
+    </epcisquery:Poll>
+  </soap:Body>
+</soap:Envelope>
