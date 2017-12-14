@@ -176,6 +176,7 @@ parseQuantity c = do
         Just $ ItemCount (read q' :: Integer)
     [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
+    _       -> Nothing
 
 {-
 The cursor level should be:
