@@ -182,28 +182,30 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
-  | isCorrectLen = Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
+  | isCorrectLen = 
+      Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
 --                                               Nothing, for the moment
   | otherwise = Left InvalidLength
       where
         [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
         isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
-
--- readURIInstanceLabelEPC _ = error "Invalid Label string or type not implemented yet"
 readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
 printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
-  "urn:epc:id:giai:" ++ gs1CompanyPrefix ++ "." ++ individualAssetReference
+  "urn:epc:id:giai:" ++ 
+    intercalate "." [gs1CompanyPrefix, individualAssetReference]
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
-  "urn:epc:id:sscc:" ++ gs1CompanyPrefix ++ "." ++ serialNumber
+  "urn:epc:id:sscc:" ++ 
+    intercalate "." [gs1CompanyPrefix, serialNumber]
 printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
-  "urn:epc:id:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ serialNumber
+  "urn:epc:id:sgtin:" ++
+    intercalate "." [gs1CompanyPrefix, itemReference, serialNumber]
 printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
-  "urn:epc:id:grai:" ++ gs1CompanyPrefix ++ "." ++ assetType ++ "." ++ serialNumber
+  "urn:epc:id:grai:" ++
+    intercalate "." [gs1CompanyPrefix, assetType, serialNumber]
     --FIXME: add Maybe SGTINFilterValue
-
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
@@ -268,13 +270,15 @@ sglnPadLen = 12
 readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
-  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+  | isCorrectLen =
+      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, ext]
-  | isCorrectLen = Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+  | isCorrectLen =
+      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
