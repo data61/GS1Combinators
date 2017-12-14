@@ -4,6 +4,7 @@ import           Data.Aeson.Encode.Pretty
 import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Data.Either
+import           Data.Either.Combinators
 import qualified Data.Text as T
 import           Text.XML
 import           Text.XML.Cursor
@@ -50,15 +51,12 @@ main = do
   let tCursors = getCursorsByName "TransformationEvent" mainCursor
   let classLabelCursors = flatten $ getCursorsByName "inputQuantityList" <$> tCursors
   let quantityElems = flatten $ getCursorsByName "quantityElement" <$> classLabelCursors
-  -- print $ length tCursors
-  -- print $ parseQuantityElement <$> quantityElems
 
-  print $ parseTransformationWhat <$> tCursors -- causes an exception, unroll
+  print $ head $ parseTransformationWhat <$> tCursors
+  TL.putStrLn . TLE.decodeUtf8 $
+    encodePretty $ fromRight' $ head $ parseTransformationWhat <$> tCursors
 
-  -- let oeCursors = getCursorsByName "TransformationEvent" cursor
-  {-print $ getTransformationEPCList cursor "inputEPCList"
-  print $ getTransformationEPCList cursor "outputEPCList"
-  print $ Main.parseTransformationWhat cursor -}
+
 
   -- print $ length $ getCursorsByName "quantityElement" cursor
   -- let tCursor = head $ getCursorsByName "TransactionEvent" cursor
