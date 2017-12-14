@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<epcis:EPCISDocument creationDate="2014-07-23T16:47:01.0573070+10:00" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epcis="urn:epcglobal:epcis:xsd:1" xmlns:epcglobal="urn:epcglobal:xsd:1" xmlns:eztrack="http://www.eztrack.org/schema/epcis/ext" xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCglobal-epcis-1_0.xsd" schemaVersion="1.0">
+  <EPCISBody>
+    <EventList>
+      <TransactionEvent>
+        <eventTime>2014-07-01T01:17:18+10:00</eventTime>
+        <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+        <bizTransactionList>
+          <bizTransaction type="urn:epcglobal:cbv:btt:desadv">urn:epcglobal:cbv:bt:9377778016948:GL1070742</bizTransaction>
+        </bizTransactionList>
+        <epcList>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385429</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385449</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385457</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385464</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385487</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385489</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385491</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385500</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385502</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385507</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385511</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385520</epc>
+        </epcList>
+        <action>ADD</action>
+        <bizStep>urn:epcglobal:cbv:bizstep:picking</bizStep>
+        <disposition>urn:epcglobal:cbv:disp:in_progress</disposition>
+        <readPoint>
+          <id>urn:epc:id:sgln:934858508.001.STAGING_HANDHELD</id>
+        </readPoint>
+        <bizLocation>
+          <id>urn:epc:id:sgln:934858508.001.STAGING_OUTBOUND</id>
+        </bizLocation>
+        <eztrack:visibility>SC_OneSteel</eztrack:visibility>
+      </TransactionEvent>
+    </EventList>
+  </EPCISBody>
+</epcis:EPCISDocument>
