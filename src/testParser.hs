@@ -55,11 +55,6 @@ main = do
   let quantityElems = flatten $ getCursorsByName "quantityElement" <$> classLabelCursors
   print $ parseQuantityElement <$> quantityElems
 
-  -- print 1
-  
-
-
-
   -- let oeCursors = getCursorsByName "TransformationEvent" cursor
   {-print $ getTransformationEPCList cursor "inputEPCList"
   print $ getTransformationEPCList cursor "outputEPCList"
