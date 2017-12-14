@@ -177,7 +177,6 @@ parseQuantity c = do
     [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
--- Name needs to be inputEPCList or outputEPCList
 {-
 The cursor level should be:
 <inputEPCList>
@@ -185,13 +184,10 @@ The cursor level should be:
   <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
 </inputEPCList>
 -}
-getTransformationEPCList :: Cursor -> Name -> [T.Text]
-getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
-
-
 parseInstanceLabel :: Cursor -> [Either ParseFailure LabelEPC]
 parseInstanceLabel c =
-  readLabelEPC Nothing . T.unpack <$> getTransformationEPCList c "inputEPCList"
+  readLabelEPC Nothing . T.unpack <$> (c $/ element "epc" &/ content)
+
 {-
 This function expects a cursor that resembles something like:
 <quantityElement>
