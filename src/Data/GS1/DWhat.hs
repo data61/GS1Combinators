@@ -36,8 +36,8 @@ type OutputEPC = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
-readLabelEPC :: String -> Maybe Quantity -> Either ParseFailure LabelEPC
-readLabelEPC epcStr mQt =
+readLabelEPC :: Maybe Quantity -> String -> Either ParseFailure LabelEPC
+readLabelEPC mQt epcStr =
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
     <>
       fmap IL (readURIInstanceLabelEPC epcTokens)

@@ -188,9 +188,10 @@ The cursor level should be:
 getTransformationEPCList :: Cursor -> Name -> [T.Text]
 getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
 
-parseInstanceLabel :: Cursor -> Either ParseFailure LabelEPC
-parseInstanceLabel c = error "not implemented yet"
 
+parseInstanceLabel :: Cursor -> [Either ParseFailure LabelEPC]
+parseInstanceLabel c =
+  readLabelEPC Nothing . T.unpack <$> getTransformationEPCList c "inputEPCList"
 {-
 This function expects a cursor that resembles something like:
 <quantityElement>
@@ -200,11 +201,10 @@ This function expects a cursor that resembles something like:
 </quantityElement>
 -}
 parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
-parseClassLabel c = do
-  error "not implemented yet"
-  -- let mQt = parseQuantity c
-  -- let [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
-  -- readLabelEPC labelStr mQt
+parseClassLabel c = readLabelEPC mQt labelStr
+  where
+    mQt = parseQuantity c
+    [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
 
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
@@ -215,9 +215,6 @@ parseDisposition :: [T.Text] -> Either ParseFailure Disposition
 parseDisposition = parseSingleElemE readURI
 
 -- |Parse Action by Name ---> perhaps deprecated? -@sa
--- Action is not a URI, so I am making parseAction return a Maybe Action
--- as opposed to any of the other parse[a] functions,
--- which returns Either ParseFailure a.
 parseAction :: [T.Text] -> Either ParseFailure Action
 parseAction = parseSingleElemE mkAction
 
@@ -235,9 +232,9 @@ parseQuantityValue = parseSingleElemM readMaybe
 parseParentID :: [T.Text] -> Maybe ParentID
 parseParentID [] = Nothing
 parseParentID (t:ts)
-  | isJust returnValue = returnValue
-  | otherwise          = parseParentID ts
-  where returnValue = mkByName $ T.unpack t
+  | isJust pId = pId
+  | otherwise  = parseParentID ts
+  where pId = mkByName $ T.unpack t
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
@@ -246,9 +243,9 @@ parseParentID (t:ts)
 -- pad the [Maybe Quantity] with Nothings
 parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
 parseEPCList [] _ = []
-parseEPCList (t:ts) [] = readLabelEPC (T.unpack t) Nothing :
+parseEPCList (t:ts) [] = readLabelEPC Nothing (T.unpack t) :
                             parseEPCList ts [Nothing]
-parseEPCList (t:ts) (q:qs) = readLabelEPC (T.unpack t) q : parseEPCList ts qs
+parseEPCList (t:ts) (q:qs) = readLabelEPC q (T.unpack t) : parseEPCList ts qs
 
 -- |Alias to parseEPCList
 -- name="childEPCs" type="epcis:EPCListType"
@@ -312,10 +309,15 @@ parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
 parseLabelEPCs insName clName c = do
   let instanceCursors = getCursorsByName insName c
   let classCursors = getCursorsByName clName c
-  (parseInstanceLabel <$> instanceCursors) ++ (parseClassLabel <$> classCursors)
+  flatten (parseInstanceLabel <$> instanceCursors) ++
+    (parseClassLabel <$> classCursors) -- error. get the quantityElements first
 
 parseTransformationID :: Cursor -> Maybe TransformationID
-parseTransformationID = error "not implemented yet"
+parseTransformationID c = do
+  let tId = c $/ element "transformationID" &/ content
+  case tId of
+    []  -> Nothing
+    [t] -> Just $ T.unpack t
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
@@ -387,7 +389,8 @@ parseEventByType c et = do
                AggregationEventT    -> "AggregationEvent"
                TransactionEventT    -> "TransactionEvent"
                TransformationEventT -> "TransformationEvent"
-  let eCursors = c $// element tagS
+
+  let eCursors = getCursorsByName tagS c
   let eid = parseEventID <$> eCursors
 
   let dwhat = parseDWhat et eCursors

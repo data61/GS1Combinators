@@ -132,7 +132,8 @@ readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
 readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
   Right $ CSGTIN gs1CompanyPrefix Nothing itemReference
     where (gs1CompanyPrefix:itemReference:_) = getSuffixTokens rest
-readURIClassLabelEPC _ = Left InvalidFormat
+-- readURIClassLabelEPC _ = Left InvalidFormat
+readURIClassLabelEPC x = error $ flatten x
 
 
 printURIClassLabelEPC :: ClassLabelEPC -> String
@@ -143,7 +144,6 @@ printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
-
 
 data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                       -- Global Individual Asset Identifier, e.g. bucket for olives
@@ -190,6 +190,7 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
         [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
         isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
 readURIInstanceLabelEPC _ = Left InvalidFormat
+-- readURIInstanceLabelEPC x = error $ flatten x
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
@@ -244,7 +245,8 @@ instance URI LocationEPC where
   readURI epcStr
    | isLocationEPC (splitOn ":" epcStr) =
       readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
-   | otherwise            = Left InvalidFormat
+  --  | otherwise            = Left InvalidFormat
+   | otherwise            = error "Invalid Location EPC"
 
 isLocationEPC :: [String] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -568,7 +570,8 @@ ppDisposition = revertCamelCase . show
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 24
 readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
-readURIDisposition Nothing = Left InvalidFormat
+-- readURIDisposition Nothing = Left InvalidFormat
+readURIDisposition Nothing = error "Invalid Disposition"
 readURIDisposition (Just disp) = Right disp
 
 instance URI Disposition where
