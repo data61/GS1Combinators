@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<epcis:EPCISDocument creationDate="2014-07-24T11:58:13.7374357+10:00" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epcis="urn:epcglobal:epcis:xsd:1" xmlns:epcglobal="urn:epcglobal:xsd:1" xmlns:eztrack="http://www.eztrack.org/schema/epcis/ext" xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCglobal-epcis-1_0.xsd" schemaVersion="1.0">
+  <EPCISBody>
+    <EventList>
+      <AggregationEvent>
+        <eventTime>2014-07-01T01:28:00+10:00</eventTime>
+        <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+        <parentID>urn:epc:id:giai:934858504.KT165</parentID>
+        <childEPCs>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385429</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385449</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385457</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385464</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385487</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385489</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385491</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385500</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385502</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385507</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385511</epc>
+          <epc>urn:epc:id:sgtin:9316266.900260.28385520</epc>
+        </childEPCs>
+        <action>ADD</action>
+        <bizStep>urn:epcglobal:cbv:bizstep:loading</bizStep>
+        <disposition>urn:epcglobal:cbv:disp:in_progress</disposition>
+        <readPoint>
+          <id>urn:epc:id:sgln:934858508.001.LOADING_HANDHELD</id>
+        </readPoint>
+        <bizLocation>
+          <id>urn:epc:id:sgln:934858508.001.CONTAINER_YARD</id>
+        </bizLocation>
+        <bizTransactionList>
+          <bizTransaction type="http://epcis.onesteel.com/btt/loadno">http://epcis.onesteel.com/bt/324063</bizTransaction>
+        </bizTransactionList>
+        <eztrack:visibility>SC_OneSteel</eztrack:visibility>
+      </AggregationEvent>
+    </EventList>
+  </EPCISBody>
+</epcis:EPCISDocument>

@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<epcis:EPCISDocument creationDate="2014-07-24T11:34:23.3706800+10:00" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epcis="urn:epcglobal:epcis:xsd:1" xmlns:epcglobal="urn:epcglobal:xsd:1" xmlns:eztrack="http://www.eztrack.org/schema/epcis/ext" xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCglobal-epcis-1_0.xsd" schemaVersion="1.0">
+  <EPCISBody>
+    <EventList>
+      <AggregationEvent>
+        <eventTime>2014-06-23T18:16:16+10:00</eventTime>
+        <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+        <parentID>urn:epc:id:giai:934858504.KT400423</parentID>
+        <childEPCs>
+          <epc>urn:epc:id:sgtin:9316266.900171.12920756</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28381404</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383228</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383231</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383232</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383241</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383662</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28383663</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28384367</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28385000</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28385019</epc>
+          <epc>urn:epc:id:sgtin:9316266.900171.28385021</epc>
+          <epc>urn:epc:id:sgtin:9316266.901189.28384603</epc>
+        </childEPCs>
+        <action>ADD</action>
+        <bizStep>urn:epcglobal:cbv:bizstep:loading</bizStep>
+        <disposition>urn:epcglobal:cbv:disp:in_progress</disposition>
+        <readPoint>
+          <id>urn:epc:id:sgln:934858508.001.LOADING_HANDHELD</id>
+        </readPoint>
+        <bizLocation>
+          <id>urn:epc:id:sgln:934858508.001.CONTAINER_YARD</id>
+        </bizLocation>
+        <bizTransactionList>
+          <bizTransaction type="http://epcis.onesteel.com/btt/loadno">http://epcis.onesteel.com/bt/323996</bizTransaction>
+        </bizTransactionList>
+        <eztrack:visibility>SC_OneSteel</eztrack:visibility>
+      </AggregationEvent>
+    </EventList>
+  </EPCISBody>
+</epcis:EPCISDocument>
