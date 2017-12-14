@@ -34,7 +34,9 @@ getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
 --   let (iEpcsErrs, iEpcs) = partitionEithers $
 --           readLabelEPC <$> 
 --           (T.unpack <$> getTransformationEPCList c "inputEPCList") Nothing
---   let (oEpcsErrs, oEpcs) = partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . T.unpack <$> getTransformationEPCList c "outputEPCList"
+--   let (oEpcsErrs, oEpcs) = 
+          -- partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . 
+          -- T.unpack <$> getTransformationEPCList c "outputEPCList"
 --   let tId = case c $/ element "transformationID" &/ content of
 --              [] -> Nothing
 --              t:ts -> Just $ T.unpack t

@@ -177,12 +177,34 @@ parseQuantity c = do
     [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
         Just $ MeasuredQuantity (read q' :: Amount) u'
 
--- rename to parseLabel
-parseQuantityElement :: Cursor -> Either ParseFailure LabelEPC
-parseQuantityElement c = do
-  let mQt = parseQuantity c
-  let labelStr = T.unpack . head $ c $/ element "epcClass" &/ content
-  readLabelEPC labelStr mQt
+-- Name needs to be inputEPCList or outputEPCList
+{-
+The cursor level should be:
+<inputEPCList>
+  <epc>urn:epc:id:sgtin:4012345.011122.25</epc>
+  <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
+</inputEPCList>
+-}
+getTransformationEPCList :: Cursor -> Name -> [T.Text]
+getTransformationEPCList c n = c $// element n &/ element "epc" &/ content
+
+parseInstanceLabel :: Cursor -> Either ParseFailure LabelEPC
+parseInstanceLabel c = error "not implemented yet"
+
+{-
+This function expects a cursor that resembles something like:
+<quantityElement>
+  <epcClass>urn:epc:class:lgtin:4012345.011111.4444</epcClass>
+  <quantity>10</quantity>
+  <uom>KGM</uom>
+</quantityElement>
+-}
+parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
+parseClassLabel c = do
+  error "not implemented yet"
+  -- let mQt = parseQuantity c
+  -- let [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
+  -- readLabelEPC labelStr mQt
 
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
@@ -234,9 +256,9 @@ parseChildEPCList :: [T.Text] -> [Maybe Quantity] ->
                      [Either ParseFailure LabelEPC]
 parseChildEPCList = parseEPCList
 
--- returns all the errors that occur in Action and [[ParseFailure]]
+-- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
-  -> ParseFailure
+                    -> ParseFailure
 returnLeftErrors (Left act, errs)  = ChildFailure (act : flatten errs)
 returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 
@@ -283,9 +305,30 @@ parseTransactionDWhat c = do
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
     _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
+-- insName --> The name of the cursor under which the instanceLabelEPCs lie
+-- clName --> The name of the cursor under which the classLabelEPCs lie
+-- eg, insName is "inputEPCList", clName is "outputQuantityList", case sensitive
+parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
+parseLabelEPCs insName clName c = do
+  let instanceCursors = getCursorsByName insName c
+  let classCursors = getCursorsByName clName c
+  (parseInstanceLabel <$> instanceCursors) ++ (parseClassLabel <$> classCursors)
+
+parseTransformationID :: Cursor -> Maybe TransformationID
+parseTransformationID = error "not implemented yet"
+
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
-parseTransformationWhat c = error "Not implemented yet"
+parseTransformationWhat c = do
+  -- get transformaiton id
+  let tId = parseTransformationID c
+  let (inputErrs, inputEpcs) = partitionEithers $
+        parseLabelEPCs "inputEPCList" "inputQuantityList" c
+  let (outputErrs, outputEpcs) = partitionEithers $
+        parseLabelEPCs "outputEPCList" "outputQuantityList" c
+  case (inputErrs, outputErrs) of
+    ([], []) -> Right $ TransformationDWhat tId inputEpcs outputEpcs
+    _        -> Left $ ChildFailure $ inputErrs ++ outputErrs
 
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
@@ -300,9 +343,9 @@ parseBizTransactionHelp (a, b) = do
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
   let texts = c $// element "bizTransaction" &/ content
-  -- "http://transaction.acme.com/po/12345678\n          "
+  -- looks like "http://transaction.acme.com/po/12345678"
   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
-  -- urn:epcglobal:cbv:btt:po
+  -- looks like urn:epcglobal:cbv:btt:po
   let z = zip texts attrs
   parseBizTransactionHelp <$> z
 
