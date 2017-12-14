@@ -63,26 +63,16 @@ executable GS1Combinators-exe
 
 test-suite GS1Combinators-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      src test
+  hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       Data.GS1.DWhat
-                     , Data.GS1.DWhy
-                     , Data.GS1.DWhen
-                     , Data.GS1.DWhere
-                     , Data.GS1.EPC
-                     , Data.GS1.ErrorDeclaration
-                     , Data.GS1.Event
-                     , Data.GS1.EventID
-                     , Data.GS1.Utils
-                     , Data.GS1.Parser.Parser
-                     , Tests.DWhat
+  other-modules:       Tests.DWhat
                      , Tests.DWhen
                      , Tests.DWhere
                      , Tests.DWhy
                      , Tests.Utils
                      , Tests.Parser
-                     , Data.GS1.URI
   build-depends:       base
+                     , GS1Combinators
                      , bytestring
                      , GS1Combinators
                      , hspec
