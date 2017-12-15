@@ -319,8 +319,8 @@ parseTransformationID c = do
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
-parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
-parseTransformationWhat c = do
+parseTransformationDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransformationDWhat c = do
   -- get transformaiton id
   let tId = parseTransformationID c
   let (inputErrs, inputEpcs) = partitionEithers $
@@ -378,7 +378,7 @@ parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
 parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
 parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
 parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
-parseDWhat TransformationEventT eCursors = parseTransformationWhat <$> eCursors
+parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 
 -- | Find all events and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
