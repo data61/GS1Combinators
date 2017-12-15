@@ -280,7 +280,8 @@ readURILocationEPC [companyPrefix, locationStr]
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, extNum]
   | isCorrectLen =
-      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
+      Right $
+        SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
