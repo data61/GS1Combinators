@@ -107,31 +107,34 @@ testPpDWhat = do
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
       ppDWhat (AggregationDWhat Observe
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nObserve\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nObserve\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
     it "creates AggregationDWhat from valid input, Add" $
       ppDWhat (AggregationDWhat Add
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nAdd\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nAdd\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
     it "creates AggregationDWhat from valid input, Delete" $
       ppDWhat (AggregationDWhat Delete
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
-            "AGGREGATION WHAT\nDelete\nJust (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "AGGREGATION WHAT\nDelete\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
 
@@ -149,37 +152,37 @@ testPpDWhat = do
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
       ppDWhat (TransactionDWhat Add
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nAdd\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Observe" $
       ppDWhat (TransactionDWhat Observe
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nObserve\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
     it "create TransactionDWhat from valid input, Delete" $
       ppDWhat (TransactionDWhat Delete
-        (Just (IL (SSCC "0614141" "1234567890")))
+        (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "TRANSACTION WHAT\nDelete\n" ++
-            "Just (IL (SSCC \"0614141\" \"1234567890\"))\n" ++
+            "Just (SSCC \"0614141\" \"1234567890\")\n" ++
             "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
             "[IL (SGTIN \"0614141\" Nothing \"107346\" \"2017\")," ++
             "IL (SGTIN \"0614141\" Nothing \"107346\" \"2018\")]\n"
