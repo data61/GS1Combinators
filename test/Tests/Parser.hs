@@ -209,12 +209,12 @@ testParser = do
       isRight (head parsedEvents) `shouldBe` True
 
   -- TODO = CHECK. COPIED FROM OUTPUT. Manually checked looks correct
-  describe "run parseTransformationWhat" $
+  describe "run parseTransformationDWhat" $
     it "parses valid DWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
       let cursor = fromDocument doc
       let tCursors = getCursorsByName "TransformationEvent" cursor
-      parseTransformationWhat <$> tCursors `shouldBe`
+      parseTransformationDWhat <$> tCursors `shouldBe`
         [Right (TransformationDWhat Nothing
           [IL (SGTIN "4012345" Nothing "011122" "25"),
            IL (SGTIN "4000001" Nothing "065432" "99886655"),
