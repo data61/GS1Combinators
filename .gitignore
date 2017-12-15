@@ -30,4 +30,5 @@ cabal.project.local
 stats_randnum_4215.sh
 
 *.out
+*.tix
 

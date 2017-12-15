@@ -30,7 +30,7 @@ instance ToSchema LabelEPC
 instance ToField LabelEPC where
     toField = toField . pack . show
 
-type ParentID  = LabelEPC
+type ParentID  = InstanceLabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
 
@@ -47,15 +47,15 @@ readLabelEPC mQt epcStr =
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList quantityList
-             ObjectDWhat Action [LabelEPC]
-           -- AggregationDWhat action parentID childEPC
-           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
-           -- TransactionDWhat action parentID(URI) bizTransactionList epcList
-           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
-           | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
-           -- TransformationDWhat transformationID inputEPCList outputEPCList
-           | TransformationDWhat (Maybe TransformationID) [InputEPC] [OutputEPC]
-           deriving (Show, Eq, Generic)
+            ObjectDWhat Action [LabelEPC]
+          -- AggregationDWhat action parentID childEPC
+          | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+          -- TransactionDWhat action parentID(URI) bizTransactionList epcList
+          -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
+          | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
+          -- TransformationDWhat transformationID inputEPCList outputEPCList
+          | TransformationDWhat (Maybe TransformationID) [InputEPC] [OutputEPC]
+          deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
