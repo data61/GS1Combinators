@@ -55,9 +55,9 @@ parseURI s uri = let puri = T.pack uri
                         else Nothing
 
 -- returns (Just Right) or Nothing
--- either2Maybe :: Either a b -> Maybe b
--- either2Maybe (Right x) = Just x
--- either2Maybe (Left _) = Nothing
+either2Maybe :: Either a b -> Maybe b
+either2Maybe (Right x) = Just x
+either2Maybe (Left _) = Nothing
 
 flatten :: [[a]] -> [a]
 flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
