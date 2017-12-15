@@ -21,7 +21,7 @@ insertUs' s = s >>= f
 
 
 revertCamelCase :: String -> String
-revertCamelCase [] = []
+revertCamelCase "" = ""
 revertCamelCase str = let r = insertUs' str in
                           case r of
                             '_':t -> t
