@@ -2,8 +2,10 @@
 
 You must always remember to build before testing, since the automatic building before the test building has been removed.
 
-stack clean
+This is automated in run_tests.sh
 
-stack build --coverage
+./run_tests.sh
 
-stack test --coverage
+To perform a clean beforehand, use the -c option
+
+./run_tests.sh -c
