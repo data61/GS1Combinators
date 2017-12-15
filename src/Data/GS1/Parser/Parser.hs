@@ -314,8 +314,8 @@ parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
   let tId = c $/ element "transformationID" &/ content
   case tId of
-    []  -> Nothing
     [t] -> Just $ T.unpack t
+    _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
