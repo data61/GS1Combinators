@@ -265,6 +265,10 @@ hasCoord s = isJust obj
 sglnPadLen :: Int
 sglnPadLen = 12
 
+getExt :: String -> Maybe SGLNExtension
+getExt "0" = Nothing
+getExt x   = Just x
+
 readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
@@ -274,12 +278,13 @@ readURILocationEPC [companyPrefix, locationStr]
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 -- with extension
-readURILocationEPC [companyPrefix, locationStr, ext]
+readURILocationEPC [companyPrefix, locationStr, extNum]
   | isCorrectLen =
-      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (Just ext)
+      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
+
 readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
 $(deriveJSON defaultOptions ''LocationReference)
