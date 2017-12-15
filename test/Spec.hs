@@ -11,6 +11,11 @@ import           Test.Hspec   (hspec)
 
 main :: IO ()
 main = do
+  -- Utils
+  hspec testRevertCamelCase
+  hspec testMkCamelCase
+  hspec testParseURI
+  
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
@@ -29,8 +34,3 @@ main = do
 
   -- Parser
   hspec testParser
-
-  -- Utils
-  hspec testRevertCamelCase
-  hspec testMkCamelCase
-  hspec testParseURI
