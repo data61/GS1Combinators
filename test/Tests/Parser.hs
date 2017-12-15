@@ -37,13 +37,13 @@ testParser = do
       let tz1 = parseStr2TimeZone et1 :: Either EPCISTimeError TimeZone
       parseDWhen <$> oeCursors `shouldBe`
         [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz)),
-        Right (DWhen (fromRight' t1) (Just (fromRight' t1)) (fromRight' tz1))]
+        Right (DWhen (fromRight' t1) Nothing (fromRight' tz1))]
 
     it "creates Nothing from Single ObjectEvent XML without Event Time" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      parseDWhen <$> oeCursors `shouldBe` [Left InvalidFormat]
+      parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEvent XML" $ do
@@ -52,23 +52,22 @@ testParser = do
       let actions = cursor $// element "action" &/ content
       parseAction actions `shouldBe` Right Observe
 
-      -- TODO = check... [Just (ItemCount 1), Just (ItemCount 1)]. CHECK!!!
   describe "parse XML to obtain EPC List" $ do
     it "finds all epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let epcs = cursor $// element "epc" &/ content
       --show <$> parseEPCList epcs Nothing `shouldBe`
-      show <$> parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
+      parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
+        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017", Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
 
     it "finds all child epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let epcs = cursor $// element "epc" &/ content
-      -- TODO = check
-      show <$> parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        ["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
+      parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
+        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017", Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+        --["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
 
   describe "parse XML to get BizStep" $ do
     it "find all the BizStep in multiple events XML" $ do
@@ -97,6 +96,7 @@ testParser = do
       let oeCursors = cursor $// element "ObjectEvent"
       parseDWhy <$> oeCursors `shouldBe` [Right $ DWhy (Just Shipping) (Just InTransit)]
 
+  -- following test - the Nothing extension used because a value of 0 indicates no extension
   describe "parse XML to obtain DWhere" $
     it "finds all the dwhere" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -122,6 +122,7 @@ testParser = do
       let oeCursors = getCursorsByName "quantityElement" cursor
       parseQuantity <$> oeCursors `shouldBe` [Just $ MeasuredQuantity 200 "KGM"]
 
+      -- TODO = check... may be incorrect!
   describe "parse BizTransaction" $ do
     it "parse BizTransaction element" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -169,6 +170,7 @@ testParser = do
           [IL $ SGTIN "0614141" Nothing "107346" "2017",
           IL $ SGTIN "0614141" Nothing "107346" "2018"]]
 
+    -- TODO = check... may be incorrect!
     it "parses a valid TransactionDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
@@ -188,7 +190,7 @@ testParser = do
           BizTransaction {
             _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
             _bt = Desadv}]
-          [IL $ SGTIN "0614141" Nothing "107346" "2017"])]
+          [IL $ SGTIN "0614141" Nothing "107346" "2018"])]
 
   describe "parse ObjectEvent" $
     it "parses a valid object event" $ do
