@@ -220,18 +220,18 @@ parseAction = parseSingleElemE mkAction
 parseQuantityValue :: [T.Text] -> Maybe Integer
 parseQuantityValue = parseSingleElemM readMaybe
 
+
 -- |parse group of text to obtain ParentID
--- a sample usage of this function would have been nice
--- previous implementation likely wouldn't work.
--- needs a (text -> URI a) function or something
--- current implementation might be potentially buggy,
--- as I am not sure how this function is supposed to work
-parseParentID :: [T.Text] -> Maybe ParentID
-parseParentID [] = Nothing
-parseParentID (t:ts)
-  | isJust pId = pId
-  | otherwise  = parseParentID ts
-  where pId = mkByName $ T.unpack t
+-- takes in one event cursor, looks for a cursor that resembles
+{-
+<parentID>urn:epc:id:sscc:0614141.1234567890</parentID>
+-}
+-- and returns the equivalent instanceLabel data-type
+parseParentID :: Cursor -> Maybe ParentID
+parseParentID c =
+  case c $/ element "parentID" &/ content of
+    (p:_) -> (either2Maybe . readURI . T.unpack) p
+    _   -> Nothing
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
@@ -273,7 +273,7 @@ parseObjectDWhat c = do
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
-  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let pid = parseParentID c
   let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
   let (errs, epcs) = partitionEithers $ parseChildEPCList
           (c $/ element "childEPCs" &/ element "epc" &/ content) qt
@@ -286,7 +286,7 @@ parseAggregationDWhat c = do
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
-  let pid = parseParentID (c $/ element "parentID" &/ content)
+  let pid = parseParentID c
   -- this is potentially buggy. quantity should not be parsed blindly like this
   -- it just literally goes through any arbitrary instance of quantity
   -- it does not put the quantity in the approriate LabelEPC

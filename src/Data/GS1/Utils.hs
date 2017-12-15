@@ -5,6 +5,7 @@ module Data.GS1.Utils (
 , mkByName
 , parseURI
 , flatten
+, either2Maybe
 ) where
 
 import           Data.Char
