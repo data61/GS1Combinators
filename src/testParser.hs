@@ -21,64 +21,17 @@ import           Control.Applicative
 flatten :: [[a]] -> [a]
 flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
 
-parseSourceDestLocationT :: Cursor -> Name -> Name -> Name -> [(T.Text, T.Text)]
-parseSourceDestLocationT c lst el attr = do
-  let location = T.strip <$> (c $// element lst &/ element el &/ content)
-  let srcDestType = T.strip <$> flatten (c $// element lst &/ element el &| attribute attr)
-  zip location srcDestType
-
--- parseTransformationWhat :: Cursor -> Either ParseFailure DWhat
--- parseTransformationWhat c = do
---   let (iEpcsErrs, iEpcs) = partitionEithers $
---           readLabelEPC <$> 
---           (T.unpack <$> getTransformationEPCList c "inputEPCList") Nothing
---   let (oEpcsErrs, oEpcs) = 
-          -- partitionEithers $ (readURI :: String -> Either ParseFailure InstanceLabelEPC) . 
-          -- T.unpack <$> getTransformationEPCList c "outputEPCList"
---   let tId = case c $/ element "transformationID" &/ content of
---              [] -> Nothing
---              t:ts -> Just $ T.unpack t
---   case (iEpcsErrs, oEpcsErrs) of
---     ([], []) -> Right $ TransformationDWhat tId iEpcs oEpcs
---     _        -> Left $ ChildFailure (iEpcsErrs ++ oEpcsErrs)
-
 main :: IO()
 main = do
-  -- doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
-  doc <- Text.XML.readFile def "../test/test-xml/TransformationEvent.xml"
+  let eventName = "TransactionEvent"
+  doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
   
   let mainCursor = fromDocument doc
-  let tCursors = getCursorsByName "TransformationEvent" mainCursor
-  let classLabelCursors = flatten $ getCursorsByName "inputQuantityList" <$> tCursors
-  let quantityElems = flatten $ getCursorsByName "quantityElement" <$> classLabelCursors
+  let eCursors = getCursorsByName eventName mainCursor
 
-  print $ head $ parseTransformationWhat <$> tCursors
-  TL.putStrLn . TLE.decodeUtf8 $
-    encodePretty $ fromRight' $ head $ parseTransformationWhat <$> tCursors
-
-
-
-  -- print $ length $ getCursorsByName "quantityElement" cursor
-  -- let tCursor = head $ getCursorsByName "TransactionEvent" cursor
-  -- let texts = tCursor $// element "bizTransaction" &/ content
-  -- let attrs = foldMap id (tCursor $// element "bizTransaction" &| attribute "type")
-  -- print texts
-  -- print attrs
-  -- print $ parseEventByType cursor TransactionEventT
-
-
-
-  -- print $ fromRight' . parseDWhen <$> oeCursors
-  -- print $ fromRight' . parseDWhy <$> oeCursors
-  -- print $ fromRight' . parseDWhere <$> oeCursors
-  -- print $ fromRight' . parseObjectDWhat <$> oeCursors
-  -- print $ fromRight' . parseAggregationDWhat <$> oeCursors
-
---   print $ parseSourceDestLocationT cursor sourceList source typeAttr
---   print $ partitionEithers $ parseSourceDestLocation cursor sourceList source typeAttr
-
---   print $ parseSourceDestLocationT cursor destList dest typeAttr
---   print $ parseSourceDestLocation cursor destList dest typeAttr
+  let dwhat = head $ parseTransactionDWhat <$> eCursors
+  print dwhat
+  TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromRight' dwhat
 
 --   print $ blahfoo <$> oeCursors -- this shows that parseBizTransaction is bugged - mkBizTransactionType might not work with fromJust
 
