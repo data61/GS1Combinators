@@ -59,15 +59,18 @@ testParser = do
       let epcs = cursor $// element "epc" &/ content
       --show <$> parseEPCList epcs Nothing `shouldBe`
       parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017", Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+        Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
 
     it "finds all child epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let epcs = cursor $// element "epc" &/ content
       parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017", Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
-        --["urn:epc:id:sgtin:0614141.107346.2017", "urn:epc:id:sgtin:0614141.107346.2018"]
+        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+        Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+        --["urn:epc:id:sgtin:0614141.107346.2017",
+        -- "urn:epc:id:sgtin:0614141.107346.2018"]
 
   describe "parse XML to get BizStep" $ do
     it "find all the BizStep in multiple events XML" $ do
@@ -105,15 +108,19 @@ testParser = do
       --mapM_ print $ parseDWhere <$> oeCursors
       parseDWhere <$> oeCursors `shouldBe`
         [Right DWhere {
-          _readPoint = [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
+          _readPoint =
+              [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
           , _bizLocation = []
           , _srcType = []
           , _destType = []},
         Right DWhere {
-          _readPoint = [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
-          , _bizLocation = [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
+          _readPoint =
+              [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
+          , _bizLocation =
+              [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
           , _srcType = []
-          , _destType = []}]
+          , _destType = []}
+        ]
 
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
@@ -157,8 +164,9 @@ testParser = do
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       -- TODO = CHECK whether Nothing is appropriate below
       parseObjectDWhat <$> oeCursors `shouldBe`
-        [Right $ ObjectDWhat Observe [IL $ SGTIN "0614141" Nothing "107346" "2017",
-        IL $ SGTIN "0614141" Nothing "107346" "2018"]]
+        [Right $ ObjectDWhat Observe
+          [IL $ SGTIN "0614141" Nothing "107346" "2017",
+          IL $ SGTIN "0614141" Nothing "107346" "2018"]]
 
     it "parses a valid AggregationDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
@@ -166,7 +174,7 @@ testParser = do
       let aeCursors = getCursorsByName "AggregationEvent" cursor
       -- TODO = check Nothings are appropriate below
       parseAggregationDWhat <$> aeCursors `shouldBe`
-        [Right $ AggregationDWhat Observe (Just $ IL $ SSCC "0614141" "1234567890")
+        [Right $ AggregationDWhat Observe (Just $ SSCC "0614141" "1234567890")
           [IL $ SGTIN "0614141" Nothing "107346" "2017",
           IL $ SGTIN "0614141" Nothing "107346" "2018"]]
 
