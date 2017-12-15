@@ -257,6 +257,7 @@ returnLeftErrors (Left act, errs)  = ChildFailure (act : flatten errs)
 returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 
 -- |parse and construct ObjectDWhat dimension
+-- potentially buggy
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
