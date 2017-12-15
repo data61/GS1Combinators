@@ -40,7 +40,9 @@ makeClassy ''DWhy
 
 -- XXX mkDWhy can be rewritten as:
 --mkDWhy = liftA2 DWhy
-mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition -> Either ParseFailure DWhy
+mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition
+          -> Either ParseFailure DWhy
 mkDWhy (Right step) (Right disp) = Right $ DWhy (Just step) (Just disp)
-mkDWhy _ _                       = undefined -- not implemented yet
-
+mkDWhy (Left eBiz) (Left eDisp) = Left $ ChildFailure [eBiz, eDisp]
+mkDWhy (Left eBiz) (Right _) = Left $ ChildFailure [eBiz]
+mkDWhy (Right _) (Left eDisp) = Left $ ChildFailure [eDisp]
