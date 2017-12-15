@@ -309,7 +309,7 @@ parseLabelEPCs insName clName c = do
   let classCursors = flatten $ getCursorsByName "quantityElement" <$>
                         getCursorsByName clName c
   flatten (parseInstanceLabel <$> instanceCursors) ++
-    (parseClassLabel <$> classCursors) -- error. get the quantityElements first
+    (parseClassLabel <$> classCursors)
 
 parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
