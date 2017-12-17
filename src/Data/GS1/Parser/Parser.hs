@@ -235,20 +235,23 @@ parseParentID c =
 
 -- |Parse a List of EPCs
 -- name="epcList" type="epcis:EPCListType"
--- whoever calls this function should make sure
--- length of the two arguments are same
--- pad the [Maybe Quantity] with Nothings
-parseEPCList :: [T.Text] -> [Maybe Quantity] -> [Either ParseFailure LabelEPC]
-parseEPCList [] _ = []
-parseEPCList (t:ts) [] = readLabelEPC Nothing (T.unpack t) :
-                            parseEPCList ts [Nothing]
-parseEPCList (t:ts) (q:qs) = readLabelEPC q (T.unpack t) : parseEPCList ts qs
+parseEPCList :: Cursor -> Name -> [Either ParseFailure LabelEPC]
+parseEPCList c n = (readLabelEPC Nothing . T.unpack) <$> texts
+  where
+    texts = c $/ element n &/ element "epc" &/ content
 
--- |Alias to parseEPCList
--- name="childEPCs" type="epcis:EPCListType"
-parseChildEPCList :: [T.Text] -> [Maybe Quantity] -> 
-                     [Either ParseFailure LabelEPC]
-parseChildEPCList = parseEPCList
+
+-- insName --> The name of the cursor under which the instanceLabelEPCs lie
+-- clName --> The name of the cursor under which the classLabelEPCs lie
+-- eg, insName is "inputEPCList", clName is "outputQuantityList", case sensitive
+parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
+parseLabelEPCs insName clName c = do
+  let instanceCursors = getCursorsByName insName c
+  let classCursors = flatten $ getCursorsByName "quantityElement" <$>
+                        getCursorsByName clName c
+  flatten (parseInstanceLabel <$> instanceCursors) ++
+    (parseClassLabel <$> classCursors)
+
 
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
@@ -263,10 +266,10 @@ parseObjectDWhat c = do
   -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
   -- find all epcs below epcList tag
-  let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
+  -- all these epcs are InstanceLabelEPCs
+  -- let (errs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (errs, epcs) = partitionEithers $
-        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
-
+        parseLabelEPCs "epcList" "quantityList" c
   case (act, errs) of
     (Right a, []) -> Right $ ObjectDWhat a epcs
     _             -> Left $ returnLeftErrors (act, [errs])
@@ -275,9 +278,8 @@ parseObjectDWhat c = do
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
   let pid = parseParentID c
-  let qt  = parseQuantity <$> getCursorsByName "quantityElement" c
-  let (errs, epcs) = partitionEithers $ parseChildEPCList
-          (c $/ element "childEPCs" &/ element "epc" &/ content) qt
+  let (errs, epcs) = partitionEithers $
+        parseLabelEPCs "childEPCs" "childQuantityList" c
   let act = parseAction (c $/ element "action" &/ content)
 
   case (act, errs) of
@@ -288,28 +290,14 @@ parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID c
-  -- this is potentially buggy. quantity should not be parsed blindly like this
-  -- it just literally goes through any arbitrary instance of quantity
-  -- it does not put the quantity in the approriate LabelEPC
-  let qt = parseQuantity <$> getCursorsByName "quantityElement" c
+  -- let (epcErrs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (epcErrs, epcs) = partitionEithers $
-        parseEPCList (c $/ element "epcList" &/ element "epc" &/ content) qt
+        parseLabelEPCs "epcList" "quantityList" c
   let act = parseAction (c $/ element "action" &/ content)
 
   case (act, bizTErrs, epcErrs) of
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
     _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
-
--- insName --> The name of the cursor under which the instanceLabelEPCs lie
--- clName --> The name of the cursor under which the classLabelEPCs lie
--- eg, insName is "inputEPCList", clName is "outputQuantityList", case sensitive
-parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
-parseLabelEPCs insName clName c = do
-  let instanceCursors = getCursorsByName insName c
-  let classCursors = flatten $ getCursorsByName "quantityElement" <$>
-                        getCursorsByName clName c
-  flatten (parseInstanceLabel <$> instanceCursors) ++
-    (parseClassLabel <$> classCursors)
 
 parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
