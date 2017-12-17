@@ -252,7 +252,7 @@ isLocationEPC _                                   = False
 -- now deprecated
 parseCoord :: [String] -> Maybe [String]
 parseCoord ["latLong", lat, long] = Just [lat, long]
-parseCoord _ = Nothing
+parseCoord _                      = Nothing
 
 -- checks if the string has coords. not a fully generalised function
 -- now deprecated
@@ -267,7 +267,7 @@ sglnPadLen = 12
 
 getExt :: String -> Maybe SGLNExtension
 getExt "0" = Nothing
-getExt x   = Just x
+getExt s   = Just s
 
 readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
 -- without extension

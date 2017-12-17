@@ -97,9 +97,10 @@ testParser = do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc2
       let oeCursors = cursor $// element "ObjectEvent"
-      parseDWhy <$> oeCursors `shouldBe` [Right $ DWhy (Just Shipping) (Just InTransit)]
+      parseDWhy <$> oeCursors `shouldBe`
+        [Right $ DWhy (Just Shipping) (Just InTransit)]
 
-  -- following test - the Nothing extension used because a value of 0 indicates no extension
+  -- the Nothing extension used because a value of 0 indicates no extension
   describe "parse XML to obtain DWhere" $
     it "finds all the dwhere" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -112,15 +113,15 @@ testParser = do
               [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
           , _bizLocation = []
           , _srcType = []
-          , _destType = []},
-        Right DWhere {
+          , _destType = []
+        }, Right DWhere {
           _readPoint =
               [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
           , _bizLocation =
               [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
           , _srcType = []
-          , _destType = []}
-        ]
+          , _destType = []
+        }]
 
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
