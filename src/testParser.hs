@@ -23,13 +23,13 @@ flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
 
 main :: IO()
 main = do
-  let eventName = "TransactionEvent"
-  doc <- Text.XML.readFile def "../test/test-xml/TransactionEvent.xml"
+  let eventName = "AggregationEvent"
+  doc <- Text.XML.readFile def "../test/test-xml/AggregationEvent.xml"
   
   let mainCursor = fromDocument doc
   let eCursors = getCursorsByName eventName mainCursor
 
-  let dwhat = head $ parseTransactionDWhat <$> eCursors
+  let dwhat = head $ parseAggregationDWhat <$> eCursors
   print dwhat
   TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromRight' dwhat
 
