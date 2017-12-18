@@ -29,9 +29,11 @@ main = do
   let mainCursor = fromDocument doc
   let eCursors = getCursorsByName eventName mainCursor
 
-  let dwhat = head $ parseAggregationDWhat <$> eCursors
-  print dwhat
-  TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromRight' dwhat
+  -- let dwhat = head $ parseAggregationDWhat <$> eCursors
+  -- print dwhat
+  let ev = parseEventByType mainCursor AggregationEventT
+  -- ev `shouldBe` ...
+  TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromRight' ev
 
 --   print $ blahfoo <$> oeCursors -- this shows that parseBizTransaction is bugged - mkBizTransactionType might not work with fromJust
 
