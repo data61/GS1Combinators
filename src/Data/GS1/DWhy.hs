@@ -40,9 +40,17 @@ makeClassy ''DWhy
 
 -- XXX mkDWhy can be rewritten as:
 --mkDWhy = liftA2 DWhy
+
+getDispAndBizStep :: Either ParseFailure a -> Maybe a
+getDispAndBizStep (Left TagNotFound) = Nothing
+
+
 mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition
           -> Either ParseFailure DWhy
 mkDWhy (Right step) (Right disp) = Right $ DWhy (Just step) (Just disp)
+mkDWhy (Left TagNotFound) (Left TagNotFound) = Right $ DWhy Nothing Nothing
+mkDWhy (Left TagNotFound) (Right disp) = Right $ DWhy Nothing (Just disp)
+mkDWhy (Right step) (Left TagNotFound) = Right $ DWhy (Just step) Nothing
 mkDWhy (Left eBiz) (Left eDisp) = Left $ ChildFailure [eBiz, eDisp]
 mkDWhy (Left eBiz) (Right _) = Left $ ChildFailure [eBiz]
 mkDWhy (Right _) (Left eDisp) = Left $ ChildFailure [eDisp]
