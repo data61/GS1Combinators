@@ -80,6 +80,19 @@ parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
                                       Nothing  -> Nothing
                               _     -> Nothing
 
+-- |Parse BizStep by Name
+parseBizStep :: Cursor -> Either ParseFailure BizStep
+parseBizStep c = parseSingleElemE readURI (c $// element "bizStep" &/ content)
+
+-- |Parse Disposition by Name
+parseDisposition :: Cursor -> Either ParseFailure Disposition
+parseDisposition c = parseSingleElemE readURI
+                      (c $// element "disposition" &/ content)
+
+-- |Parse Action by Name ---> perhaps deprecated? -@sa
+parseAction :: Cursor -> Either ParseFailure Action
+parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
+
 -- |The name of the current cursor stays at ObjectEvent
 parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
@@ -104,13 +117,10 @@ parseDWhen c = do
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
-  let biz = parseBizStep (c $/ element "bizStep" &/ content)
-  let disp = parseDisposition (c $/ element "disposition" &/ content)
+  let biz = parseBizStep c
+  let disp = parseDisposition c
   mkDWhy biz disp
 
--- use rights :: [Either a b] -> [b]
--- or, lookup the monadic instance for Either
--- use do notation
 extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
 extractLocationEPCList = readURI . T.unpack
 
@@ -145,6 +155,7 @@ parseSourceDestLocation c lst el attr = do
         T.unpack . T.strip <$> flatten
           (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
+
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
@@ -201,23 +212,6 @@ parseClassLabel c = readLabelEPC mQt labelStr
     mQt = parseQuantity c
     [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
     -- possible runtime exception
-
--- |Parse BizStep by Name
-parseBizStep :: [T.Text] -> Either ParseFailure BizStep
-parseBizStep = parseSingleElemE readURI
-
--- |Parse Disposition by Name
-parseDisposition :: [T.Text] -> Either ParseFailure Disposition
-parseDisposition = parseSingleElemE readURI
-
--- |Parse Action by Name ---> perhaps deprecated? -@sa
-parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
-
--- |Parse a single Maybe Integer
--- readMaybe x :: Maybe Integer
-parseQuantityValue :: [T.Text] -> Maybe Integer
-parseQuantityValue = parseSingleElemM readMaybe
 
 
 -- |parse group of text to obtain ParentID
