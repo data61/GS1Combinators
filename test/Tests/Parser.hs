@@ -133,10 +133,17 @@ testParser = do
       let teCursors = cursor $// element "TransformationEvent"
       parseDWhy <$> teCursors `shouldBe`
         [Right $ DWhy Nothing Nothing]
+
     -- @todo create a dummy xml with no disposition or bizStep
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhy test for Aggregation"
-
+  describe "parse DWhy from AggregationEvent" $ do
+    it "create DWhy from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      parseDWhy <$> oeCursors `shouldBe`
+        [Right (DWhy (Just Receiving) (Just InProgress))]
 
   -- the Nothing extension used because a value of 0 indicates no extension
   describe "parse XML to obtain DWhere" $ do
@@ -163,6 +170,18 @@ testParser = do
 
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhere test for Aggregation"
+  describe "parse DWhere from AggregationEvent" $ do
+    it "create DWhere from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      parseDWhere <$> oeCursors `shouldBe`
+        -- NOTE that according to EPCIS_Guideline.pdf page 35, a plain GLN indicated by extension valued 0
+        [Right (DWhere{_readPoint=[SGLN "0614141" (LocationReferenceNum "00777") Nothing],
+                       _bizLocation=[SGLN "0614141" (LocationReferenceNum "00888") Nothing],
+                       -- TODO = check these should be empty
+                      _srcType=[],
+                      _destType=[]})]
     
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
@@ -376,11 +395,3 @@ testParser = do
     it "parseTimeZoneXML valid" $ do
       (parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
         fromRight' (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone)))
-
-    it "parseQuantityValue invalid" $ do
-      (parseQuantityValue []) `shouldBe` Nothing
-    it "parseQuantityValue invalid" $ do
-      (parseQuantityValue ["abc"]) `shouldBe` Nothing  
-    it "parseQuantityValue invalid" $ do
-      (parseQuantityValue ["42"]) `shouldBe` (Just 42)
-      
