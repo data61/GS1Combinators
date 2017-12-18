@@ -45,32 +45,41 @@ testParser = do
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
+  
+  
+  
   describe "parse XML to obtain Action" $
-    it "finds action from Single ObjectEvent XML" $ do
+    it "finds action from Single ObjectEventNoEventTime XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
-      let actions = cursor $// element "action" &/ content
-      parseAction actions `shouldBe` Right Observe
+      parseAction cursor `shouldBe` Right Observe
 
-  -- describe "parse XML to obtain EPC List" $ do
-  --   it "finds all epcs" $ do
-  --     doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
-  --     let cursor = fromDocument doc
-  --     let epcs = cursor $// element "epc" &/ content
-  --     --show <$> parseEPCList epcs Nothing `shouldBe`
-  --     parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-  --       [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-  --       Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+  describe "parse XML to obtain EPC List" $ do
+    it "finds all epcs" $ do
+      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+      let cursor = fromDocument doc
+      parseLabelEPCs "epcList" "quantityList" cursor
+        `shouldBe`
+          [
+            Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+            Right $ IL $ SGTIN "0614141" Nothing "107346" "2018",
+            Right $ CL (LGTIN "4012345" "012345" "998877")
+                (Just $ MeasuredQuantity 200 "KGM")
+          ]
 
-  --   it "finds all child epcs" $ do
-  --     doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
-  --     let cursor = fromDocument doc
-  --     let epcs = cursor $// element "epc" &/ content
-  --     parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-  --       [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-  --       Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
-        --["urn:epc:id:sgtin:0614141.107346.2017",
-        -- "urn:epc:id:sgtin:0614141.107346.2018"]
+    it "finds all child epcs" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      parseLabelEPCs "childEPCs" "childQuantityList" cursor
+        `shouldBe`
+          [
+            Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+            Right $ IL $ SGTIN "0614141" Nothing "107346" "2018",
+            Right $ CL (CSGTIN "4012345" Nothing "098765")
+                (Just $ ItemCount 10),
+            Right $ CL (LGTIN "4012345" "012345" "998877")
+                (Just $ MeasuredQuantity 200.5 "KGM")
+          ]
 
   describe "parse XML to get BizStep" $ do
     it "find all the BizStep in multiple events XML" $ do
