@@ -46,8 +46,8 @@ parseSingleElemE _ []    = Left TagNotFound
 
 -- |Parse a list of Text to a list of type a
 -- deprecated
-parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
-parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+-- parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
+-- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
@@ -98,9 +98,10 @@ parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
-  let tz = if isNothing $ parseTimeZoneXML' tzn
+  let tz = if isJust $ parseTimeZoneXML' tzn -- TWEAK since want the valid version more
             then parseTimeZoneXML' tzn
             else parseTimeZoneXML etn
+  -- TODO = fix
   -- ^^^ this statement is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
   -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
   -- which is equivalent to returning Nothing.
