@@ -46,7 +46,7 @@ readLabelEPC mQt epcStr =
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
-data DWhat = -- ObjectDWhat action epcList quantityList
+data DWhat = -- ObjectDWhat action epcList
             ObjectDWhat Action [LabelEPC]
           -- AggregationDWhat action parentID childEPC
           | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
