@@ -138,13 +138,13 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-parseSourceDestLocation :: Cursor -> Name -> Name -> Name -> 
+parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
                             [Either ParseFailure SrcDestLocation]
 parseSourceDestLocation c lst el attr = do
   let locations =
         T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes =
-        T.unpack . T.strip <$> flatten 
+        T.unpack . T.strip <$> flatten
           (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
@@ -162,7 +162,7 @@ parseDWhere c = do
   case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists
     ([], [], [], []) -> Right $ DWhere rps bls srcTypes destTypes
-    _                -> Left $ ChildFailure $ 
+    _                -> Left $ ChildFailure $
                           rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
 
 parseQuantity :: Cursor -> Maybe Quantity
