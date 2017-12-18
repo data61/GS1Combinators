@@ -86,30 +86,41 @@ testParser = do
     it "find all the BizStep in multiple events XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc
-      let bizStepText = cursor $// element "ObjectEvent" &/ element "bizStep" &/ content
-      parseBizStep bizStepText `shouldBe` Right Shipping
+      parseBizStep cursor `shouldBe` Right Shipping
 
     it "find the first BizStep in single Event XML" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc2
-      let bizStepText = cursor $// element "ObjectEvent" &/ element "bizStep" &/ content
-      parseBizStep bizStepText `shouldBe` Right Shipping
+      parseBizStep cursor `shouldBe` Right Shipping
 
   describe "parse XML to get Disposition" $
     it "find all the Disposition in single XML" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc2
-      let dispText = cursor $// element "ObjectEvent" &/ element "disposition" &/ content
-      parseDisposition dispText `shouldBe` Right InTransit
+      parseDisposition cursor `shouldBe` Right InTransit
 
   describe "parse DWhy" $ do
-    it "find the bizStep or disposition and creates a DWhy" $ do
+    it "ObjectEvent2.xml" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc2
-      let oeCursors = cursor $// element "ObjectEvent"
+      let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhy <$> oeCursors `shouldBe`
         [Right $ DWhy (Just Shipping) (Just InTransit)]
 
+    it "Transformation.xml" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
+      let cursor = fromDocument doc2
+      let teCursors = cursor $// element "TransformationEvent"
+      parseDWhy <$> teCursors `shouldBe`
+        [Right $ DWhy (Just Commissioning) (Just InProgress)]
+    
+    it "Empty" $ do
+      doc2 <- Text.XML.readFile def "test/test-xml/Empty_DWhy.xml"
+      let cursor = fromDocument doc2
+      let teCursors = cursor $// element "TransformationEvent"
+      parseDWhy <$> teCursors `shouldBe`
+        [Right $ DWhy Nothing Nothing]
+    -- @todo create a dummy xml with no disposition or bizStep
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhy test for Aggregation"
 
