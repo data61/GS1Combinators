@@ -336,15 +336,17 @@ data BusinessTransactionEPC =  GDTI GS1CompanyPrefix DocumentType SerialNumber
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
-  printURI = printURIBusinessTransactionEPC
+  printURI = printURIBizTransactionEPC
   readURI epcStr = readURIBusinessTransactionEPC $
                       getSuffixTokens [last $ splitOn ":" epcStr]
 --                    Getting the uri body out of the string
-printURIBusinessTransactionEPC :: BusinessTransactionEPC -> String
-printURIBusinessTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
-  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
-printURIBusinessTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
-  "urn:epc:id:gsrn:" ++ intercalate "." [gs1CompanyPrefix, serialReference]
+printURIBizTransactionEPC :: BusinessTransactionEPC -> String
+printURIBizTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
+  "urn:epc:id:gsrn:" ++
+    intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
+printURIBizTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
+  "urn:epc:id:gsrn:" ++
+    intercalate "." [gs1CompanyPrefix, serialReference]
 
 -- the length of the arguments should equal to the following, according to the spec
 -- used for the purposes of validation

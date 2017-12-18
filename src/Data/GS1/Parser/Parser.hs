@@ -262,9 +262,7 @@ returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
-  -- find action right below ObjectEvent tag
   let act = parseAction (c $/ element "action" &/ content)
-  -- find all epcs below epcList tag
   -- let (errs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (errs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
