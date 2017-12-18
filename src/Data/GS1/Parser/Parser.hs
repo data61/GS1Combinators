@@ -88,7 +88,7 @@ parseDisposition :: Cursor -> Either ParseFailure Disposition
 parseDisposition c = parseSingleElemE readURI
                       (c $// element "disposition" &/ content)
 
--- |Parse Action by Name ---> perhaps deprecated? -@sa
+-- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
 parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
 
