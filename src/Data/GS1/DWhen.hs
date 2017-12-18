@@ -42,14 +42,12 @@ mkDWhen :: String -> String -> Maybe DWhen
 mkDWhen a b = let et = parseStr2Time a :: Either EPCISTimeError EPCISTime
                   rt = parseStr2Time b :: Either EPCISTimeError EPCISTime
                   tz = parseStr2TimeZone a :: Either EPCISTimeError TimeZone in
-                  case et of
-                    Right et' ->
-                        case rt of
-                        Right rt' ->
-                          let diff = diffUTCTime et' rt' in
+                  case (et, rt) of
+                    (Right et', Right rt') ->
+                        let diff = diffUTCTime et' rt' in
                                       if diff < 0
-                                      then Just $ DWhen et' (Just rt') (fromRight' tz) else Nothing
-                        _         -> Just $ DWhen et' Nothing (fromRight' tz)
+                                      then Just $ DWhen et' (Just rt')(fromRight' tz) else Nothing
+                    (Right et', Left _) -> Just $ DWhen et' Nothing (fromRight' tz)
                     _         -> Nothing
 
 -- DELETEME
