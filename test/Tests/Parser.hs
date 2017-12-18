@@ -45,7 +45,8 @@ testParser = do
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
-  
+    -- it "AggregationEvent" $ do
+    --   error "@todo Add DWhen test for Aggregation"
   
   
   describe "parse XML to obtain Action" $
@@ -101,7 +102,7 @@ testParser = do
       let dispText = cursor $// element "ObjectEvent" &/ element "disposition" &/ content
       parseDisposition dispText `shouldBe` Right InTransit
 
-  describe "parse DWhy" $
+  describe "parse DWhy" $ do
     it "find the bizStep or disposition and creates a DWhy" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc2
@@ -109,9 +110,13 @@ testParser = do
       parseDWhy <$> oeCursors `shouldBe`
         [Right $ DWhy (Just Shipping) (Just InTransit)]
 
+    -- it "AggregationEvent" $ do
+    --   error "@todo Add DWhy test for Aggregation"
+
+
   -- the Nothing extension used because a value of 0 indicates no extension
-  describe "parse XML to obtain DWhere" $
-    it "finds all the dwhere" $ do
+  describe "parse XML to obtain DWhere" $ do
+    it "ObjectEvent" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc2
       let oeCursors = getCursorsByName "ObjectEvent" cursor
@@ -132,6 +137,9 @@ testParser = do
           , _destType = []
         }]
 
+    -- it "AggregationEvent" $ do
+    --   error "@todo Add DWhere test for Aggregation"
+    
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -289,7 +297,7 @@ testParser = do
           ]
 
   -- this is an unnecessary test. it should compare the guts of parseEvents
-  describe "parse ObjectEvent" $
+  describe "Parse Full Events" $
     it "parses a valid object event" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
