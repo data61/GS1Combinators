@@ -342,5 +342,7 @@ testParser = do
 
     it "parseTimeXML invalid" $ do
       (parseTimeXML []) `shouldBe` Nothing
-    -- it "parseTimeXML valid" $ do
-    --   (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` 
+    it "parseTimeXML valid" $ do
+      (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
+        let et = parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime in
+        fromRight' et))
