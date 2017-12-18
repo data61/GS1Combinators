@@ -25,7 +25,7 @@ main :: IO()
 main = do
   let eventName = "AggregationEvent"
   doc <- Text.XML.readFile def "../test/test-xml/AggregationEvent.xml"
-  
+
   let mainCursor = fromDocument doc
   let eCursors = getCursorsByName eventName mainCursor
 
