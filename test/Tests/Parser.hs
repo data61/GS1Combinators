@@ -247,3 +247,8 @@ testParser = do
   --          IL (SGTIN "4012345" Nothing "077889" "26"),
   --          IL (SGTIN "4012345" Nothing "077889" "27"),
   --          IL (SGTIN "4012345" Nothing "077889" "28")])]
+
+
+  describe "test some basic functions in Parser" $
+    it "parseSingleElemE invalid" $ do
+      (parseSingleElemE (\s -> Right s) []) `shouldBe` (Left InvalidFormat)
