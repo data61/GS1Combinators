@@ -52,23 +52,23 @@ testParser = do
       let actions = cursor $// element "action" &/ content
       parseAction actions `shouldBe` Right Observe
 
-  describe "parse XML to obtain EPC List" $ do
-    it "finds all epcs" $ do
-      doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
-      let cursor = fromDocument doc
-      let epcs = cursor $// element "epc" &/ content
-      --show <$> parseEPCList epcs Nothing `shouldBe`
-      parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-        Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+  -- describe "parse XML to obtain EPC List" $ do
+  --   it "finds all epcs" $ do
+  --     doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
+  --     let cursor = fromDocument doc
+  --     let epcs = cursor $// element "epc" &/ content
+  --     --show <$> parseEPCList epcs Nothing `shouldBe`
+  --     parseEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
+  --       [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+  --       Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
 
-    it "finds all child epcs" $ do
-      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
-      let cursor = fromDocument doc
-      let epcs = cursor $// element "epc" &/ content
-      parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
-        [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-        Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
+  --   it "finds all child epcs" $ do
+  --     doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+  --     let cursor = fromDocument doc
+  --     let epcs = cursor $// element "epc" &/ content
+  --     parseChildEPCList epcs [Just (ItemCount 1), Just (ItemCount 1)] `shouldBe`
+  --       [Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
+  --       Right $ IL $ SGTIN "0614141" Nothing "107346" "2018"]
         --["urn:epc:id:sgtin:0614141.107346.2017",
         -- "urn:epc:id:sgtin:0614141.107346.2018"]
 
@@ -166,8 +166,13 @@ testParser = do
       -- TODO = CHECK whether Nothing is appropriate below
       parseObjectDWhat <$> oeCursors `shouldBe`
         [Right $ ObjectDWhat Observe
-          [IL $ SGTIN "0614141" Nothing "107346" "2017",
-          IL $ SGTIN "0614141" Nothing "107346" "2018"]]
+          [
+            IL $ SGTIN "0614141" Nothing "107346" "2017",
+            IL $ SGTIN "0614141" Nothing "107346" "2018",
+            CL (LGTIN "4012345" "012345" "998877")
+                (Just $ MeasuredQuantity 200 "KGM")
+          ]
+        ]
 
     it "parses a valid AggregationDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
@@ -175,9 +180,16 @@ testParser = do
       let aeCursors = getCursorsByName "AggregationEvent" cursor
       -- TODO = check Nothings are appropriate below
       parseAggregationDWhat <$> aeCursors `shouldBe`
-        [Right $ AggregationDWhat Observe (Just $ SSCC "0614141" "1234567890")
-          [IL $ SGTIN "0614141" Nothing "107346" "2017",
-          IL $ SGTIN "0614141" Nothing "107346" "2018"]]
+        [
+          Right $ AggregationDWhat Observe (Just $ SSCC "0614141" "1234567890")
+            [
+              IL $ SGTIN "0614141" Nothing "107346" "2017",
+              IL $ SGTIN "0614141" Nothing "107346" "2018",
+              CL (CSGTIN "4012345" Nothing "098765") (Just $ ItemCount 10),
+              CL (LGTIN "4012345" "012345" "998877")
+                  (Just $ MeasuredQuantity 200.5 "KGM")
+            ]
+        ]
 
     -- TODO = check... may be incorrect!
     it "parses a valid TransactionDWhat" $ do
