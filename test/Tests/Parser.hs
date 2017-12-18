@@ -46,7 +46,8 @@ testParser = do
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
   
-  
+  -- .. add DWhen test for Aggregation
+
   
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEventNoEventTime XML" $ do
@@ -329,5 +330,7 @@ testParser = do
     it "parseSingleElemM valid" $ do
       (parseSingleElemM Just ["hi"]) `shouldBe` (Just "hi")
 
-    -- it "parseTimeXML invalid" $ do
-    --   (parseTimeXML) `shouldBe` 
+    it "parseTimeXML invalid" $ do
+      (parseTimeXML []) `shouldBe` Nothing
+    -- it "parseTimeXML valid" $ do
+    --   (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` 
