@@ -46,8 +46,8 @@ parseSingleElemE _ _     = Left InvalidFormat
 
 -- |Parse a list of Text to a list of type a
 -- deprecated
-parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
-parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
+-- parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
+-- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
 
 -- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Maybe EPCISTime
