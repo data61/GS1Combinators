@@ -342,7 +342,24 @@ testParser = do
 
     it "parseTimeXML invalid" $ do
       (parseTimeXML []) `shouldBe` Nothing
+    it "parseTimeXML invalid 2" $ do
+      (parseTimeXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
     it "parseTimeXML valid" $ do
       (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
-        let et = parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime in
-        fromRight' et))
+         fromRight' (parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime)))
+
+    it "parseTimeZoneXML invalid" $ do
+      (parseTimeZoneXML []) `shouldBe` Nothing
+    it "parseTimeZoneXML invalid 2" $ do
+      (parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
+    it "parseTimeZoneXML valid" $ do
+      (parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
+        fromRight' (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone)))
+
+    it "parseQuantityValue invalid" $ do
+      (parseQuantityValue []) `shouldBe` Nothing
+    it "parseQuantityValue invalid" $ do
+      (parseQuantityValue ["abc"]) `shouldBe` Nothing  
+    it "parseQuantityValue invalid" $ do
+      (parseQuantityValue ["42"]) `shouldBe` (Just 42)
+      
