@@ -249,6 +249,18 @@ testParser = do
   --          IL (SGTIN "4012345" Nothing "077889" "28")])]
 
 
-  describe "test some basic functions in Parser" $
+  describe "test some basic functions in Parser" $ do
     it "parseSingleElemE invalid" $ do
-      (parseSingleElemE (\s -> Right s) []) `shouldBe` (Left InvalidFormat)
+      (parseSingleElemE Right []) `shouldBe` (Left InvalidFormat)
+    it "parseSingleElemE valid" $ do
+      (parseSingleElemE Right ["hi"]) `shouldBe` (Right "hi")
+
+    it "parseSingleElemM invalid" $ do
+      (parseSingleElemM Just []) `shouldBe` Nothing
+    it "parseSingleElemM invalid 2" $ do
+      (parseSingleElemM (const (Nothing :: Maybe String)) ["hi"]) `shouldBe` Nothing
+    it "parseSingleElemM valid" $ do
+      (parseSingleElemM Just ["hi"]) `shouldBe` (Just "hi")
+
+    it "parseTimeXML invalid" $ do
+      (parseTimeXML) `shouldBe`
