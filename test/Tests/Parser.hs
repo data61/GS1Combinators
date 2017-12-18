@@ -46,11 +46,21 @@ testParser = do
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
   
+  -- TODO = fix issue in Parser.hs
+  -- PROBLEM NOTICED IN Parser.hs src = in parseDWhen, it assumes that parseTimeZoneXML' produces a Just value into value tz
   -- .. add DWhen test for Aggregation
 
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhen test for Aggregation"
-  
+  describe "parse DWhen AggregationEvent" $ do
+    it "create DWhen from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      let t = (parseStr2Time "2013-06-08T14:58:56.591+02:00") :: Either EPCISTimeError EPCISTime
+      let tz = (parseStr2TimeZone "+02:00") :: Either EPCISTimeError TimeZone
+      parseDWhen <$> oeCursors `shouldBe`
+        [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))]
   
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEventNoEventTime XML" $ do
