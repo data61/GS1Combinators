@@ -53,7 +53,7 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       parseAction cursor `shouldBe` Right Observe
-
+  
   describe "parse XML to obtain EPC List" $ do
     it "finds all epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -147,16 +147,21 @@ testParser = do
       let btCursor = cursor $// element "bizTransactionList"
       parseBizTransaction <$> btCursor `shouldBe`
         [
-          [Right BizTransaction {
-            _btid = "http://transaction.acme.com/po/12345678",
-            _bt = Po}],
+          [
+            Right BizTransaction {
+              _btid = "http://transaction.acme.com/po/12345678",
+              _bt = Po
+              }
+          ],
           [
             Right BizTransaction {
               _btid = "http://transaction.acme.com/po/12345678",
               _bt = Po},
             Right BizTransaction {
               _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
-              _bt = Desadv}]
+              _bt = Desadv
+            }
+          ]
         ]
 
     it "get all attrs" $ do
@@ -168,20 +173,56 @@ testParser = do
       readURI . T.unpack <$> foldMap id attrs `shouldBe` [Right Po]
 
   describe "parse DWhat" $ do
-    it "parses a valid ObjectDWhat" $ do
-      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
-      let cursor = fromDocument doc
-      let oeCursors = getCursorsByName "ObjectEvent" cursor
-      -- TODO = CHECK whether Nothing is appropriate below
-      parseObjectDWhat <$> oeCursors `shouldBe`
-        [Right $ ObjectDWhat Observe
+    describe "Parse ObjectDWhat" $ do
+      it "ObjectEvent2" $ do
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+        let cursor = fromDocument doc
+        let oeCursors = getCursorsByName "ObjectEvent" cursor
+        parseObjectDWhat <$> oeCursors `shouldBe`
           [
-            IL $ SGTIN "0614141" Nothing "107346" "2017",
-            IL $ SGTIN "0614141" Nothing "107346" "2018",
-            CL (LGTIN "4012345" "012345" "998877")
-                (Just $ MeasuredQuantity 200 "KGM")
+            Right $ ObjectDWhat Observe
+              [
+                IL $ SGTIN "0614141" Nothing "107346" "2017",
+                IL $ SGTIN "0614141" Nothing "107346" "2018",
+                CL (LGTIN "4012345" "012345" "998877")
+                    (Just $ MeasuredQuantity 200 "KGM")
+              ]
           ]
-        ]
+
+      it "ObjectEvent_11_TrainArrives.xml" $ do
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEvent_11_TrainArrives.xml"
+        let cursor = fromDocument doc
+        let oeCursors = getCursorsByName "ObjectEvent" cursor
+        parseObjectDWhat <$> oeCursors `shouldBe`
+          [ Right $ ObjectDWhat Observe [] ]
+      
+      it "ObjectEventNoEventTime.xml" $ do
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
+        let cursor = fromDocument doc
+        let oeCursors = getCursorsByName "ObjectEvent" cursor
+        parseObjectDWhat <$> oeCursors `shouldBe`
+          [
+            Right $ ObjectDWhat Observe
+              [
+                IL $ SGTIN "0614141" Nothing "107346" "2017",
+                IL $ SGTIN "0614141" Nothing "107346" "2018"
+              ]
+          ]
+
+      it "ObjectEvent.xml" $ do
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+        let cursor = fromDocument doc
+        let oeCursors = getCursorsByName "ObjectEvent" cursor
+        parseObjectDWhat <$> oeCursors `shouldBe`
+          [
+            Right $ ObjectDWhat Observe
+              [
+                IL $ SGTIN "0614141" Nothing "107346" "2017",
+                IL $ SGTIN "0614141" Nothing "107346" "2018"
+              ],
+            Right $ ObjectDWhat Observe
+              [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+          ]
 
     it "parses a valid AggregationDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
@@ -222,6 +263,32 @@ testParser = do
             _bt = Desadv}]
           [IL $ SGTIN "0614141" Nothing "107346" "2018"])]
 
+    -- TODO = CHECK. COPIED FROM OUTPUT. Manually checked looks correct
+    describe "run parseTransformationDWhat" $
+      it "parses valid DWhat" $ do
+        doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
+        let cursor = fromDocument doc
+        let tCursors = getCursorsByName "TransformationEvent" cursor
+        parseTransformationDWhat <$> tCursors `shouldBe`
+          [
+            Right $ TransformationDWhat Nothing
+              [
+                IL (SGTIN "4012345" Nothing "011122" "25"),
+                IL (SGTIN "4000001" Nothing "065432" "99886655"),
+                CL (LGTIN "4012345" "011111" "4444")
+                    (Just (MeasuredQuantity 10.0 "KGM")),
+                CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
+                CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
+              ] 
+              [
+                IL (SGTIN "4012345" Nothing "077889" "25"),
+                IL (SGTIN "4012345" Nothing "077889" "26"),
+                IL (SGTIN "4012345" Nothing "077889" "27"),
+                IL (SGTIN "4012345" Nothing "077889" "28")
+              ]
+          ]
+
+  -- this is an unnecessary test. it should compare the guts of parseEvents
   describe "parse ObjectEvent" $
     it "parses a valid object event" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
