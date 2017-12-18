@@ -48,6 +48,8 @@ data ParseFailure = InvalidLength
                   -- When parsing an event failed
                   | TimeZoneError
                   -- error in parsing timezone
+                  | TagNotFound
+                  -- when a mandatory tag is not found
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
