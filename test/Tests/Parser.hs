@@ -45,9 +45,22 @@ testParser = do
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
+  
+  -- TODO = fix issue in Parser.hs
+  -- PROBLEM NOTICED IN Parser.hs src = in parseDWhen, it assumes that parseTimeZoneXML' produces a Just value into value tz
+  -- .. add DWhen test for Aggregation
+
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhen test for Aggregation"
-  
+  describe "parse DWhen AggregationEvent" $ do
+    it "create DWhen from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      let t = (parseStr2Time "2013-06-08T14:58:56.591+02:00") :: Either EPCISTimeError EPCISTime
+      let tz = (parseStr2TimeZone "+02:00") :: Either EPCISTimeError TimeZone
+      parseDWhen <$> oeCursors `shouldBe`
+        [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))]
   
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEventNoEventTime XML" $ do
@@ -120,10 +133,17 @@ testParser = do
       let teCursors = cursor $// element "TransformationEvent"
       parseDWhy <$> teCursors `shouldBe`
         [Right $ DWhy Nothing Nothing]
+
     -- @todo create a dummy xml with no disposition or bizStep
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhy test for Aggregation"
-
+  describe "parse DWhy from AggregationEvent" $ do
+    it "create DWhy from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      parseDWhy <$> oeCursors `shouldBe`
+        [Right (DWhy (Just Receiving) (Just InProgress))]
 
   -- the Nothing extension used because a value of 0 indicates no extension
   describe "parse XML to obtain DWhere" $ do
@@ -150,6 +170,18 @@ testParser = do
 
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhere test for Aggregation"
+  describe "parse DWhere from AggregationEvent" $ do
+    it "create DWhere from AggregationEvent" $ do
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
+      let cursor = fromDocument doc
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
+      parseDWhere <$> oeCursors `shouldBe`
+        -- NOTE that according to EPCIS_Guideline.pdf page 35, a plain GLN indicated by extension valued 0
+        [Right (DWhere{_readPoint=[SGLN "0614141" (LocationReferenceNum "00777") Nothing],
+                       _bizLocation=[SGLN "0614141" (LocationReferenceNum "00888") Nothing],
+                       -- TODO = check these should be empty
+                      _srcType=[],
+                      _destType=[]})]
     
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
@@ -316,3 +348,50 @@ testParser = do
       length parsedEvents `shouldBe` 1
       isRight (head parsedEvents) `shouldBe` True
 
+  -- TODO = CHECK. COPIED FROM OUTPUT. Manually checked looks correct
+  -- describe "run parseTransformationDWhat" $
+  --   it "parses valid DWhat" $ do
+  --     doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
+  --     let cursor = fromDocument doc
+  --     let tCursors = getCursorsByName "TransformationEvent" cursor
+  --     parseTransformationDWhat <$> tCursors `shouldBe`
+  --       [Right (TransformationDWhat Nothing
+  --         [IL (SGTIN "4012345" Nothing "011122" "25"),
+  --          IL (SGTIN "4000001" Nothing "065432" "99886655"),
+  --          CL (LGTIN "4012345" "011111" "4444") (Just (MeasuredQuantity 10.0 "KGM")),
+  --          CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
+  --          CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))] 
+  --         [IL (SGTIN "4012345" Nothing "077889" "25"),
+  --          IL (SGTIN "4012345" Nothing "077889" "26"),
+  --          IL (SGTIN "4012345" Nothing "077889" "27"),
+  --          IL (SGTIN "4012345" Nothing "077889" "28")])]
+
+
+  describe "test some basic functions in Parser" $ do
+    it "parseSingleElemE invalid" $ do
+      (parseSingleElemE Right []) `shouldBe` (Left InvalidFormat)
+    it "parseSingleElemE valid" $ do
+      (parseSingleElemE Right ["hi"]) `shouldBe` (Right "hi")
+
+    it "parseSingleElemM invalid" $ do
+      (parseSingleElemM Just []) `shouldBe` Nothing
+    it "parseSingleElemM invalid 2" $ do
+      (parseSingleElemM (const (Nothing :: Maybe String)) ["hi"]) `shouldBe` Nothing
+    it "parseSingleElemM valid" $ do
+      (parseSingleElemM Just ["hi"]) `shouldBe` (Just "hi")
+
+    it "parseTimeXML invalid" $ do
+      (parseTimeXML []) `shouldBe` Nothing
+    it "parseTimeXML invalid 2" $ do
+      (parseTimeXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
+    it "parseTimeXML valid" $ do
+      (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
+         fromRight' (parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime)))
+
+    it "parseTimeZoneXML invalid" $ do
+      (parseTimeZoneXML []) `shouldBe` Nothing
+    it "parseTimeZoneXML invalid 2" $ do
+      (parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
+    it "parseTimeZoneXML valid" $ do
+      (parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
+        fromRight' (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone)))
