@@ -14,12 +14,9 @@ import           Data.GS1.EPC
 import           Data.GS1.DWhere
 import           Data.GS1.DWhat
 import           Data.GS1.Event
-
+import           Data.GS1.Utils
 import           Control.Applicative
 
-
-flatten :: [[a]] -> [a]
-flatten xs = (\z n -> foldr (flip (foldr z)) n xs) (:) []
 
 main :: IO()
 main = do

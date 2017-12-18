@@ -202,6 +202,7 @@ parseClassLabel c = readLabelEPC mQt labelStr
   where
     mQt = parseQuantity c
     [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
+    -- possible runtime exception
 
 -- |Parse BizStep by Name
 parseBizStep :: [T.Text] -> Either ParseFailure BizStep
@@ -212,8 +213,8 @@ parseDisposition :: [T.Text] -> Either ParseFailure Disposition
 parseDisposition = parseSingleElemE readURI
 
 -- |Parse Action by Name ---> perhaps deprecated? -@sa
-parseAction :: [T.Text] -> Either ParseFailure Action
-parseAction = parseSingleElemE mkAction
+parseAction :: Cursor -> Either ParseFailure Action
+parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
 
 -- |Parse a single Maybe Integer
 -- readMaybe x :: Maybe Integer
@@ -262,7 +263,7 @@ returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
-  let act = parseAction (c $/ element "action" &/ content)
+  let act = parseAction c
   -- let (errs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (errs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
@@ -276,7 +277,7 @@ parseAggregationDWhat c = do
   let pid = parseParentID c
   let (errs, epcs) = partitionEithers $
         parseLabelEPCs "childEPCs" "childQuantityList" c
-  let act = parseAction (c $/ element "action" &/ content)
+  let act = parseAction c
 
   case (act, errs) of
     (Right a, []) -> Right $ AggregationDWhat a pid epcs
@@ -289,7 +290,7 @@ parseTransactionDWhat c = do
   -- let (epcErrs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (epcErrs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
-  let act = parseAction (c $/ element "action" &/ content)
+  let act = parseAction c
 
   case (act, bizTErrs, epcErrs) of
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
