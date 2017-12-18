@@ -147,7 +147,7 @@ data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
                       -- Global Individual Asset Identifier, e.g. bucket for olives
                       | SSCC GS1CompanyPrefix SerialNumber
                       --serial shipping container code
-                      | SGTIN GS1CompanyPrefix 
+                      | SGTIN GS1CompanyPrefix
                         (Maybe SGTINFilterValue) ItemReference SerialNumber
                        --serialsed global trade item number
                       | GRAI GS1CompanyPrefix AssetType SerialNumber
@@ -180,7 +180,7 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
-  | isCorrectLen = 
+  | isCorrectLen =
       Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
 --                                               Nothing, for the moment
   | otherwise = Left InvalidLength
@@ -192,10 +192,10 @@ readURIInstanceLabelEPC _ = Left InvalidFormat
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> String
 printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
-  "urn:epc:id:giai:" ++ 
+  "urn:epc:id:giai:" ++
     intercalate "." [gs1CompanyPrefix, individualAssetReference]
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
-  "urn:epc:id:sscc:" ++ 
+  "urn:epc:id:sscc:" ++
     intercalate "." [gs1CompanyPrefix, serialNumber]
 printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
   "urn:epc:id:sgtin:" ++
