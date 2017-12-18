@@ -65,9 +65,7 @@ parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
                       where
                         parseTimeZoneHelper' x =
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                              case ptz of
-                                Left _  -> Nothing
-                                Right a -> Just a
+                              either2Maybe ptz
 
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
