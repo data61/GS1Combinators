@@ -41,9 +41,6 @@ makeClassy ''DWhy
 -- XXX mkDWhy can be rewritten as:
 --mkDWhy = liftA2 DWhy
 
-getDispAndBizStep :: Either ParseFailure a -> Maybe a
-getDispAndBizStep (Left TagNotFound) = Nothing
-
 
 mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition
           -> Either ParseFailure DWhy
