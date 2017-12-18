@@ -53,7 +53,7 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       parseAction cursor `shouldBe` Right Observe
-
+  
   describe "parse XML to obtain EPC List" $ do
     it "finds all epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -147,16 +147,21 @@ testParser = do
       let btCursor = cursor $// element "bizTransactionList"
       parseBizTransaction <$> btCursor `shouldBe`
         [
-          [Right BizTransaction {
-            _btid = "http://transaction.acme.com/po/12345678",
-            _bt = Po}],
+          [
+            Right BizTransaction {
+              _btid = "http://transaction.acme.com/po/12345678",
+              _bt = Po
+              }
+          ],
           [
             Right BizTransaction {
               _btid = "http://transaction.acme.com/po/12345678",
               _bt = Po},
             Right BizTransaction {
               _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
-              _bt = Desadv}]
+              _bt = Desadv
+            }
+          ]
         ]
 
     it "get all attrs" $ do
