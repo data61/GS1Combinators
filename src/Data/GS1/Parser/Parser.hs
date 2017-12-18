@@ -54,10 +54,9 @@ parseTimeXML :: [T.Text] -> Maybe EPCISTime
 parseTimeXML = parseSingleElemM parseTimeHelper'
                 where
                   parseTimeHelper' x =
-                    let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime in
-                        case pt of
-                          Left _  -> Nothing
-                          Right a -> Just a
+                    let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime
+                      in
+                        either2Maybe pt
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
