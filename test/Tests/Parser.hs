@@ -329,5 +329,5 @@ testParser = do
     it "parseSingleElemM valid" $ do
       (parseSingleElemM Just ["hi"]) `shouldBe` (Just "hi")
 
-    it "parseTimeXML invalid" $ do
-      (parseTimeXML) `shouldBe`
+    -- it "parseTimeXML invalid" $ do
+    --   (parseTimeXML) `shouldBe` 
