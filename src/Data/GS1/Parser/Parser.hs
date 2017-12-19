@@ -277,13 +277,6 @@ parseParentID c =
     (p:_) -> (either2Maybe . readURI . T.unpack) p
     _   -> Nothing
 
--- |Parse a List of EPCs
--- name="epcList" type="epcis:EPCListType"
-parseEPCList :: Cursor -> Name -> [Either ParseFailure LabelEPC]
-parseEPCList c n = (readLabelEPC Nothing . T.unpack) <$> texts
-  where
-    texts = c $/ element n &/ element "epc" &/ content
-
 
 -- insName --> The name of the cursor under which the instanceLabelEPCs lie
 -- clName --> The name of the cursor under which the classLabelEPCs lie
