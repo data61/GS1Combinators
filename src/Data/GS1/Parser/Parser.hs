@@ -101,7 +101,6 @@ parseDWhen c = do
   let tz = if isJust $ parseTimeZoneXML' tzn -- TWEAK since want the valid version more
             then parseTimeZoneXML' tzn
             else parseTimeZoneXML etn
-  -- TODO = fix
   -- ^^^ this statement is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
   -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
   -- which is equivalent to returning Nothing.
@@ -113,7 +112,7 @@ parseDWhen c = do
     Just et' -> Right $ DWhen et' rt (fromJust tz)
     _        -> Left TimeZoneError
 
--- TODO = CHECK
+-- @todo check for valid combinations of BizStep and Disp
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
