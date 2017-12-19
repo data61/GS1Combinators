@@ -43,31 +43,31 @@ makeClassy ''DWhy
 
 
 -- given a disposition, returns the list of valid BizSteps
-dispositionValidList :: Disposition -> [BizStep]
+dispositionValidList :: Disposition -> [BizStep] 
 dispositionValidList Active =  [Commissioning]
 dispositionValidList ContainerClosed =  [StagingOutbound]
 dispositionValidList Damaged =
     [Accepting, Inspecting, Receiving, Removing, Repairing, Replacing]
 dispositionValidList Destroyed =  [Destroying]
 dispositionValidList Dispensed =  [] -- nothing defined - page 25 of spec
-dispositionValidList Encoded =  [Encoding]
-dispositionValidList Expired =  [Holding, StagingOutbound, Storing]
-dispositionValidList InProgress =
+dispositionValidList Encoded =  [Encoding] 
+dispositionValidList Expired =  [Holding, StagingOutbound, Storing] 
+dispositionValidList InProgress = 
     [Receiving, Picking, Loading, Accepting, StagingOutbound] ++
-    [Arriving, VoidShipping]
-dispositionValidList InTransit =  [Shipping, Departing]
-dispositionValidList Inactive   =  [Decommissioning]
-dispositionValidList NoPedigreeMatch   =  [Holding, StagingOutbound, Storing]
-dispositionValidList NonSellableOther =
-    [Holding, Inspecting, StagingOutbound, Storing]
+    [Arriving, VoidShipping] 
+dispositionValidList InTransit =  [Shipping, Departing] 
+dispositionValidList Inactive   =  [Decommissioning] 
+dispositionValidList NoPedigreeMatch   =  [Holding, StagingOutbound, Storing] 
+dispositionValidList NonSellableOther = 
+    [Holding, Inspecting, StagingOutbound, Storing] 
 dispositionValidList PartiallyDispensed =  []
-dispositionValidList Recalled =  [Holding, StagingOutbound, Storing]
-dispositionValidList Reserved =  [Reserving]
-dispositionValidList RetailSold =  [RetailSelling]
-dispositionValidList Returned =  [Receiving, Holding, Shipping]
-dispositionValidList SellableAccessible =  [Stocking, Receiving]
+dispositionValidList Recalled =  [Holding, StagingOutbound, Storing] 
+dispositionValidList Reserved =  [Reserving] 
+dispositionValidList RetailSold =  [RetailSelling] 
+dispositionValidList Returned =  [Receiving, Holding, Shipping] 
+dispositionValidList SellableAccessible =  [Stocking, Receiving] 
 dispositionValidList SellableNotAccessible =
-    [Receiving, Storing, Loading, Holding, Inspecting]
+    [Receiving, Storing, Loading, Holding, Inspecting] 
 dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
 dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
 
