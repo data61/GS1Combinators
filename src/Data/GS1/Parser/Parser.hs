@@ -152,9 +152,13 @@ parseDWhen c = do
     _                    -> Left TimeZoneError
 
 -- checks if the bistep is valid for the disposition
+-- true if no disposition is found
 checkValidBizDisp :: Either ParseFailure BizStep
                       -> Either ParseFailure Disposition -> Bool
-checkValidBizDisp b d = True
+checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
+checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
+checkValidBizDisp _ (Left TagNotFound) = True
+checkValidBizDisp (Left _) (Right _) = False
 
 -- @todo check for valid combinations of BizStep and Disp
 -- |Parse DWhy
