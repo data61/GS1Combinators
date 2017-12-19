@@ -30,8 +30,8 @@ main = do
   -- print dwhat
   let dwhen = head $ parseDWhen <$> eCursors
   print dwhen
-  let ev = head $ parseEventByType mainCursor TransformationEventT
-  print ev
+  -- let ev = head $ parseEventByType mainCursor TransformationEventT
+  -- print ev
   -- case ev of
   --   Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
   --   _         -> print "NOOOOO"
