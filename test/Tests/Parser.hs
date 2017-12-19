@@ -433,7 +433,7 @@ testParser = do
               -- a dwhy element
               (DWhy (Just Shipping) (Just InTransit))
               -- a dwhere element
-              (DWhere [] [] [] []),
+              (DWhere [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")] [] [] []),
 
             -- second element
             Right $ Event
