@@ -352,8 +352,8 @@ testParser = do
           [Right $ Event
             -- @todo annonate the attributes with comments about what they are
             ObjectEventT -- type
-            (EventID (fromJust $
-                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+            (Just (EventID (fromJust $
+                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3")))
             -- eid
             -- a dwhat element
             (
@@ -413,8 +413,8 @@ testParser = do
             -- @todo annonate the attributes with comments about what they are
               ObjectEventT -- type
               -- eid
-              (EventID (fromJust $
-                  fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
+              (Just (EventID (fromJust $
+                  fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
                 ObjectDWhat Observe
@@ -444,8 +444,8 @@ testParser = do
             Right $ Event
               ObjectEventT -- type
               -- eid
-              (EventID (fromJust $
-                  fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3"))
+              (Just (EventID (fromJust $
+                  fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
                 ObjectDWhat Observe
@@ -481,9 +481,7 @@ testParser = do
         [Right $ Event
           -- @todo annonate the attributes with comments about what they are
           TransformationEventT -- type
-          (EventID (fromJust $
-              fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
-          -- eid
+          Nothing -- eid
           -- a dwhat element
           (
             TransformationDWhat Nothing
@@ -514,7 +512,6 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            -- <id>urn:epc:id:sgln:4012345.00001.0</id>
             [SGLN "4012345" (LocationReferenceNum "00001") Nothing]
             -- [ReadPointLocation]
             [] -- [BizLocation]
@@ -534,8 +531,8 @@ testParser = do
         [Right $ Event
           -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
-          (EventID (fromJust $
-              fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
+          (Just (EventID (fromJust $
+              fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
           -- eid
           -- a dwhat element
           (
@@ -572,8 +569,8 @@ testParser = do
           Right $ Event
           -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
-          (EventID (fromJust $
-              fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3"))
+          (Just (EventID (fromJust $
+              fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
           -- eid
           -- a dwhat element
           (
@@ -617,8 +614,8 @@ testParser = do
         [Right $ Event
           -- @todo annonate the attributes with comments about what they are
           AggregationEventT -- type
-          (EventID (fromJust $
-              fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5"))
+          (Just (EventID (fromJust $
+              fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5")))
           -- eid
           -- a dwhat element
           (
