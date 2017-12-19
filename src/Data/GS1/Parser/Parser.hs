@@ -98,8 +98,9 @@ parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
   let et = parseTimeXML etn
-  let tz = if isJust $ parseTimeZoneXML' tzn -- TWEAK since want the valid version more
-            then parseTimeZoneXML' tzn
+  let parsedTz = parseTimeZoneXML' tzn
+  let tz = if isJust parsedTz
+            then parsedTz
             else parseTimeZoneXML etn
   -- ^^^ this statement is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
   -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
@@ -108,9 +109,9 @@ parseDWhen c = do
   -- this needs a closer look and more robust error handling
 
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
-  case et of
-    Just et' -> Right $ DWhen et' rt (fromJust tz)
-    _        -> Left TimeZoneError
+  case (et, tz) of
+    (Just et', Just tz') -> Right $ DWhen et' rt tz'
+    _                    -> Left TimeZoneError
 
 -- @todo check for valid combinations of BizStep and Disp
 -- |Parse DWhy
