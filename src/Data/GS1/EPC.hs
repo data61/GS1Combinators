@@ -148,7 +148,8 @@ $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
-                      -- Global Individual Asset Identifier, e.g. bucket for olives
+                      -- Global Individual Asset Identifier,
+                      -- e.g. bucket for olives
                       | SSCC GS1CompanyPrefix SerialNumber
                       --serial shipping container code
                       | SGTIN GS1CompanyPrefix
