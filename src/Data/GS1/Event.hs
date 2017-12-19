@@ -49,7 +49,7 @@ $(deriveJSON defaultOptions ''Event)
 instance ToSchema Event
 
 {-
-   commenting out the lens stuff, we don't use it anyway...
+  --  commenting out the lens stuff, we don't use it anyway...
 instance HasEventID (Eventish a) where
   eventID =
     lens
