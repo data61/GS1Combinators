@@ -25,6 +25,11 @@ import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
 
+import           Control.Monad.Except     (MonadError)
+import           Control.Monad.Error.Lens
+import           Data.Time
+
+
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
@@ -66,18 +71,49 @@ parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
                           let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
                               either2Maybe ptz
 
+-- NOTE = from here down to parseBizStep are functions added to fix bugs in parseDWhen,
+-- due to parseTimeZone not actually working at all originally and parseStr2Time not allowing for no timezone being present
+
 -- |Parse TimeZone from eventTimeZoneOffset
 -- Only the first occured TimeZone will be considered
+-- parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
+-- parseTimeZoneXML' [] = Nothing
+-- parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
+--                             case l of
+--                               (x:_) ->
+--                                 let rx = readMaybe x :: Maybe Int in
+--                                     case rx of
+--                                       Just t'  -> Just $ hoursToTimeZone t'
+--                                       Nothing  -> Nothing
+--                               _     -> Nothing
+-- |parse the string and obtain TimeZone,
+parseStr2TimeZone' :: (AsEPCISTimeError e, MonadError e m) => String -> m TimeZone
+parseStr2TimeZone' s = let parsed = parseTimeM True defaultTimeLocale "%z" s :: Maybe ZonedTime in
+                      case parsed of
+                        Just t -> let tz = zonedTimeZone t :: TimeZone in
+                                      pure tz
+                        Nothing -> throwing _IllegalTimeFormat ()
+
 parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML' [] = Nothing
-parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
-                            case l of
-                              (x:_) ->
-                                let rx = readMaybe x :: Maybe Int in
-                                    case rx of
-                                      Just t'  -> Just $ hoursToTimeZone t'
-                                      Nothing  -> Nothing
-                              _     -> Nothing
+parseTimeZoneXML' = parseSingleElemM parseTimeZoneHelper'
+  where
+    parseTimeZoneHelper' x =
+      let ptz = parseStr2TimeZone' x :: Either EPCISTimeError TimeZone in
+        either2Maybe ptz
+
+-- use init to remove the 'Z' at the end... TODO = should consider if empty as well
+parseStr2Time' :: (AsEPCISTimeError e, MonadError e m) => String -> m EPCISTime
+parseStr2Time' s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q" (init s) :: Maybe EPCISTime in
+                     case parsed of
+                       Just et -> pure et
+                       Nothing -> throwing _IllegalTimeFormat ()
+
+parseTimeXML' :: [T.Text] -> Maybe EPCISTime
+parseTimeXML' = parseSingleElemM parseTimeHelper'
+  where
+    parseTimeHelper' x =
+      let pt = parseStr2Time' x :: Either EPCISTimeError EPCISTime
+        in either2Maybe pt
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
@@ -97,7 +133,9 @@ parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
-  let et = parseTimeXML etn
+  let et = if ((length etn > 0) && ((length (T.unpack (head etn))) > 0) && (last (T.unpack (head etn))) == 'Z')
+              then parseTimeXML' etn
+               else parseTimeXML etn
   let parsedTz = parseTimeZoneXML' tzn
   let tz = if isJust parsedTz
             then parsedTz
