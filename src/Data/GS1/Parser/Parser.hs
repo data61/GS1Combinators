@@ -162,6 +162,7 @@ parseDWhen c = do
 -- true if no disposition is found
 checkValidBizDisp :: Either ParseFailure BizStep
                       -> Either ParseFailure Disposition -> Bool
+-- checkValidBizDisp _ _ = True                      
 checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
 checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
 checkValidBizDisp _ (Left TagNotFound) = True
