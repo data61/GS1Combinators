@@ -537,6 +537,9 @@ testParser = do
             TransactionDWhat Observe
             Nothing
             [
+              BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po}
+            ]
+            [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
               IL $ SGTIN "0614141" Nothing "107346" "2018"
             ]
@@ -572,6 +575,10 @@ testParser = do
           (
             TransactionDWhat Observe
             Nothing
+            [
+              BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po},
+              BizTransaction{_btid="urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
+            ]
             [IL $ SGTIN "0614141" Nothing "107346" "2018"]
           )
           -- a dwhen element
