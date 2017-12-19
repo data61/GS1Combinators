@@ -25,27 +25,3 @@ data DWhen = DWhen
 $(deriveJSON defaultOptions ''DWhen)
 instance ToSchema DWhen
 makeClassy ''DWhen
-
--- DELETEME
--- |eventTime, recordTime, the timezone is eventTime's
--- XXX a lot of this switching between Either and Maybe can be rewritten using _Left and _Right prisms
-mkDWhen :: String -> String -> Maybe DWhen
-mkDWhen a b = let et = parseStr2Time a :: Either EPCISTimeError EPCISTime
-                  rt = parseStr2Time b :: Either EPCISTimeError EPCISTime
-                  tz = parseStr2TimeZone a :: Either EPCISTimeError TimeZone in
-                  case (et, rt) of
-                    (Right et', Right rt') ->
-                        let diff = diffUTCTime et' rt' in
-                                      if diff < 0
-                                      then Just $ DWhen et' (Just rt')(fromRight' tz) else Nothing
-                    (Right et', Left _) -> Just $ DWhen et' Nothing (fromRight' tz)
-                    _         -> Nothing
-
--- DELETEME
--- |use it when event time and record time are the same
-mkDWhen' :: String -> Maybe DWhen
-mkDWhen' s = let t = parseStr2Time s :: Either EPCISTimeError EPCISTime
-                 tz = parseStr2TimeZone s :: Either EPCISTimeError TimeZone in
-                 case t of
-                   Right t' -> Just $ DWhen t' (Just t') (fromRight' tz)
-                   _        -> Nothing
