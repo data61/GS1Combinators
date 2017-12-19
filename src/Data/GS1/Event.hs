@@ -38,7 +38,7 @@ mkEventType = mkByName
 data Event = Event
   {
     _type  :: EventType
-  , _eid   :: Maybe EventID
+  , _eid   :: EventID
   , _what  :: DWhat
   , _when  :: DWhen
   , _why   :: DWhy
