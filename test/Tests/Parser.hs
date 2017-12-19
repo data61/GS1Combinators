@@ -481,47 +481,40 @@ testParser = do
           -- eid
           -- a dwhat element
           (
-            TransformationDWhat Observe
-            [
-              IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018",
-              CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200 "KGM")
-            ]
+            TransformationDWhat Nothing
+              [
+                IL (SGTIN "4012345" Nothing "011122" "25"),
+                IL (SGTIN "4000001" Nothing "065432" "99886655"),
+                CL (LGTIN "4012345" "011111" "4444")
+                    (Just (MeasuredQuantity 10.0 "KGM")),
+                CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
+                CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
+              ] 
+              [
+                IL (SGTIN "4012345" Nothing "077889" "25"),
+                IL (SGTIN "4012345" Nothing "077889" "26"),
+                IL (SGTIN "4012345" Nothing "077889" "27"),
+                IL (SGTIN "4012345" Nothing "077889" "28")
+              ]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-              Nothing
-              (read "-06:00" :: TimeZone)
+              (read "2013-10-31 14:58:56.591Z" :: UTCTime) -- eventTime
+              Nothing -- recordTime
+              (read "+02:00" :: TimeZone) -- timeZone
           )
           -- a dwhy element
-          (DWhy (Just Shipping) (Just InTransit))
+          (DWhy (Just Commissioning) (Just InProgress))
           -- a dwhere element
           (
             DWhere
-            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            -- <id>urn:epc:id:sgln:4012345.00001.0</id>
+            [SGLN "4012345" (LocationReferenceNum "00001") Nothing]
             -- [ReadPointLocation]
-            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
-            -- [BizLocation]
-            [
-              (
-                SDPossessingParty, -- SourceDestType
-                SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                -- LocationEPC
-              )
-            ] -- srcType
-            [
-              (
-                SDOwningParty,
-                SGLN "0614141" (LocationReferenceNum "00001") Nothing
-              ),
-              (
-                SDLocation,
-                SGLN "0614141" (LocationReferenceNum "00777") Nothing
-              )
-            ] -- destType
+            [] -- [BizLocation]
+            [] -- srcType
+            [] -- destType
           )
         ]
 
