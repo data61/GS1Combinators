@@ -368,30 +368,35 @@ testParser = do
 
 
   describe "test some basic functions in Parser" $ do
-    it "parseSingleElemE invalid" $ do
-      (parseSingleElemE Right []) `shouldBe` (Left InvalidFormat)
-    it "parseSingleElemE valid" $ do
-      (parseSingleElemE Right ["hi"]) `shouldBe` (Right "hi")
+    it "parseSingleElemE invalid" $
+      parseSingleElemE Right [] `shouldBe` Left TagNotFound
+    it "parseSingleElemE valid" $
+      parseSingleElemE Right ["hi"] `shouldBe` Right "hi"
 
-    it "parseSingleElemM invalid" $ do
-      (parseSingleElemM Just []) `shouldBe` Nothing
-    it "parseSingleElemM invalid 2" $ do
-      (parseSingleElemM (const (Nothing :: Maybe String)) ["hi"]) `shouldBe` Nothing
-    it "parseSingleElemM valid" $ do
-      (parseSingleElemM Just ["hi"]) `shouldBe` (Just "hi")
+    it "parseSingleElemM invalid" $
+      parseSingleElemM Just [] `shouldBe` Nothing
+    it "parseSingleElemM invalid 2" $
+      parseSingleElemM (const (Nothing :: Maybe String)) ["hi"] `shouldBe` Nothing
+    it "parseSingleElemM valid" $
+      parseSingleElemM Just ["hi"] `shouldBe` Just "hi"
 
-    it "parseTimeXML invalid" $ do
-      (parseTimeXML []) `shouldBe` Nothing
-    it "parseTimeXML invalid 2" $ do
-      (parseTimeXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
-    it "parseTimeXML valid" $ do
-      (parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
-         fromRight' (parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime)))
+    it "parseTimeXML invalid" $
+      parseTimeXML [] `shouldBe` Nothing
+    it "parseTimeXML invalid 2" $
+      parseTimeXML
+        ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]
+          `shouldBe` Nothing
+    it "parseTimeXML valid" $
+      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Just (
+         fromRight' (parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime))
 
-    it "parseTimeZoneXML invalid" $ do
-      (parseTimeZoneXML []) `shouldBe` Nothing
-    it "parseTimeZoneXML invalid 2" $ do
-      (parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]) `shouldBe` Nothing
-    it "parseTimeZoneXML valid" $ do
-      (parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]) `shouldBe` (Just (
-        fromRight' (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone)))
+    it "parseTimeZoneXML invalid" $
+      parseTimeZoneXML [] `shouldBe` Nothing
+    it "parseTimeZoneXML invalid 2" $
+      parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"] `shouldBe` Nothing
+    it "parseTimeZoneXML valid" $
+      parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]
+        `shouldBe`
+          Just (
+            fromRight'
+              (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone))
