@@ -18,7 +18,9 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Parser.Parser
-
+import           Data.GS1.EventID
+import           Data.UUID as UUID
+import           Data.Maybe
 import           Data.Time
 
 testParser :: Spec
@@ -337,6 +339,7 @@ testParser = do
               ]
           ]
 
+
   -- this is an unnecessary test. it should compare the guts of parseEvents
   describe "Parse Full Events" $
     it "parses a valid object event" $ do
@@ -345,14 +348,57 @@ testParser = do
       let parsedEvents = parseEventByType cursor ObjectEventT
       -- this is a template to write tests for the events
       parsedEvents`shouldBe`
-        [
-          Right $
-            ObjectEventT
-            -- some UUID
             -- a huge dwhat element
-            -- a huge dwhen element
-            -- a huge dwhy element
-            -- a huge dwhere element
+        [Right $ Event
+          -- @todo annonate the attributes with comments about what they are
+          ObjectEventT -- type
+          (EventID (fromJust $
+              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+          -- eid
+          -- a dwhat element
+          (
+            ObjectDWhat Observe
+            [
+              IL $ SGTIN "0614141" Nothing "107346" "2017",
+              IL $ SGTIN "0614141" Nothing "107346" "2018",
+              CL (LGTIN "4012345" "012345" "998877")
+                  (Just $ MeasuredQuantity 200 "KGM")
+            ]
+          )
+          -- a dwhen element
+          (
+            DWhen
+              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+              Nothing
+              (read "-06:00" :: TimeZone)
+          )
+          -- a dwhy element
+          (DWhy (Just Shipping) (Just InTransit))
+          -- a dwhere element
+          (
+            DWhere
+            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            -- [ReadPointLocation]
+            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+            -- [BizLocation]
+            [
+              (
+                SDPossessingParty, -- SourceDestType
+                SGLN "4012345" (LocationReferenceNum "00001") Nothing
+                -- LocationEPC
+              )
+            ] -- srcType
+            [
+              (
+                SDOwningParty,
+                SGLN "0614141" (LocationReferenceNum "00001") Nothing
+              ),
+              (
+                SDLocation,
+                SGLN "0614141" (LocationReferenceNum "00777") Nothing
+              )
+            ] -- destType
+          )
         ]
       -- length parsedEvents `shouldBe` 1
       -- isRight (head parsedEvents) `shouldBe` True
