@@ -532,23 +532,21 @@ testParser = do
           -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
           (EventID (fromJust $
-              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+              fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
           -- eid
           -- a dwhat element
           (
             TransactionDWhat Observe
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018",
-              CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200 "KGM")
+              IL $ SGTIN "0614141" Nothing "107346" "2018"
             ]
           )
           -- a dwhen element
           (
             DWhen
               (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-              Nothing
+              (Just (read "2005-04-03T20:33:31.116-06:00" :: UTCTime))
               (read "-06:00" :: TimeZone)
           )
           -- a dwhy element
@@ -556,27 +554,43 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
             -- [ReadPointLocation]
-            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+            []
             -- [BizLocation]
-            [
-              (
-                SDPossessingParty, -- SourceDestType
-                SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                -- LocationEPC
-              )
-            ] -- srcType
-            [
-              (
-                SDOwningParty,
-                SGLN "0614141" (LocationReferenceNum "00001") Nothing
-              ),
-              (
-                SDLocation,
-                SGLN "0614141" (LocationReferenceNum "00777") Nothing
-              )
-            ] -- destType
+            [] -- srcType
+            [] -- destType
+          ),
+
+          Right $ Event
+          -- @todo annonate the attributes with comments about what they are
+          TransactionEventT -- type
+          (EventID (fromJust $
+              fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3"))
+          -- eid
+          -- a dwhat element
+          (
+            TransactionDWhat Observe
+            [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+          )
+          -- a dwhen element
+          (
+            DWhen
+              (read "2005-04-04 20:33:31.116-06:00" :: UTCTime)
+              Nothing
+              (read "-06:00" :: TimeZone)
+          )
+          -- a dwhy element
+          (DWhy (Just Receiving) (Just InProgress))
+          -- a dwhere element
+          (
+            DWhere
+            [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
+            -- [ReadPointLocation]
+            [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
+            -- [BizLocation]
+            [] -- srcType
+            [] -- destType
           )
         ]
     
