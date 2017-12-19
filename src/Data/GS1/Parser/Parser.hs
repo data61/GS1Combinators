@@ -18,12 +18,15 @@ import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import           Data.UUID
 import           Data.XML.Types      hiding (Event)
+import           Data.Time
 
 import           Text.Read
 import           Text.XML.Cursor
 
 import           Control.Applicative
 import           Control.Arrow
+import           Control.Monad.Except     (MonadError)
+import           Control.Monad.Error.Lens
 
 import           Data.GS1.Utils
 import           Data.GS1.DWhat
@@ -33,11 +36,6 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
-
-import           Control.Monad.Except     (MonadError)
-import           Control.Monad.Error.Lens
-import           Data.Time
-
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
