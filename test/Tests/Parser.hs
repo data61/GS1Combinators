@@ -482,7 +482,7 @@ testParser = do
           -- @todo annonate the attributes with comments about what they are
           TransformationEventT -- type
           (EventID (fromJust $
-              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+              fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
           -- eid
           -- a dwhat element
           (
