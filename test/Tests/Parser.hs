@@ -313,14 +313,13 @@ testParser = do
             _bt = Desadv}]
           [IL $ SGTIN "0614141" Nothing "107346" "2018"])]
 
-    -- TODO = CHECK. COPIED FROM OUTPUT. Manually checked looks correct
     describe "run parseTransformationDWhat" $
       it "parses valid DWhat" $ do
         doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
         let cursor = fromDocument doc
         let tCursors = getCursorsByName "TransformationEvent" cursor
         parseTransformationDWhat <$> tCursors `shouldBe`
-          [
+          [ 
             Right $ TransformationDWhat Nothing
               [
                 IL (SGTIN "4012345" Nothing "011122" "25"),
@@ -344,27 +343,19 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor ObjectEventT
-      length parsedEvents `shouldBe` 1
-      isRight (head parsedEvents) `shouldBe` True
-
-  -- TODO = CHECK. COPIED FROM OUTPUT. Manually checked looks correct
-  -- describe "run parseTransformationDWhat" $
-  --   it "parses valid DWhat" $ do
-  --     doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
-  --     let cursor = fromDocument doc
-  --     let tCursors = getCursorsByName "TransformationEvent" cursor
-  --     parseTransformationDWhat <$> tCursors `shouldBe`
-  --       [Right (TransformationDWhat Nothing
-  --         [IL (SGTIN "4012345" Nothing "011122" "25"),
-  --          IL (SGTIN "4000001" Nothing "065432" "99886655"),
-  --          CL (LGTIN "4012345" "011111" "4444") (Just (MeasuredQuantity 10.0 "KGM")),
-  --          CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
-  --          CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))] 
-  --         [IL (SGTIN "4012345" Nothing "077889" "25"),
-  --          IL (SGTIN "4012345" Nothing "077889" "26"),
-  --          IL (SGTIN "4012345" Nothing "077889" "27"),
-  --          IL (SGTIN "4012345" Nothing "077889" "28")])]
-
+      -- this is a template to write tests for the events
+      parsedEvents`shouldBe`
+        [
+          Right $
+            ObjectEventT
+            -- some UUID
+            -- a huge dwhat element
+            -- a huge dwhen element
+            -- a huge dwhy element
+            -- a huge dwhere element
+        ]
+      -- length parsedEvents `shouldBe` 1
+      -- isRight (head parsedEvents) `shouldBe` True
 
   describe "test some basic functions in Parser" $ do
     it "parseSingleElemE invalid" $
