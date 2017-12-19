@@ -390,7 +390,7 @@ parseEventList t = fmap asEvent
               , Either ParseFailure DWhen
               , Either ParseFailure DWhy
               , Either ParseFailure DWhere) -> Either ParseFailure Event
-    asEvent (i, w1, w2, w3, w4) = Event t <$>  i <*> w1 <*> w2 <*> w3 <*> w4
+    asEvent (i, w1, w2, w3, w4) = Event t <$> i <*> w1 <*> w2 <*> w3 <*> w4
 
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
