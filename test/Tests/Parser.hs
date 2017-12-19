@@ -401,67 +401,72 @@ testParser = do
             )
           ]
 
-      -- @todo change this!
-      it "ObjectEvent" $ do -- @sa
+      it "ObjectEvent" $ do
         doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
         let cursor = fromDocument doc
         let parsedEvents = parseEventByType cursor ObjectEventT
         -- this is a template to write tests for the events
         parsedEvents`shouldBe`
               -- a huge dwhat element
-          [Right $ Event
+          [
+            Right $ Event
             -- @todo annonate the attributes with comments about what they are
-            ObjectEventT -- type
-            (EventID (fromJust $
-                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
-            -- eid
-            -- a dwhat element
-            (
-              ObjectDWhat Observe
-              [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018",
-                CL (LGTIN "4012345" "012345" "998877")
-                    (Just $ MeasuredQuantity 200 "KGM")
-              ]
-            )
-            -- a dwhen element
-            (
-              DWhen
-                (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-                Nothing
-                (read "-06:00" :: TimeZone)
-            )
-            -- a dwhy element
-            (DWhy (Just Shipping) (Just InTransit))
-            -- a dwhere element
-            (
-              DWhere
-              [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
-              -- [ReadPointLocation]
-              [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
-              -- [BizLocation]
-              [
-                (
-                  SDPossessingParty, -- SourceDestType
-                  SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                  -- LocationEPC
-                )
-              ] -- srcType
-              [
-                (
-                  SDOwningParty,
-                  SGLN "0614141" (LocationReferenceNum "00001") Nothing
-                ),
-                (
-                  SDLocation,
-                  SGLN "0614141" (LocationReferenceNum "00777") Nothing
-                )
-              ] -- destType
-            )
+              ObjectEventT -- type
+              -- eid
+              (EventID (fromJust $
+                  fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
+              -- a dwhat element
+              (
+                ObjectDWhat Observe
+                [
+                  IL $ SGTIN "0614141" Nothing "107346" "2017",
+                  IL $ SGTIN "0614141" Nothing "107346" "2018"
+                ]
+              )
+              -- a dwhen element
+              (
+                DWhen
+                  (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+                  (Just (read "2005-04-03 20:33:31.116-06:00" :: UTCTime))
+                  (read "-06:00" :: TimeZone)
+              )
+              -- a dwhy element
+              (DWhy (Just Shipping) (Just InTransit))
+              -- a dwhere element
+              (DWhere [] [] [] []),
+
+            -- second element
+            Right $ Event
+              ObjectEventT -- type
+              -- eid
+              (EventID (fromJust $
+                  fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3"))
+              -- a dwhat element
+              (
+                ObjectDWhat Observe
+                  [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+              )
+              -- a dwhen element
+              (
+                DWhen
+                  (read "2005-04-04 20:33:31.116-06:00" :: UTCTime)
+                  Nothing
+                  (read "-06:00" :: TimeZone)
+              )
+              -- a dwhy element
+              (DWhy (Just Receiving) (Just InProgress))
+              -- a dwhere element
+              (
+                DWhere
+                [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
+                -- [ReadPointLocation]
+                [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
+                -- [BizLocation]
+                [] []
+              )
           ]
-    -- @todo change this!
-    it "parses a valid transformation event" $ do -- @sa
+
+    it "parses a valid transformation event" $ do
       doc <- Text.XML.readFile def "test/test-xml/Transformation.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor TransformationEventT
