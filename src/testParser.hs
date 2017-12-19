@@ -20,18 +20,21 @@ import           Control.Applicative
 
 main :: IO()
 main = do
-  let eventName = "AggregationEvent"
-  doc <- Text.XML.readFile def "../test/test-xml/AggregationEvent.xml"
+  let eventName = "TransformationEvent"
+  doc <- Text.XML.readFile def "../test/test-xml/TransformationEvent.xml"
 
   let mainCursor = fromDocument doc
   let eCursors = getCursorsByName eventName mainCursor
 
-  -- let dwhat = head $ parseAggregationDWhat <$> eCursors
+  -- let dwhat = head $ parseTransformationDWhat <$> eCursors
   -- print dwhat
-  let ev = head $ parseEventByType mainCursor AggregationEventT
-  case ev of
-    Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
-    _         -> print "NOOOOO"
+  let dwhen = head $ parseDWhen <$> eCursors
+  print dwhen
+  let ev = head $ parseEventByType mainCursor TransformationEventT
+  print ev
+  -- case ev of
+  --   Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
+  --   _         -> print "NOOOOO"
   -- ev `shouldBe` ...
   -- TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev
 

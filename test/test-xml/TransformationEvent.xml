@@ -7,6 +7,8 @@
     <EventList>
       <extension>
         <TransformationEvent>
+          <eventID>b1080840-e9cc-11e6-bf0e-fe55135034f3</eventID>
+          <!-- ^^^remove this -->
           <eventTime>2013-10-31T14:58:56.591Z</eventTime>
           <eventTimeZoneOffset>+02:00</eventTimeZoneOffset>
           <inputEPCList>
