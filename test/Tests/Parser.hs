@@ -433,7 +433,12 @@ testParser = do
               -- a dwhy element
               (DWhy (Just Shipping) (Just InTransit))
               -- a dwhere element
-              (DWhere [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")] [] [] []),
+              -- <id>urn:epc:id:sgln:0614141.07346.1234</id>
+              (
+                DWhere
+                  [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
+                  [] [] []
+              ),
 
             -- second element
             Right $ Event
@@ -558,8 +563,7 @@ testParser = do
             DWhere
             [SGLN "0614141" (LocationReferenceNum "07346") (Just "1234")]
             -- [ReadPointLocation]
-            []
-            -- [BizLocation]
+            []-- [BizLocation]
             [] -- srcType
             [] -- destType
           ),

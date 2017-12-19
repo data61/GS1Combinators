@@ -265,7 +265,6 @@ returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
 parseObjectDWhat c = do
   let act = parseAction c
-  -- let (errs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (errs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
   case (act, errs) of
@@ -288,7 +287,6 @@ parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentID c
-  -- let (epcErrs, epcs) = partitionEithers $ parseEPCList c "epcList"
   let (epcErrs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
   let act = parseAction c
