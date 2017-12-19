@@ -30,7 +30,6 @@ main = do
 
   -- DWhen
   hspec testParseTime
-  hspec testMkDWhen
 
   -- Parser
   hspec testParser
