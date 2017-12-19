@@ -10,7 +10,7 @@ import           Text.XML.Cursor
 import qualified Data.Text              as T
 import           Data.Time.LocalTime
 import           Data.Either.Combinators
-
+-- import           Data.Time.Clock.UTC.UTCTime
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -18,6 +18,12 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Parser.Parser
+
+-- use this link to calculate epoch seconds to put down for converting to UTCDate
+-- https://www.timeanddate.com/date/duration.html
+import Data.Time.Clock.POSIX
+import Data.Time.Format
+import Data.Time
 
 
 testParser :: Spec
@@ -57,11 +63,16 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "AggregationEvent" cursor
-      let t = (parseStr2Time "2013-06-08T14:58:56.591+02:00") :: Either EPCISTimeError EPCISTime
-      let tz = (parseStr2TimeZone "+02:00") :: Either EPCISTimeError TimeZone
+      let t = parseStr2Time "2013-06-08T14:58:56.591+02:00" :: Either EPCISTimeError EPCISTime
+      let tz = parseStr2TimeZone "+02:00" :: Either EPCISTimeError TimeZone
+      let tz1 = parseStr2TimeZone "2013-06-08T14:58:56.591+02:00" :: Either EPCISTimeError TimeZone      
       parseDWhen <$> oeCursors `shouldBe`
-        [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))]
-  
+--        [Right (DWhen (posixSecondsToUTCTime 1370696336.591) Nothing (fromRight' tz1))]
+        -- []
+        -- [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz))]
+        -- [Right (DWhen (2013-06-08 12:58:56.591 :: EPCISTime) (Just (fromRight' t)) (fromRight' tz))]
+        [Right (DWhen ((read "2013-06-08 12:58:56.591") :: UTCTime) Nothing (fromRight' tz1))]
+
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEventNoEventTime XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
