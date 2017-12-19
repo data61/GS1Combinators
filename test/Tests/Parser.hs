@@ -10,7 +10,7 @@ import           Text.XML.Cursor
 import qualified Data.Text              as T
 import           Data.Time.LocalTime
 import           Data.Either.Combinators
--- import           Data.Time.Clock.UTC.UTCTime
+
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -19,12 +19,7 @@ import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.Parser.Parser
 
--- use this link to calculate epoch seconds to put down for converting to UTCDate
--- https://www.timeanddate.com/date/duration.html
-import Data.Time.Clock.POSIX
-import Data.Time.Format
-import Data.Time
-
+import           Data.Time
 
 testParser :: Spec
 testParser = do
