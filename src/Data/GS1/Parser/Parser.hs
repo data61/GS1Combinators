@@ -377,7 +377,7 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
-              -> [(Either ParseFailure EventID
+              -> [(Maybe EventID
                   , Either ParseFailure DWhat
                   , Either ParseFailure DWhen
                   , Either ParseFailure DWhy
@@ -385,12 +385,12 @@ parseEventList :: EventType
               -> [Either ParseFailure Event]
 parseEventList t = fmap asEvent
   where
-    asEvent :: (Either ParseFailure EventID
+    asEvent :: (Maybe EventID
               , Either ParseFailure DWhat
               , Either ParseFailure DWhen
               , Either ParseFailure DWhy
               , Either ParseFailure DWhere) -> Either ParseFailure Event
-    asEvent (i, w1, w2, w3, w4) = Event t <$> i <*> w1 <*> w2 <*> w3 <*> w4
+    asEvent (i, w1, w2, w3, w4) = Event t i <$> w1 <*> w2 <*> w3 <*> w4
 
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
@@ -416,7 +416,7 @@ parseEventByType c et = do
                TransformationEventT -> "TransformationEvent"
 
   let eCursors = getCursorsByName tagS c
-  let eid = parseEventID <$> eCursors
+  let eid = either2Maybe . parseEventID <$> eCursors
 
   let dwhat = parseDWhat et eCursors
   let dwhen = parseDWhen <$> eCursors
