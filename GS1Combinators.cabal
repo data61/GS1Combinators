@@ -28,6 +28,7 @@ library
                      , Data.GS1.Parser.Parser
                      , Data.GS1.URI
   build-depends:       base >= 4.7 && < 5
+                     , time >= 1.4.1
                      , bytestring
                      , mtl
                      , time
