@@ -52,7 +52,7 @@ testParser = do
 
     -- it "AggregationEvent" $ do
     --   error "@todo Add DWhen test for Aggregation"
-  describe "parse DWhen AggregationEvent" $ do
+  describe "parse DWhen AggregationEvent" $
     it "create DWhen from AggregationEvent" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
