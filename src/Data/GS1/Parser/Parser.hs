@@ -1,5 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{- 
+  Unless otherwise stated, all `parse` functions take in a top level cursor
+  Here, top level cursor means an event level cursor. following is an example,
+  <TransformationEvent>
+    <stuff> content </stuff>
+    ...
+  </TransformationEvent>
+-}
+
 module Data.GS1.Parser.Parser where
 import           Data.List
 import           Data.List.Split
