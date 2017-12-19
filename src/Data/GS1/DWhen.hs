@@ -4,22 +4,13 @@
 
 module Data.GS1.DWhen where
 
-import           Control.Lens
--- import           Control.Monad.Error.Lens
--- import           Control.Monad.Except     (MonadError)
-import           Data.Either.Combinators
-import           Data.Time
-import           GHC.Generics
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Swagger
--- import qualified Data.Text as T
-
--- import Database.SQLite.Simple.ToField
--- import Data.Aeson.Text
--- import Data.ByteString.Char8 (pack)
--- import qualified Data.Text.Lazy as TxtL
-
+import Control.Lens
+import Data.Either.Combinators
+import Data.Time
+import GHC.Generics
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Swagger
 import Data.GS1.EPC
 
 data DWhen = DWhen
