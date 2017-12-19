@@ -340,24 +340,143 @@ testParser = do
           ]
 
 
-  -- this is an unnecessary test. it should compare the guts of parseEvents
-  describe "Parse Full Events" $
-    it "parses a valid object event" $ do
-      doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+  describe "Parse Full Events" $ do
+    describe "Object Events" $ do
+      it "ObjectEvent2" $ do
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
+        let cursor = fromDocument doc
+        let parsedEvents = parseEventByType cursor ObjectEventT
+        -- this is a template to write tests for the events
+        parsedEvents`shouldBe`
+              -- a huge dwhat element
+          [Right $ Event
+            -- @todo annonate the attributes with comments about what they are
+            ObjectEventT -- type
+            (EventID (fromJust $
+                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+            -- eid
+            -- a dwhat element
+            (
+              ObjectDWhat Observe
+              [
+                IL $ SGTIN "0614141" Nothing "107346" "2017",
+                IL $ SGTIN "0614141" Nothing "107346" "2018",
+                CL (LGTIN "4012345" "012345" "998877")
+                    (Just $ MeasuredQuantity 200 "KGM")
+              ]
+            )
+            -- a dwhen element
+            (
+              DWhen
+                (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+                Nothing
+                (read "-06:00" :: TimeZone)
+            )
+            -- a dwhy element
+            (DWhy (Just Shipping) (Just InTransit))
+            -- a dwhere element
+            (
+              DWhere
+              [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+              -- [ReadPointLocation]
+              [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+              -- [BizLocation]
+              [
+                (
+                  SDPossessingParty, -- SourceDestType
+                  SGLN "4012345" (LocationReferenceNum "00001") Nothing
+                  -- LocationEPC
+                )
+              ] -- srcType
+              [
+                (
+                  SDOwningParty,
+                  SGLN "0614141" (LocationReferenceNum "00001") Nothing
+                ),
+                (
+                  SDLocation,
+                  SGLN "0614141" (LocationReferenceNum "00777") Nothing
+                )
+              ] -- destType
+            )
+          ]
+
+      -- @todo change this!
+      it "ObjectEvent" $ do -- @sa
+        doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
+        let cursor = fromDocument doc
+        let parsedEvents = parseEventByType cursor ObjectEventT
+        -- this is a template to write tests for the events
+        parsedEvents`shouldBe`
+              -- a huge dwhat element
+          [Right $ Event
+            -- @todo annonate the attributes with comments about what they are
+            ObjectEventT -- type
+            (EventID (fromJust $
+                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+            -- eid
+            -- a dwhat element
+            (
+              ObjectDWhat Observe
+              [
+                IL $ SGTIN "0614141" Nothing "107346" "2017",
+                IL $ SGTIN "0614141" Nothing "107346" "2018",
+                CL (LGTIN "4012345" "012345" "998877")
+                    (Just $ MeasuredQuantity 200 "KGM")
+              ]
+            )
+            -- a dwhen element
+            (
+              DWhen
+                (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+                Nothing
+                (read "-06:00" :: TimeZone)
+            )
+            -- a dwhy element
+            (DWhy (Just Shipping) (Just InTransit))
+            -- a dwhere element
+            (
+              DWhere
+              [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+              -- [ReadPointLocation]
+              [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+              -- [BizLocation]
+              [
+                (
+                  SDPossessingParty, -- SourceDestType
+                  SGLN "4012345" (LocationReferenceNum "00001") Nothing
+                  -- LocationEPC
+                )
+              ] -- srcType
+              [
+                (
+                  SDOwningParty,
+                  SGLN "0614141" (LocationReferenceNum "00001") Nothing
+                ),
+                (
+                  SDLocation,
+                  SGLN "0614141" (LocationReferenceNum "00777") Nothing
+                )
+              ] -- destType
+            )
+          ]
+    -- @todo change this!
+    it "parses a valid transformation event" $ do -- @sa
+      doc <- Text.XML.readFile def "test/test-xml/Transformation.xml"
       let cursor = fromDocument doc
-      let parsedEvents = parseEventByType cursor ObjectEventT
+      let parsedEvents = parseEventByType cursor TransformationEventT
       -- this is a template to write tests for the events
       parsedEvents`shouldBe`
             -- a huge dwhat element
         [Right $ Event
           -- @todo annonate the attributes with comments about what they are
-          ObjectEventT -- type
+          TransformationEventT -- type
           (EventID (fromJust $
               fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
           -- eid
           -- a dwhat element
           (
-            ObjectDWhat Observe
+            TransformationDWhat Observe
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
               IL $ SGTIN "0614141" Nothing "107346" "2018",
@@ -400,8 +519,127 @@ testParser = do
             ] -- destType
           )
         ]
-      -- length parsedEvents `shouldBe` 1
-      -- isRight (head parsedEvents) `shouldBe` True
+
+    -- @todo change this!    
+    it "parses a valid transaction event" $ do -- @matt
+      doc <- Text.XML.readFile def "test/test-xml/Transaction.xml"
+      let cursor = fromDocument doc
+      let parsedEvents = parseEventByType cursor TransactionEventT
+      -- this is a template to write tests for the events
+      parsedEvents`shouldBe`
+            -- a huge dwhat element
+        [Right $ Event
+          -- @todo annonate the attributes with comments about what they are
+          TransactionEventT -- type
+          (EventID (fromJust $
+              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+          -- eid
+          -- a dwhat element
+          (
+            TransactionDWhat Observe
+            [
+              IL $ SGTIN "0614141" Nothing "107346" "2017",
+              IL $ SGTIN "0614141" Nothing "107346" "2018",
+              CL (LGTIN "4012345" "012345" "998877")
+                  (Just $ MeasuredQuantity 200 "KGM")
+            ]
+          )
+          -- a dwhen element
+          (
+            DWhen
+              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+              Nothing
+              (read "-06:00" :: TimeZone)
+          )
+          -- a dwhy element
+          (DWhy (Just Shipping) (Just InTransit))
+          -- a dwhere element
+          (
+            DWhere
+            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            -- [ReadPointLocation]
+            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+            -- [BizLocation]
+            [
+              (
+                SDPossessingParty, -- SourceDestType
+                SGLN "4012345" (LocationReferenceNum "00001") Nothing
+                -- LocationEPC
+              )
+            ] -- srcType
+            [
+              (
+                SDOwningParty,
+                SGLN "0614141" (LocationReferenceNum "00001") Nothing
+              ),
+              (
+                SDLocation,
+                SGLN "0614141" (LocationReferenceNum "00777") Nothing
+              )
+            ] -- destType
+          )
+        ]
+    
+    -- @todo change this!
+    it "parses a valid aggregation event" $ do -- @matt
+      doc <- Text.XML.readFile def "test/test-xml/Aggregation.xml"
+      let cursor = fromDocument doc
+      let parsedEvents = parseEventByType cursor AggregationEventT
+      -- this is a template to write tests for the events
+      parsedEvents`shouldBe`
+            -- a huge dwhat element
+        [Right $ Event
+          -- @todo annonate the attributes with comments about what they are
+          AggregationEventT -- type
+          (EventID (fromJust $
+              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+          -- eid
+          -- a dwhat element
+          (
+            AggregationDWhat Observe
+            [
+              IL $ SGTIN "0614141" Nothing "107346" "2017",
+              IL $ SGTIN "0614141" Nothing "107346" "2018",
+              CL (LGTIN "4012345" "012345" "998877")
+                  (Just $ MeasuredQuantity 200 "KGM")
+            ]
+          )
+          -- a dwhen element
+          (
+            DWhen
+              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+              Nothing
+              (read "-06:00" :: TimeZone)
+          )
+          -- a dwhy element
+          (DWhy (Just Shipping) (Just InTransit))
+          -- a dwhere element
+          (
+            DWhere
+            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            -- [ReadPointLocation]
+            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
+            -- [BizLocation]
+            [
+              (
+                SDPossessingParty, -- SourceDestType
+                SGLN "4012345" (LocationReferenceNum "00001") Nothing
+                -- LocationEPC
+              )
+            ] -- srcType
+            [
+              (
+                SDOwningParty,
+                SGLN "0614141" (LocationReferenceNum "00001") Nothing
+              ),
+              (
+                SDLocation,
+                SGLN "0614141" (LocationReferenceNum "00777") Nothing
+              )
+            ] -- destType
+          )
+        ]
+
 
   describe "test some basic functions in Parser" $ do
     it "parseSingleElemE invalid" $
