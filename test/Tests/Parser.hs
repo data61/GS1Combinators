@@ -401,68 +401,73 @@ testParser = do
             )
           ]
 
-      -- @todo change this!
-      it "ObjectEvent" $ do -- @sa
+      it "ObjectEvent" $ do
         doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
         let cursor = fromDocument doc
         let parsedEvents = parseEventByType cursor ObjectEventT
         -- this is a template to write tests for the events
         parsedEvents`shouldBe`
               -- a huge dwhat element
-          [Right $ Event
+          [
+            Right $ Event
             -- @todo annonate the attributes with comments about what they are
-            ObjectEventT -- type
-            (EventID (fromJust $
-                fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
-            -- eid
-            -- a dwhat element
-            (
-              ObjectDWhat Observe
-              [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018",
-                CL (LGTIN "4012345" "012345" "998877")
-                    (Just $ MeasuredQuantity 200 "KGM")
-              ]
-            )
-            -- a dwhen element
-            (
-              DWhen
-                (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-                Nothing
-                (read "-06:00" :: TimeZone)
-            )
-            -- a dwhy element
-            (DWhy (Just Shipping) (Just InTransit))
-            -- a dwhere element
-            (
-              DWhere
-              [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
-              -- [ReadPointLocation]
-              [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
-              -- [BizLocation]
-              [
-                (
-                  SDPossessingParty, -- SourceDestType
-                  SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                  -- LocationEPC
-                )
-              ] -- srcType
-              [
-                (
-                  SDOwningParty,
-                  SGLN "0614141" (LocationReferenceNum "00001") Nothing
-                ),
-                (
-                  SDLocation,
-                  SGLN "0614141" (LocationReferenceNum "00777") Nothing
-                )
-              ] -- destType
-            )
+              ObjectEventT -- type
+              -- eid
+              (EventID (fromJust $
+                  fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3"))
+              -- a dwhat element
+              (
+                ObjectDWhat Observe
+                [
+                  IL $ SGTIN "0614141" Nothing "107346" "2017",
+                  IL $ SGTIN "0614141" Nothing "107346" "2018"
+                ]
+              )
+              -- a dwhen element
+              (
+                DWhen
+                  (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+                  (Just (read "2005-04-03 20:33:31.116-06:00" :: UTCTime))
+                  (read "-06:00" :: TimeZone)
+              )
+              -- a dwhy element
+              (DWhy (Just Shipping) (Just InTransit))
+              -- a dwhere element
+              (DWhere [] [] [] []),
+
+            -- second element
+            Right $ Event
+              ObjectEventT -- type
+              -- eid
+              (EventID (fromJust $
+                  fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3"))
+              -- a dwhat element
+              (
+                ObjectDWhat Observe
+                  [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+              )
+              -- a dwhen element
+              (
+                DWhen
+                  (read "2005-04-04 20:33:31.116-06:00" :: UTCTime)
+                  Nothing
+                  (read "-06:00" :: TimeZone)
+              )
+              -- a dwhy element
+              (DWhy (Just Receiving) (Just InProgress))
+              -- a dwhere element
+              (
+                DWhere
+                [SGLN "0012345" (LocationReferenceNum "11111") (Just "400")]
+                -- [ReadPointLocation]
+                [SGLN "0012345" (LocationReferenceNum "11111") Nothing]
+                -- [BizLocation]
+                [] []
+              )
           ]
-    -- @todo change this!
-    it "parses a valid transformation event" $ do -- @sa
-      doc <- Text.XML.readFile def "test/test-xml/Transformation.xml"
+
+    it "parses a valid transformation event" $ do
+      doc <- Text.XML.readFile def "test/test-xml/TransformationEvent.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor TransformationEventT
       -- this is a template to write tests for the events
@@ -476,53 +481,46 @@ testParser = do
           -- eid
           -- a dwhat element
           (
-            TransformationDWhat Observe
-            [
-              IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018",
-              CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200 "KGM")
-            ]
+            TransformationDWhat Nothing
+              [
+                IL (SGTIN "4012345" Nothing "011122" "25"),
+                IL (SGTIN "4000001" Nothing "065432" "99886655"),
+                CL (LGTIN "4012345" "011111" "4444")
+                    (Just (MeasuredQuantity 10.0 "KGM")),
+                CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
+                CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
+              ] 
+              [
+                IL (SGTIN "4012345" Nothing "077889" "25"),
+                IL (SGTIN "4012345" Nothing "077889" "26"),
+                IL (SGTIN "4012345" Nothing "077889" "27"),
+                IL (SGTIN "4012345" Nothing "077889" "28")
+              ]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-              Nothing
-              (read "-06:00" :: TimeZone)
+              (read "2013-10-31 14:58:56.591Z" :: UTCTime) -- eventTime
+              Nothing -- recordTime
+              (read "+02:00" :: TimeZone) -- timeZone
           )
           -- a dwhy element
-          (DWhy (Just Shipping) (Just InTransit))
+          (DWhy (Just Commissioning) (Just InProgress))
           -- a dwhere element
           (
             DWhere
-            [SGLN "0614141" (LocationReferenceNum "00777") Nothing]
+            -- <id>urn:epc:id:sgln:4012345.00001.0</id>
+            [SGLN "4012345" (LocationReferenceNum "00001") Nothing]
             -- [ReadPointLocation]
-            [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
-            -- [BizLocation]
-            [
-              (
-                SDPossessingParty, -- SourceDestType
-                SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                -- LocationEPC
-              )
-            ] -- srcType
-            [
-              (
-                SDOwningParty,
-                SGLN "0614141" (LocationReferenceNum "00001") Nothing
-              ),
-              (
-                SDLocation,
-                SGLN "0614141" (LocationReferenceNum "00777") Nothing
-              )
-            ] -- destType
+            [] -- [BizLocation]
+            [] -- srcType
+            [] -- destType
           )
         ]
 
     -- @todo change this!    
     it "parses a valid transaction event" $ do -- @matt
-      doc <- Text.XML.readFile def "test/test-xml/Transaction.xml"
+      doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor TransactionEventT
       -- this is a template to write tests for the events
@@ -596,7 +594,7 @@ testParser = do
     
     -- @todo change this!
     it "parses a valid aggregation event" $ do -- @matt
-      doc <- Text.XML.readFile def "test/test-xml/Aggregation.xml"
+      doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor AggregationEventT
       -- this is a template to write tests for the events
@@ -606,27 +604,32 @@ testParser = do
           -- @todo annonate the attributes with comments about what they are
           AggregationEventT -- type
           (EventID (fromJust $
-              fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3"))
+              fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5"))
           -- eid
           -- a dwhat element
           (
             AggregationDWhat Observe
+            -- <parentID>urn:epc:id:sscc:0614141.1234567890</parentID>
+                                  -- | SSCC GS1CompanyPrefix SerialNumber
+
+            (Just (SSCC "0614141" "1234567890")) -- Maybe ParentID
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
               IL $ SGTIN "0614141" Nothing "107346" "2018",
+              CL (CSGTIN "4012345" Nothing "098765") (Just $ ItemCount 10),
               CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200 "KGM")
-            ]
+                  (Just $ MeasuredQuantity 200.5 "KGM")
+            ] -- [LabelEPC]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+              (read "2013-06-08 14:58:56.591+02:00" :: UTCTime)
               Nothing
-              (read "-06:00" :: TimeZone)
+              (read "+02:00" :: TimeZone)
           )
           -- a dwhy element
-          (DWhy (Just Shipping) (Just InTransit))
+          (DWhy (Just Receiving) (Just InProgress))
           -- a dwhere element
           (
             DWhere
@@ -634,23 +637,8 @@ testParser = do
             -- [ReadPointLocation]
             [SGLN "0614141" (LocationReferenceNum "00888") Nothing]
             -- [BizLocation]
-            [
-              (
-                SDPossessingParty, -- SourceDestType
-                SGLN "4012345" (LocationReferenceNum "00001") Nothing
-                -- LocationEPC
-              )
-            ] -- srcType
-            [
-              (
-                SDOwningParty,
-                SGLN "0614141" (LocationReferenceNum "00001") Nothing
-              ),
-              (
-                SDLocation,
-                SGLN "0614141" (LocationReferenceNum "00777") Nothing
-              )
-            ] -- destType
+            [] -- srcType
+            [] -- destType
           )
         ]
 
