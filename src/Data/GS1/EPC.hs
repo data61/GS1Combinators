@@ -50,6 +50,8 @@ data ParseFailure = InvalidLength
                   -- error in parsing timezone
                   | TagNotFound
                   -- when a mandatory tag is not found
+                  | InvalidDispBizCombination
+                  -- when the disposition does not go with the bizstep
                   | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,

@@ -113,13 +113,22 @@ parseDWhen c = do
     (Just et', Just tz') -> Right $ DWhen et' rt tz'
     _                    -> Left TimeZoneError
 
+-- checks if the bistep is valid for the disposition
+checkValidBizDisp :: Either ParseFailure BizStep
+                      -> Either ParseFailure Disposition -> Bool
+checkValidBizDisp b d = True
+
 -- @todo check for valid combinations of BizStep and Disp
 -- |Parse DWhy
 parseDWhy :: Cursor -> Either ParseFailure DWhy
 parseDWhy c = do
   let biz = parseBizStep c
   let disp = parseDisposition c
-  mkDWhy biz disp
+  if checkValidBizDisp biz disp
+    then
+      mkDWhy biz disp
+    else
+      Left InvalidDispBizCombination
 
 extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
 extractLocationEPCList = readURI . T.unpack
