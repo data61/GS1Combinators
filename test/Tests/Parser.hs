@@ -535,6 +535,7 @@ testParser = do
           -- a dwhat element
           (
             TransactionDWhat Observe
+            Nothing
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
               IL $ SGTIN "0614141" Nothing "107346" "2018"
@@ -544,7 +545,7 @@ testParser = do
           (
             DWhen
               (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-              (Just (read "2005-04-03T20:33:31.116-06:00" :: UTCTime))
+              (Just (read "2005-04-03 20:33:31.116-06:00" :: UTCTime))
               (read "-06:00" :: TimeZone)
           )
           -- a dwhy element
@@ -560,6 +561,7 @@ testParser = do
             [] -- destType
           ),
 
+          -- second element
           Right $ Event
           -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
@@ -569,6 +571,7 @@ testParser = do
           -- a dwhat element
           (
             TransactionDWhat Observe
+            Nothing
             [IL $ SGTIN "0614141" Nothing "107346" "2018"]
           )
           -- a dwhen element
