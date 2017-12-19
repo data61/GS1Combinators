@@ -28,9 +28,12 @@ main = do
 
   -- let dwhat = head $ parseAggregationDWhat <$> eCursors
   -- print dwhat
-  let ev = parseEventByType mainCursor AggregationEventT
+  let ev = head $ parseEventByType mainCursor AggregationEventT
+  case ev of
+    Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
+    _         -> print "NOOOOO"
   -- ev `shouldBe` ...
-  TL.putStrLn . TLE.decodeUtf8 $ encodePretty $ fromRight' ev
+  -- TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev
 
 --   print $ blahfoo <$> oeCursors -- this shows that parseBizTransaction is bugged - mkBizTransactionType might not work with fromJust
 
