@@ -26,9 +26,12 @@ main = do
   let mainCursor = fromDocument doc
   let eCursors = getCursorsByName eventName mainCursor
 
-  let dwhat = head $ parseTransformationDWhat <$> eCursors
-  print dwhat
-  -- let ev = head $ parseEventByType mainCursor TransformationEventT
+  -- let dwhat = head $ parseTransformationDWhat <$> eCursors
+  -- print dwhat
+  let dwhen = head $ parseDWhen <$> eCursors
+  print dwhen
+  let ev = head $ parseEventByType mainCursor TransformationEventT
+  print ev
   -- case ev of
   --   Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
   --   _         -> print "NOOOOO"
