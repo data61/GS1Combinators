@@ -3,14 +3,9 @@ module Tests.DWhen (
 ) where
 
 import Data.Either.Combinators
-import Data.Time
 import Test.Hspec
 import Data.GS1.EPC
-import Data.GS1.DWhen
 import Data.GS1.Parser.Parser
-
-type EitherET  = Either ParseFailure EPCISTime
-type EitherETZ = Either ParseFailure TimeZone
 
 testParseTime :: Spec
 testParseTime =
@@ -24,9 +19,9 @@ testParseTime =
       show z `shouldBe` "Right -0600"
 
     it "parses slightly invalid string and returns ParseFailure" $ do
-      let zt = fromLeft' (parseStr2Time "2005-04-3T20:33:31.116-06:00" :: EitherET)
+      let zt = fromLeft' (parseStr2Time "2005-04-3T20:33:31.116-06:00")
       zt `shouldBe` TimeZoneError
 
     it "parses empty string and returns ParseFailure" $ do
-      let zt = fromLeft' (parseStr2Time "" :: EitherET)
+      let zt = fromLeft' (parseStr2Time "")
       zt `shouldBe` TimeZoneError
