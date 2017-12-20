@@ -15,7 +15,11 @@ import           Database.SQLite.Simple.ToField
 import qualified Data.Text.Lazy as TxtL
 
 --        should this be BizStep now? - @sa
-data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
+data DWhy = DWhy 
+            {
+              _DWhyBizStep     :: Maybe BizStep
+            , _DWhyDisposition :: Maybe Disposition
+            }
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
 instance ToSchema DWhy
