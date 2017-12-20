@@ -620,23 +620,6 @@ instance ToSchema EPCISTimeError
 
 makeClassyPrisms ''EPCISTimeError
 
--- example format: 2005-04-03T20:33:31.116-06:00
--- |parse the string to UTC time, the time zone information will be merged into the time
-parseStr2Time :: (AsEPCISTimeError e, MonadError e m) => String -> m EPCISTime
-parseStr2Time s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime in
-                      case parsed of
-                        Just et -> pure et
-                        Nothing -> throwing _IllegalTimeFormat ()
-
--- |parse the string and obtain TimeZone,
-parseStr2TimeZone :: (AsEPCISTimeError e, MonadError e m) => String -> m TimeZone
-parseStr2TimeZone s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe ZonedTime in
-                      case parsed of
-                        Just t -> let tz = zonedTimeZone t :: TimeZone in
-                                      pure tz
-                        Nothing -> throwing _IllegalTimeFormat ()
-
-
 instance Eq ZonedTime where
   x == y = show x == show y
 
