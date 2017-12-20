@@ -52,7 +52,10 @@ data ParseFailure = InvalidLength
                   -- when a mandatory tag is not found
                   | InvalidDispBizCombination
                   -- when the disposition does not go with the bizstep
-                  | ChildFailure [ParseFailure]
+                  | ChildFailure 
+                    { 
+                      _parseFailureChildFailuresList :: [ParseFailure]
+                    }
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
                   -- like DWhat, DWhere, etc
@@ -102,8 +105,15 @@ type Uom = String
 type Amount = Float
 type AssetType = String
 
-data Quantity = MeasuredQuantity Amount Uom
-              | ItemCount Integer
+data Quantity = MeasuredQuantity
+                {
+                  _quantityAmount :: Amount
+                , _quantityUom    :: Uom
+                }
+              | ItemCount
+                {
+                  _quantityCount :: Integer
+                }
                 deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
@@ -115,9 +125,19 @@ getSuffixTokens :: [String] -> [String]
 getSuffixTokens suffix = splitOn "." $ concat suffix
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data ClassLabelEPC =  LGTIN GS1CompanyPrefix ItemReference Lot
+data ClassLabelEPC =  LGTIN
+                      {
+                        _lgtinCompanyPrefix :: GS1CompanyPrefix
+                      , _lgtinItemReference :: ItemReference
+                      , _lgtinLot           :: Lot
+                      }
                      -- e.g. olives in a vat, harvested in April 2017
-                    | CSGTIN GS1CompanyPrefix (Maybe SGTINFilterValue) ItemReference
+                    | CSGTIN
+                      {
+                        _csgtinCompanyPrefix    :: GS1CompanyPrefix
+                      , _csgtinSgtinFilterValue :: Maybe SGTINFilterValue
+                      , _csgtinItemReference    :: ItemReference
+                      }
                      deriving (Show, Read, Eq, Generic)
 
 instance URI ClassLabelEPC where
@@ -147,18 +167,33 @@ printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
-data InstanceLabelEPC = GIAI {
-                          _giaiCompanyPrefix :: GS1CompanyPrefix,
-                          _serialNum :: SerialNumber
+data InstanceLabelEPC = GIAI 
+                        {
+                          _giaiCompanyPrefix :: GS1CompanyPrefix
+                        , _giaiSerialNum     :: SerialNumber
                         }
                       -- Global Individual Asset Identifier,
                       -- e.g. bucket for olives
-                      | SSCC GS1CompanyPrefix SerialNumber
+                      | SSCC
+                        {
+                          _ssccCompanyPrefix :: GS1CompanyPrefix
+                        , _ssccSerialNum     :: SerialNumber
+                        }
                       --serial shipping container code
-                      | SGTIN GS1CompanyPrefix
-                        (Maybe SGTINFilterValue) ItemReference SerialNumber
+                      | SGTIN
+                        {
+                          _sgtinCompanyPrefix    :: GS1CompanyPrefix
+                        , _sgtinSgtinFilterValue :: Maybe SGTINFilterValue
+                        , _sgtinItemReference    :: ItemReference
+                        , _sgtinSerialNum        :: SerialNumber
+                        }
                        --serialsed global trade item number
-                      | GRAI GS1CompanyPrefix AssetType SerialNumber
+                      | GRAI
+                        {
+                          _graiCompanyPrefix :: GS1CompanyPrefix
+                        , _graiAssetType     :: AssetType
+                        , _graiSerialNum     :: SerialNumber
+                        }
                      --Global returnable asset identifier
                       deriving (Show, Read, Eq, Generic)
 
@@ -222,15 +257,18 @@ instance ToField InstanceLabelEPC where
 
 type Lng = Float
 type Lat = Float
-data LocationReference = LocationReferenceNum String
+data LocationReference = LocationReferenceNum
+                         {
+                           _locationRefNum :: String
+                         }
   deriving (Read, Eq, Generic, Show)
 $(deriveJSON defaultOptions ''LocationReference)
 
 
 data LocationEPC = SGLN {
-    _sglnCompanyPrefix :: GS1CompanyPrefix,
-    _locationRef :: LocationReference,
-    _sglnExt :: Maybe SGLNExtension
+    _sglnCompanyPrefix :: GS1CompanyPrefix
+  , _locationRef :: LocationReference
+  , _sglnExt :: Maybe SGLNExtension
   }
   deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -337,7 +375,12 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 type DocumentType = String
 type ServiceReference = String
-data BusinessTransactionEPC =  GDTI GS1CompanyPrefix DocumentType SerialNumber
+data BusinessTransactionEPC =  GDTI
+                               {
+                                 _businessTransactionEpcCompanyPrefix :: GS1CompanyPrefix
+                               , _businessTransactionEpcDocType       :: DocumentType
+                               , _businessTransactionEpcSerialNum     :: SerialNumber
+                               }
                              | GSRN GS1CompanyPrefix SerialReference
                               deriving (Show, Read, Eq, Generic)
 

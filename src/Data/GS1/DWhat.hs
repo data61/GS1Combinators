@@ -23,12 +23,12 @@ import           Data.GS1.EPC
 
 data LabelEPC = CL 
                 {
-                  _clEpc :: ClassLabelEPC
-                , _qnt   :: Maybe Quantity
+                  _clClassLabelEpc :: ClassLabelEPC
+                , _clQuantity      :: Maybe Quantity
                 }
               | IL
                 {
-                  _ilEpc :: InstanceLabelEPC
+                  _ilInstanceLabelEpc :: InstanceLabelEPC
                 }
               deriving (Show, Read, Eq, Generic)
 
@@ -58,31 +58,31 @@ readLabelEPC mQt epcStr =
 data DWhat = -- ObjectDWhat action epcList
             ObjectDWhat
             { 
-              _objAction   :: Action
-            , _objLabelEpc :: [LabelEPC]
+              _objAction  :: Action
+            , _objEpcList :: [LabelEPC]
             }
           -- AggregationDWhat action parentID childEPC
           | AggregationDWhat
             {
-              _aggAction   :: Action
-            , _aggParentId :: Maybe ParentID
-            , _aggLabelEpc :: [LabelEPC]
+              _aggAction       :: Action
+            , _aggParentId     :: Maybe ParentID
+            , _aggChildEpcList :: [LabelEPC]
             }
           -- TransactionDWhat action parentID(URI) bizTransactionList epcList
           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
           | TransactionDWhat
             {
-              _transactionAction         :: Action 
-            , _transactionParentId       :: Maybe ParentID
-            , _transactionBizTransaction :: [BizTransaction]
-            , _transactionLabelEpc       :: [LabelEPC]
+              _transactionAction             :: Action 
+            , _transactionParentIdURI        :: Maybe ParentID
+            , _transactionBizTransactionList :: [BizTransaction]
+            , _transactionEpcList            :: [LabelEPC]
             }
           -- TransformationDWhat transformationID inputEPCList outputEPCList
           | TransformationDWhat
             {
-              _TransformationId        :: Maybe TransformationID
-            , _TransformationInputEpc  :: [InputEPC]
-            , _TransformationOutputEpc :: [OutputEPC]
+              _TransformationId            :: Maybe TransformationID
+            , _TransformationInputEpcList  :: [InputEPC]
+            , _TransformationOutputEpcList :: [OutputEPC]
             }
           deriving (Show, Eq, Generic)
 
