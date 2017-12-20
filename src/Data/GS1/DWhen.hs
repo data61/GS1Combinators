@@ -24,4 +24,3 @@ data DWhen = DWhen
 
 $(deriveJSON defaultOptions ''DWhen)
 instance ToSchema DWhen
-makeClassy ''DWhen

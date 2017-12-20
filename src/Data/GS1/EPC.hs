@@ -485,13 +485,6 @@ data BizStep = Accepting
 $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
-makeClassy ''BizStep
--- XXX - you might also want makeClassyPrisms for BizStep (as well as, or instead of, makeClassy)
-
--- DELETEME since not used, redundant
--- mkBizStep' :: String -> Maybe BizStep
--- mkBizStep' = mkByName
-
 ppBizStep :: BizStep -> String
 ppBizStep = revertCamelCase . show
 
@@ -558,7 +551,6 @@ data BizTransaction = BizTransaction
 $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
-makeClassy ''BizTransaction
 
 
 -- | TransformationID
@@ -587,7 +579,6 @@ data DispositionError = InvalidDisposition
 $(deriveJSON defaultOptions ''DispositionError)
 instance ToSchema DispositionError
 
-makeClassyPrisms ''DispositionError
 
 data Disposition = Active
                  | ContainerClosed
@@ -615,7 +606,6 @@ data Disposition = Active
 $(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
 
-makeClassyPrisms ''Disposition
 
 ppDisposition :: Disposition -> String
 ppDisposition = revertCamelCase . show
@@ -663,7 +653,6 @@ data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''EPCISTimeError)
 instance ToSchema EPCISTimeError
 
-makeClassyPrisms ''EPCISTimeError
 
 instance Eq ZonedTime where
   x == y = show x == show y
