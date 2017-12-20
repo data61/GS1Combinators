@@ -34,10 +34,11 @@ testParser = do
       --mapM_ print $ parseDWhen <$> oeCursors
       let et = "2005-04-03T20:33:31.116-06:00"
       let et1 = "2005-04-04T20:33:31.116-06:00"
-      let t = parseStr2Time et :: Either EPCISTimeError EPCISTime
-      let t1 = parseStr2Time et1 :: Either EPCISTimeError EPCISTime
-      let tz = parseStr2TimeZone et :: Either EPCISTimeError TimeZone
-      let tz1 = parseStr2TimeZone et1 :: Either EPCISTimeError TimeZone
+      let tzStr = "-06:00"
+      let t = parseStr2Time et
+      let t1 = parseStr2Time et1
+      let tz = parseStr2TimeZone tzStr
+      let tz1 = parseStr2TimeZone tzStr
       parseDWhen <$> oeCursors `shouldBe`
         [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz)),
         Right (DWhen (fromRight' t1) Nothing (fromRight' tz1))]
@@ -668,22 +669,21 @@ testParser = do
       parseSingleElemM Just ["hi"] `shouldBe` Just "hi"
 
     it "parseTimeXML invalid" $
-      parseTimeXML [] `shouldBe` Nothing
+      parseTimeXML [] `shouldBe` Left TagNotFound
     it "parseTimeXML invalid 2" $
       parseTimeXML
         ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]
-          `shouldBe` Nothing
+          `shouldBe` Left TimeZoneError
     it "parseTimeXML valid" $
-      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Just (
-         fromRight' (parseStr2Time "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError EPCISTime))
+      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Right 
+         (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
 
     it "parseTimeZoneXML invalid" $
-      parseTimeZoneXML [] `shouldBe` Nothing
+      parseTimeZoneXML [] `shouldBe` Left TagNotFound
     it "parseTimeZoneXML invalid 2" $
-      parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"] `shouldBe` Nothing
+      parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"] `shouldBe` Left TimeZoneError
     it "parseTimeZoneXML valid" $
-      parseTimeZoneXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]
-        `shouldBe`
-          Just (
-            fromRight'
-              (parseStr2TimeZone "2005-04-03T20:33:31.116-06:00"::Either EPCISTimeError TimeZone))
+      parseTimeZoneXML
+        ["-06:00", "the quick brown fox jumped over the lazy dog"]
+          `shouldBe`
+            Right (read "-06:00" :: TimeZone)

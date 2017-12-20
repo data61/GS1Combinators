@@ -67,12 +67,11 @@ parseTimeZoneXML = parseSingleElemE parseStr2TimeZone
 parseStr2TimeZone :: String -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
-      Just t -> let tz = zonedTimeZone t :: TimeZone in
-                    pure tz
+      Just t -> pure t
       Nothing -> Left TimeZoneError
       where
         parsedStr =
-            parseTimeM True defaultTimeLocale "%z" s :: Maybe ZonedTime
+            parseTimeM True defaultTimeLocale "%z" s :: Maybe TimeZone
 
 -- use init to remove the 'Z' at the end...
 -- TODO = should consider if empty as well
@@ -83,12 +82,16 @@ parseStr2Time :: String -> Either ParseFailure EPCISTime
 parseStr2Time s =
     case parsedStr of
       Just et -> pure et
-      Nothing -> Left TimeZoneError
+      Nothing ->
+        case parsedStrZ of
+          Just et' -> pure et'
+          Nothing  -> Left TimeZoneError
       where
-        parsedStr = 
-            parseTimeM True defaultTimeLocale "%FT%X%Q"
-                (init s) :: Maybe EPCISTime
-
+        parsedStr =
+            parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
+        parsedStrZ =
+            parseTimeM True defaultTimeLocale "%FT%X%QZ" s :: Maybe EPCISTime
+            -- if this fails, try a different format string
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
