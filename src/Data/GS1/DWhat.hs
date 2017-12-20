@@ -20,8 +20,16 @@ import qualified Data.Text.Lazy as TxtL
 
 import           Data.GS1.EPC
 
-data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
-                deriving (Show, Read, Eq, Generic)
+data LabelEPC = CL 
+                {
+                  _clClassLabelEpc :: ClassLabelEPC
+                , _clQuantity      :: Maybe Quantity
+                }
+              | IL
+                {
+                  _ilInstanceLabelEpc :: InstanceLabelEPC
+                }
+              deriving (Show, Read, Eq, Generic)
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
@@ -47,14 +55,34 @@ readLabelEPC mQt epcStr =
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
 data DWhat = -- ObjectDWhat action epcList
-            ObjectDWhat Action [LabelEPC]
+            ObjectDWhat
+            { 
+              _objAction  :: Action
+            , _objEpcList :: [LabelEPC]
+            }
           -- AggregationDWhat action parentID childEPC
-          | AggregationDWhat Action (Maybe ParentID) [LabelEPC]
+          | AggregationDWhat
+            {
+              _aggAction       :: Action
+            , _aggParentId     :: Maybe ParentID
+            , _aggChildEpcList :: [LabelEPC]
+            }
           -- TransactionDWhat action parentID(URI) bizTransactionList epcList
           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
-          | TransactionDWhat Action (Maybe ParentID) [BizTransaction] [LabelEPC]
+          | TransactionDWhat
+            {
+              _transactionAction             :: Action 
+            , _transactionParentIdURI        :: Maybe ParentID
+            , _transactionBizTransactionList :: [BizTransaction]
+            , _transactionEpcList            :: [LabelEPC]
+            }
           -- TransformationDWhat transformationID inputEPCList outputEPCList
-          | TransformationDWhat (Maybe TransformationID) [InputEPC] [OutputEPC]
+          | TransformationDWhat
+            {
+              _TransformationId            :: Maybe TransformationID
+            , _TransformationInputEpcList  :: [InputEPC]
+            , _TransformationOutputEpcList :: [OutputEPC]
+            }
           deriving (Show, Eq, Generic)
 
 $(deriveJSON defaultOptions ''DWhat)
