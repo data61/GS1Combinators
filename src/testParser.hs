@@ -18,33 +18,13 @@ import           Data.GS1.Utils
 import           Control.Applicative
 
 
-main :: IO()
+main :: IO ()
 main = do
-  let eventName = "TransformationEvent"
-  doc <- Text.XML.readFile def "../test/test-xml/TransformationEvent.xml"
+  doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent.xml"
 
   let mainCursor = fromDocument doc
-  let eCursors = getCursorsByName eventName mainCursor
-
-  -- let dwhat = head $ parseTransformationDWhat <$> eCursors
-  -- print dwhat
-  let dwhen = head $ parseDWhen <$> eCursors
-  print dwhen
-  -- let ev = head $ parseEventByType mainCursor TransformationEventT
-  -- print ev
-  -- case ev of
-  --   Right ev' -> TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev'
-  --   _         -> print "NOOOOO"
-  -- ev `shouldBe` ...
-  -- TL.putStrLn . TLE.decodeUtf8 $ encodePretty ev
-
---   print $ blahfoo <$> oeCursors -- this shows that parseBizTransaction is bugged - mkBizTransactionType might not work with fromJust
-
--- blahfoo c = do
---   let texts = c $// element "bizTransaction" &/ content
---   let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
---   let z = zip attrs texts
---   parseBizTransactionHelp <$> z
---     where
---       parseBizTransactionHelp (a, b) =
---         mkBizTransactionType (T.unpack . T.strip $ b)
+  
+  -- scope for optimization: only call parseEventByType on existent EventTypes
+  let allParsedEvents = filter (not. null) $ flatten $ parseEventByType mainCursor <$> allEvents
+  -- print allParsedEvents
+  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (rights allParsedEvents)
