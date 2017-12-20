@@ -43,7 +43,7 @@ testParser = do
         [Right (DWhen (fromRight' t) (Just (fromRight' t)) (fromRight' tz)),
         Right (DWhen (fromRight' t1) Nothing (fromRight' tz1))]
 
-    it "creates Nothing from Single ObjectEvent XML without Event Time" $ do
+    it "Returns ParseFailure from ObjectEvent XML without Event Time" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
