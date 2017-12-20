@@ -149,14 +149,11 @@ parseDWhen c = do
               then parseTimeXML' etn
                else parseTimeXML etn
   let parsedTz = parseTimeZoneXML' tzn
+
+  -- this used to be buggy. it returned `Nothing` if parsedTz was `Nothing`
   let tz = if isJust parsedTz
             then parsedTz
             else parseTimeZoneXML etn
-  -- ^^^ this statement is potentially buggy. firstly, (parseTimeZoneXML' tzn) is being evaluated twice
-  -- secondly, it just returns (parseTimeZoneXML' tzn) if isNothing (parseTimeZoneXML' tzn),
-  -- which is equivalent to returning Nothing.
-  -- if tz == Nothing, (fromJust tz) would throw a run-time exception
-  -- this needs a closer look and more robust error handling
 
   let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case (et, tz) of
@@ -180,6 +177,7 @@ parseDWhy c = do
   let biz = parseBizStep c
   let disp = parseDisposition c
   mkDWhy biz disp
+  -- comment the following lines in if disp-bizstep combo matters
   -- if checkValidBizDisp biz disp
   --   then
   --     mkDWhy biz disp
