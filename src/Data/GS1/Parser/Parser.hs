@@ -171,7 +171,7 @@ parseSourceDestLocation c lst el attr = do
   let locations =
         T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes =
-        T.unpack . T.strip <$> flatten
+        T.unpack . T.strip <$> concat
           (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
@@ -252,17 +252,17 @@ parseParentID c =
 parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
 parseLabelEPCs insName clName c = do
   let instanceCursors = getCursorsByName insName c
-  let classCursors = flatten $ getCursorsByName "quantityElement" <$>
+  let classCursors = concat $ getCursorsByName "quantityElement" <$>
                         getCursorsByName clName c
-  flatten (parseInstanceLabel <$> instanceCursors) ++
+  concat (parseInstanceLabel <$> instanceCursors) ++
     (parseClassLabel <$> classCursors)
 
 
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
                     -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure (act : flatten errs)
-returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
+returnLeftErrors (Left act, errs)  = ChildFailure (act : concat errs)
+returnLeftErrors (Right _, errs) = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat

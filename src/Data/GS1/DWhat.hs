@@ -19,7 +19,6 @@ import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
 
 import           Data.GS1.EPC
--- why can't GHCi find these modules?
 
 data LabelEPC = CL ClassLabelEPC (Maybe Quantity) | IL InstanceLabelEPC
                 deriving (Show, Read, Eq, Generic)
