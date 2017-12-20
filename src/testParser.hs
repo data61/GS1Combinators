@@ -16,11 +16,12 @@ import           Data.GS1.DWhat
 import           Data.GS1.Event
 import           Data.GS1.Utils
 import           Control.Applicative
-
+import           System.Environment
 
 main :: IO ()
 main = do
-  doc <- Text.XML.readFile def "../test/test-xml/ObjectEvent.xml"
+  args <- getArgs
+  doc <- Text.XML.readFile def (head args)
 
   let mainCursor = fromDocument doc
   
