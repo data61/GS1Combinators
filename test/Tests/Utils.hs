@@ -11,12 +11,9 @@ data TestDataType = Foo
                   | Bar
                   | Jaja
                   deriving (Show, Eq, Generic, Read)
-{-
-$(deriveJSON defaultOptions ''TestDataType)
-instance ToSchema TestDataType
 
-makeClassyPrisms ''TestDataType
--}
+-- $(deriveJSON defaultOptions ''TestDataType)
+
 testDataTypeURI :: String
 testDataTypeURI = "blah:foo:bar"
 

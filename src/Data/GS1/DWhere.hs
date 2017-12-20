@@ -57,7 +57,6 @@ data DWhere = DWhere
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhere)
 instance ToSchema DWhere
-makeClassy ''DWhere
 
 instance ToField DWhere where
   toField = toField . TxtL.toStrict . encodeToLazyText

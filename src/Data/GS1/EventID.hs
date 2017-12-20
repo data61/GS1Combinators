@@ -35,5 +35,3 @@ instance ToSchema EventID
 instance ToParamSchema EventID where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
-
-makeClassy ''EventID
