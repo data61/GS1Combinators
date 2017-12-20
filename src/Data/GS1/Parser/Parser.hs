@@ -16,7 +16,7 @@ import           Data.Maybe
 import           Data.Either
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
-import           Data.UUID
+import           Data.UUID           hiding (null)
 import           Data.XML.Types      hiding (Event)
 import           Data.Time
 
@@ -140,7 +140,12 @@ parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
-  let et = if ((length etn > 0) && ((length (T.unpack (head etn))) > 0) && (last (T.unpack (head etn))) == 'Z')
+
+  -- the following statement effectively just checks if the last character
+  -- of etn is 'Z'
+  let et = if not (null etn) &&
+          not (null (T.unpack (head etn)))
+          && last (T.unpack (head etn)) == 'Z'
               then parseTimeXML' etn
                else parseTimeXML etn
   let parsedTz = parseTimeZoneXML' tzn
