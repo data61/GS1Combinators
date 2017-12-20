@@ -17,6 +17,7 @@ import Data.GS1.Utils
 import Data.Aeson
 import Data.Aeson.TH
 import Data.Swagger
+import Data.XML.Types      hiding (Event)
 
 import Data.ByteString.Char8 (pack)
 import Database.SQLite.Simple.ToField
@@ -25,15 +26,23 @@ data EventType = ObjectEventT
                | AggregationEventT
                | TransactionEventT
                | TransformationEventT
-               deriving (Show, Eq, Generic, Read)
+               deriving (Show, Eq, Generic, Enum, Read)
+
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
 instance ToField EventType where
   toField = toField . pack . show
 
+-- this function might be needed later, unused for now
+-- returns the `Name` equivalent of an `EventType`
+-- eventType2Name :: EventType -> Name
+-- eventType2Name = error "eventType2Name not implemented yet"
 
 mkEventType :: String -> Maybe EventType
 mkEventType = mkByName
+
+allEvents :: [EventType]
+allEvents = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
 
 data Event = Event
   {
