@@ -14,30 +14,36 @@ testBizStep = do
     it "produces correct URI" $
       printURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
     it "produces correct URI" $
-      printURI CycleCounting `shouldBe` "urn:epcglobal:cbv:bizstep:cycle_counting"
+      printURI CycleCounting `shouldBe`
+        "urn:epcglobal:cbv:bizstep:cycle_counting"
     it "produces correct URI" $
-      printURI CreatingClassInstance `shouldBe` "urn:epcglobal:cbv:bizstep:creating_class_instance"
+      printURI CreatingClassInstance `shouldBe`
+        "urn:epcglobal:cbv:bizstep:creating_class_instance"
 
   describe "parseBizStep" $ do
     it "parse valid uri to bizstep" $
-      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe` Right VoidShipping
+      readURI "urn:epcglobal:cbv:bizstep:void_shipping" `shouldBe`
+        Right VoidShipping
 
     it "parse valid uri to bizstep" $
       readURI "urn:epcglobal:cbv:bizstep:accepting" `shouldBe` Right Accepting
 
   describe "Invalid urns" $ do
     it "parse valid uri but invalid step to Nothing" $
-      (readURI :: String -> Either ParseFailure BizStep) "urn:epcglobal:cbv:bizstep:s"
-        `shouldBe` Left InvalidFormat
+      (readURI :: String -> Either ParseFailure BizStep)
+        "urn:epcglobal:cbv:bizstep:s"
+          `shouldBe` Left InvalidFormat
 
     it "parse invalid uri to Nothing" $
-      (readURI :: String -> Either ParseFailure BizStep) "urn:invalidns:cbv:bizstep:void_shipping"
-        `shouldBe` Left InvalidFormat
+      (readURI :: String -> Either ParseFailure BizStep)
+        "urn:invalidns:cbv:bizstep:void_shipping"
+          `shouldBe` Left InvalidFormat
     it "A component of the urn missing" $
       (readURI :: String -> Either ParseFailure BizStep) "urn:epc:cbv:bizstep"
         `shouldBe` Left InvalidFormat
     it "empty" $
-      (readURI :: String -> Either ParseFailure BizStep) "" `shouldBe` Left InvalidFormat
+      (readURI :: String -> Either ParseFailure BizStep) ""
+        `shouldBe` Left InvalidFormat
 
 testBizTransaction :: Spec
 testBizTransaction = do
@@ -67,9 +73,6 @@ testBizTransaction = do
     it "print BizTransaction 2" $
       printURI Prodorder `shouldBe` "urn:epcglobal:cbv:btt:prodorder"
 
--- FIXME - ppDWhat needs a spec. These tests have been based on current output and checking ppDWhat preserves information in output.
-
--- TODO test for quantity
 testPpDWhat :: Spec
 testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
