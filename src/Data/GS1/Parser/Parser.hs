@@ -62,26 +62,33 @@ parseStr2TimeZone s =
       where
         parsedStr =
             parseTimeM True defaultTimeLocale "%z" s :: Maybe TimeZone
+{-
+All three should have tests
+"%FT%X%Q%z" -> 2017-12-20T04:11:43+00:00
+"%FT%X%QZ" -> 017-12-20T04:11:43Z
+"%Y%m%dT%H%M%S%QZ" -> 20171220T041143Z
+-}
+isoFormats :: [String]
+isoFormats = [
+    "%FT%X%Q%z",
+    "%FT%X%QZ",
+    "%Y%m%dT%H%M%S%QZ"
+  ]
 
--- use init to remove the 'Z' at the end...
--- TODO = should consider if empty as well
 -- example format: 2005-04-03T20:33:31.116-06:00
 -- |parse the string to UTC time,
 -- the time zone information will be merged into the time
+
+getFirstJust :: [Maybe a] -> Either ParseFailure a
+getFirstJust [] = Left TimeZoneError
+getFirstJust (Just x : xs) = Right x
+getFirstJust (Nothing : xs) = getFirstJust xs
+
+-- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: String -> Either ParseFailure EPCISTime
-parseStr2Time s =
-    case parsedStr of
-      Just et -> pure et
-      Nothing ->
-        case parsedStrZ of
-          Just et' -> pure et'
-          Nothing  -> Left TimeZoneError
-      where
-        parsedStr =
-            parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
-        parsedStrZ =
-            parseTimeM True defaultTimeLocale "%FT%X%QZ" s :: Maybe EPCISTime
-            -- if this fails, try a different format string
+parseStr2Time s = getFirstJust $
+    fmap (\i -> parseTimeM True defaultTimeLocale i s :: Maybe EPCISTime)
+      isoFormats
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
