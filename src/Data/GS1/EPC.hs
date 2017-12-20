@@ -148,7 +148,7 @@ $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 data InstanceLabelEPC = GIAI {
-                          _companyPrefix :: GS1CompanyPrefix,
+                          _giaiCompanyPrefix :: GS1CompanyPrefix,
                           _serialNum :: SerialNumber
                         }
                       -- Global Individual Asset Identifier,
@@ -228,7 +228,7 @@ $(deriveJSON defaultOptions ''LocationReference)
 
 
 data LocationEPC = SGLN {
-    _companyPrefix :: GS1CompanyPrefix,
+    _sglnCompanyPrefix :: GS1CompanyPrefix,
     _locationRef :: LocationReference,
     _sglnExt :: Maybe SGLNExtension
   }
