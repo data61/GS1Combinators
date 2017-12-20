@@ -74,6 +74,7 @@ parseStr2TimeZone s =
         parsedStr =
             parseTimeM True defaultTimeLocale "%z" s :: Maybe ZonedTime
 
+-- TODO IMPORTANT = an error should be returned if no TimeZone
 -- use init to remove the 'Z' at the end...
 -- TODO = should consider if empty as well
 -- example format: 2005-04-03T20:33:31.116-06:00
