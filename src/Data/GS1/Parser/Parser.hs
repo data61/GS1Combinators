@@ -411,7 +411,9 @@ parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
 parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
 parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 
--- | Find all events and put them into an event list
+-- this function takes in the top-most cursor
+-- | Find all events (that match the specified EventType)
+-- and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
   let tagS = case et of
