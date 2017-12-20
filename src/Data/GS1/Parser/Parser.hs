@@ -55,72 +55,40 @@ parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text]
 parseSingleElemE f (x:_) = f . T.unpack $ x
 parseSingleElemE _ []    = Left TagNotFound
 
-
--- |Parse a list of Text to a list of type a
--- deprecated
--- parseListElem' :: (String -> Maybe a) -> [T.Text] -> [a]
--- parseListElem' f t = fromJust <$> (f . T.unpack <$> t)
-
 -- |Only the first occurance of EventTime for each Event will be recognised
-parseTimeXML :: [T.Text] -> Maybe EPCISTime
-parseTimeXML = parseSingleElemM parseTimeHelper'
-                where
-                  parseTimeHelper' x =
-                    let pt = parseStr2Time x :: Either EPCISTimeError EPCISTime
-                      in
-                        either2Maybe pt
+parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
+parseTimeXML = parseSingleElemE parseStr2Time
 
 -- |Only the first occurrance of EventTime for each Event will be recognised
-parseTimeZoneXML :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML = parseSingleElemM parseTimeZoneHelper'
-                      where
-                        parseTimeZoneHelper' x =
-                          let ptz = parseStr2TimeZone x :: Either EPCISTimeError TimeZone in
-                              either2Maybe ptz
+parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
+parseTimeZoneXML = parseSingleElemE parseStr2TimeZone
 
--- NOTE = from here down to parseBizStep are functions added to fix bugs in parseDWhen,
--- due to parseTimeZone not actually working at all originally and parseStr2Time not allowing for no timezone being present
-
--- |Parse TimeZone from eventTimeZoneOffset
--- Only the first occured TimeZone will be considered
--- parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
--- parseTimeZoneXML' [] = Nothing
--- parseTimeZoneXML' (t:_) = let l = splitOn ":" (T.unpack t) in
---                             case l of
---                               (x:_) ->
---                                 let rx = readMaybe x :: Maybe Int in
---                                     case rx of
---                                       Just t'  -> Just $ hoursToTimeZone t'
---                                       Nothing  -> Nothing
---                               _     -> Nothing
 -- |parse the string and obtain TimeZone,
-parseStr2TimeZone' :: (AsEPCISTimeError e, MonadError e m) => String -> m TimeZone
-parseStr2TimeZone' s = let parsed = parseTimeM True defaultTimeLocale "%z" s :: Maybe ZonedTime in
-                      case parsed of
-                        Just t -> let tz = zonedTimeZone t :: TimeZone in
-                                      pure tz
-                        Nothing -> throwing _IllegalTimeFormat ()
+parseStr2TimeZone :: String -> Either ParseFailure TimeZone
+parseStr2TimeZone s =
+    case parsedStr of
+      Just t -> let tz = zonedTimeZone t :: TimeZone in
+                    pure tz
+      Nothing -> Left TimeZoneError
+      where
+        parsedStr =
+            parseTimeM True defaultTimeLocale "%z" s :: Maybe ZonedTime
 
-parseTimeZoneXML' :: [T.Text] -> Maybe TimeZone
-parseTimeZoneXML' = parseSingleElemM parseTimeZoneHelper'
-  where
-    parseTimeZoneHelper' x =
-      let ptz = parseStr2TimeZone' x :: Either EPCISTimeError TimeZone in
-        either2Maybe ptz
+-- use init to remove the 'Z' at the end...
+-- TODO = should consider if empty as well
+-- example format: 2005-04-03T20:33:31.116-06:00
+-- |parse the string to UTC time,
+-- the time zone information will be merged into the time
+parseStr2Time :: String -> Either ParseFailure EPCISTime
+parseStr2Time s =
+    case parsedStr of
+      Just et -> pure et
+      Nothing -> Left TimeZoneError
+      where
+        parsedStr = 
+            parseTimeM True defaultTimeLocale "%FT%X%Q"
+                (init s) :: Maybe EPCISTime
 
--- use init to remove the 'Z' at the end... TODO = should consider if empty as well
-parseStr2Time' :: (AsEPCISTimeError e, MonadError e m) => String -> m EPCISTime
-parseStr2Time' s = let parsed = parseTimeM True defaultTimeLocale "%FT%X%Q" (init s) :: Maybe EPCISTime in
-                     case parsed of
-                       Just et -> pure et
-                       Nothing -> throwing _IllegalTimeFormat ()
-
-parseTimeXML' :: [T.Text] -> Maybe EPCISTime
-parseTimeXML' = parseSingleElemM parseTimeHelper'
-  where
-    parseTimeHelper' x =
-      let pt = parseStr2Time' x :: Either EPCISTimeError EPCISTime
-        in either2Maybe pt
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
@@ -140,25 +108,13 @@ parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
+  let et = parseTimeXML etn
+  let tz = parseTimeZoneXML tzn
+  let rt = either2Maybe $ parseTimeXML (c $/ element "recordTime" &/ content)
 
-  -- the following statement effectively just checks if the last character
-  -- of etn is 'Z'
-  let et = if not (null etn) &&
-          not (null (T.unpack (head etn)))
-          && last (T.unpack (head etn)) == 'Z'
-              then parseTimeXML' etn
-               else parseTimeXML etn
-  let parsedTz = parseTimeZoneXML' tzn
-
-  -- this used to be buggy. it returned `Nothing` if parsedTz was `Nothing`
-  let tz = if isJust parsedTz
-            then parsedTz
-            else parseTimeZoneXML etn
-
-  let rt = parseTimeXML (c $/ element "recordTime" &/ content)
   case (et, tz) of
-    (Just et', Just tz') -> Right $ DWhen et' rt tz'
-    _                    -> Left TimeZoneError
+    (Right et', Right tz') -> Right $ DWhen et' rt tz'
+    _                      -> Left TimeZoneError
 
 -- checks if the bistep is valid for the disposition
 -- true if no disposition is found
