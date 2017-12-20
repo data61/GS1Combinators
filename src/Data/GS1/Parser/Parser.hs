@@ -41,27 +41,17 @@ import           Data.GS1.EventID
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
--- can parseSingleElem be more generalised?
--- |Given a list of Text for a given element
--- Only return the first one
--- parseSingleElemM returns a Maybe
-parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElemM f (x:_) = f . T.unpack $ x
-parseSingleElemM _ _     = Nothing
-
--- parseSingleElemE returns an Either
-parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text]
+-- parseSingleElem returns an Either
+parseSingleElem :: (String -> Either ParseFailure a) -> [T.Text]
                       -> Either ParseFailure a
-parseSingleElemE f (x:_) = f . T.unpack $ x
-parseSingleElemE _ []    = Left TagNotFound
+parseSingleElem f (x:_) = f . T.unpack $ x
+parseSingleElem _ []    = Left TagNotFound
 
--- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
-parseTimeXML = parseSingleElemE parseStr2Time
+parseTimeXML = parseSingleElem parseStr2Time
 
--- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
-parseTimeZoneXML = parseSingleElemE parseStr2TimeZone
+parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 
 -- |parse the string and obtain TimeZone,
 parseStr2TimeZone :: String -> Either ParseFailure TimeZone
@@ -72,6 +62,18 @@ parseStr2TimeZone s =
       where
         parsedStr =
             parseTimeM True defaultTimeLocale "%z" s :: Maybe TimeZone
+{-
+All three should have tests
+"%FT%X%Q%z" -> 2017-12-20T04:11:43+00:00
+"%FT%X%QZ" -> 017-12-20T04:11:43Z
+"%Y%m%dT%H%M%S%QZ" -> 20171220T041143Z
+-}
+isoFormats :: [String]
+isoFormats = [
+    "%FT%X%Q%z",
+    "%FT%X%QZ",
+    "%Y%m%dT%H%M%S%QZ"
+  ]
 
 -- TODO IMPORTANT = an error should be returned if no TimeZone
 -- use init to remove the 'Z' at the end...
@@ -79,33 +81,30 @@ parseStr2TimeZone s =
 -- example format: 2005-04-03T20:33:31.116-06:00
 -- |parse the string to UTC time,
 -- the time zone information will be merged into the time
+
+getFirstJust :: [Maybe a] -> Either ParseFailure a
+getFirstJust [] = Left TimeZoneError
+getFirstJust (Just x : xs) = Right x
+getFirstJust (Nothing : xs) = getFirstJust xs
+
+-- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: String -> Either ParseFailure EPCISTime
-parseStr2Time s =
-    case parsedStr of
-      Just et -> pure et
-      Nothing ->
-        case parsedStrZ of
-          Just et' -> pure et'
-          Nothing  -> Left TimeZoneError
-      where
-        parsedStr =
-            parseTimeM True defaultTimeLocale "%FT%X%Q%z" s :: Maybe EPCISTime
-        parsedStrZ =
-            parseTimeM True defaultTimeLocale "%FT%X%QZ" s :: Maybe EPCISTime
-            -- if this fails, try a different format string
+parseStr2Time s = getFirstJust $
+    fmap (\i -> parseTimeM True defaultTimeLocale i s :: Maybe EPCISTime)
+      isoFormats
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
-parseBizStep c = parseSingleElemE readURI (c $// element "bizStep" &/ content)
+parseBizStep c = parseSingleElem readURI (c $// element "bizStep" &/ content)
 
 -- |Parse Disposition by Name
 parseDisposition :: Cursor -> Either ParseFailure Disposition
-parseDisposition c = parseSingleElemE readURI
+parseDisposition c = parseSingleElem readURI
                       (c $// element "disposition" &/ content)
 
 -- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
+parseAction c = parseSingleElem mkAction (c $// element "action" &/ content)
 
 -- |The name of the current cursor stays at ObjectEvent
 parseDWhen :: Cursor -> Either ParseFailure DWhen
@@ -175,7 +174,7 @@ parseSourceDestLocation c lst el attr = do
   let locations =
         T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
   let srcDestTypes =
-        T.unpack . T.strip <$> flatten
+        T.unpack . T.strip <$> concat
           (c $// element lst &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
@@ -256,17 +255,17 @@ parseParentID c =
 parseLabelEPCs :: Name -> Name -> Cursor -> [Either ParseFailure LabelEPC]
 parseLabelEPCs insName clName c = do
   let instanceCursors = getCursorsByName insName c
-  let classCursors = flatten $ getCursorsByName "quantityElement" <$>
+  let classCursors = concat $ getCursorsByName "quantityElement" <$>
                         getCursorsByName clName c
-  flatten (parseInstanceLabel <$> instanceCursors) ++
+  concat (parseInstanceLabel <$> instanceCursors) ++
     (parseClassLabel <$> classCursors)
 
 
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
                     -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure (act : flatten errs)
-returnLeftErrors (Right _, errs) = ChildFailure $ flatten errs
+returnLeftErrors (Left act, errs)  = ChildFailure (act : concat errs)
+returnLeftErrors (Right _, errs) = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
@@ -360,7 +359,7 @@ parseEventList t = fmap asEvent
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElemE parseEventID' eid where
+  parseSingleElem parseEventID' eid where
     parseEventID' eid' = case fromString eid' of
                            Nothing -> Left InvalidEvent
                            Just u  -> Right $ EventID u
