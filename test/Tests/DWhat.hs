@@ -74,7 +74,8 @@ testPpDWhat :: Spec
 testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
     it "creates ObjectDWhat from valid input, Observe" $
-      ppDWhat (ObjectDWhat Observe [IL (SGTIN "0614141" Nothing "107346" "2017"),
+      ppDWhat (ObjectDWhat Observe
+        [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nObserve\n" ++
