@@ -147,7 +147,10 @@ printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
-data InstanceLabelEPC = GIAI GS1CompanyPrefix SerialNumber
+data InstanceLabelEPC = GIAI {
+                          _companyPrefix :: GS1CompanyPrefix,
+                          _serialNum :: SerialNumber
+                        }
                       -- Global Individual Asset Identifier,
                       -- e.g. bucket for olives
                       | SSCC GS1CompanyPrefix SerialNumber
@@ -220,21 +223,23 @@ instance ToField InstanceLabelEPC where
 type Lng = Float
 type Lat = Float
 data LocationReference = LocationReferenceNum String
-  deriving (Read, Eq, Generic)
+  deriving (Read, Eq, Generic, Show)
+$(deriveJSON defaultOptions ''LocationReference)
 
 
-data LocationEPC = SGLN GS1CompanyPrefix LocationReference (Maybe SGLNExtension)
+data LocationEPC = SGLN {
+    _companyPrefix :: GS1CompanyPrefix,
+    _locationRef :: LocationReference,
+    _sglnExt :: Maybe SGLNExtension
+  }
   deriving (Show, Read, Eq, Generic)
+$(deriveJSON defaultOptions ''LocationEPC)
 
 -- |non-normative representation - simplest form of RFC5870
 -- deprecated, kept momentarily for reference
 -- ppLocationReference :: LocationReference -> String
 -- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
 -- ppLocationReference (LocationReferenceNum str) = str
-
-
-instance Show LocationReference where
-  show (LocationReferenceNum str) = str
 
 instance ToSchema LocationReference
 
@@ -292,9 +297,6 @@ readURILocationEPC [companyPrefix, locationStr, extNum]
       isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
 
 readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
-
-$(deriveJSON defaultOptions ''LocationReference)
-$(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationEPC
 
