@@ -656,17 +656,10 @@ testParser = do
 
 
   describe "test some basic functions in Parser" $ do
-    it "parseSingleElemE invalid" $
-      parseSingleElemE Right [] `shouldBe` Left TagNotFound
-    it "parseSingleElemE valid" $
-      parseSingleElemE Right ["hi"] `shouldBe` Right "hi"
-
-    it "parseSingleElemM invalid" $
-      parseSingleElemM Just [] `shouldBe` Nothing
-    it "parseSingleElemM invalid 2" $
-      parseSingleElemM (const (Nothing :: Maybe String)) ["hi"] `shouldBe` Nothing
-    it "parseSingleElemM valid" $
-      parseSingleElemM Just ["hi"] `shouldBe` Just "hi"
+    it "parseSingleElem invalid" $
+      parseSingleElem Right [] `shouldBe` Left TagNotFound
+    it "parseSingleElem valid" $
+      parseSingleElem Right ["hi"] `shouldBe` Right "hi"
 
     it "parseTimeXML invalid" $
       parseTimeXML [] `shouldBe` Left TagNotFound
