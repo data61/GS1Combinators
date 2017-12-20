@@ -41,27 +41,17 @@ import           Data.GS1.EventID
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
--- can parseSingleElem be more generalised?
--- |Given a list of Text for a given element
--- Only return the first one
--- parseSingleElemM returns a Maybe
-parseSingleElemM :: (String -> Maybe a) -> [T.Text] -> Maybe a
-parseSingleElemM f (x:_) = f . T.unpack $ x
-parseSingleElemM _ _     = Nothing
-
--- parseSingleElemE returns an Either
-parseSingleElemE :: (String -> Either ParseFailure a) -> [T.Text]
+-- parseSingleElem returns an Either
+parseSingleElem :: (String -> Either ParseFailure a) -> [T.Text]
                       -> Either ParseFailure a
-parseSingleElemE f (x:_) = f . T.unpack $ x
-parseSingleElemE _ []    = Left TagNotFound
+parseSingleElem f (x:_) = f . T.unpack $ x
+parseSingleElem _ []    = Left TagNotFound
 
--- |Only the first occurance of EventTime for each Event will be recognised
 parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
-parseTimeXML = parseSingleElemE parseStr2Time
+parseTimeXML = parseSingleElem parseStr2Time
 
--- |Only the first occurrance of EventTime for each Event will be recognised
 parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
-parseTimeZoneXML = parseSingleElemE parseStr2TimeZone
+parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 
 -- |parse the string and obtain TimeZone,
 parseStr2TimeZone :: String -> Either ParseFailure TimeZone
@@ -95,16 +85,16 @@ parseStr2Time s =
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
-parseBizStep c = parseSingleElemE readURI (c $// element "bizStep" &/ content)
+parseBizStep c = parseSingleElem readURI (c $// element "bizStep" &/ content)
 
 -- |Parse Disposition by Name
 parseDisposition :: Cursor -> Either ParseFailure Disposition
-parseDisposition c = parseSingleElemE readURI
+parseDisposition c = parseSingleElem readURI
                       (c $// element "disposition" &/ content)
 
 -- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElemE mkAction (c $// element "action" &/ content)
+parseAction c = parseSingleElem mkAction (c $// element "action" &/ content)
 
 -- |The name of the current cursor stays at ObjectEvent
 parseDWhen :: Cursor -> Either ParseFailure DWhen
@@ -359,7 +349,7 @@ parseEventList t = fmap asEvent
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElemE parseEventID' eid where
+  parseSingleElem parseEventID' eid where
     parseEventID' eid' = case fromString eid' of
                            Nothing -> Left InvalidEvent
                            Just u  -> Right $ EventID u
