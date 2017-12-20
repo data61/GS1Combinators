@@ -54,7 +54,7 @@ data ParseFailure = InvalidLength
                   -- when the disposition does not go with the bizstep
                   | ChildFailure 
                     { 
-                      _parseFailureChildFailuresList :: [ParseFailure]
+                      _childFailuresList :: [ParseFailure]
                     }
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
@@ -375,13 +375,15 @@ parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 type DocumentType = String
 type ServiceReference = String
-data BusinessTransactionEPC =  GDTI
-                               {
-                                 _businessTransactionEpcCompanyPrefix :: GS1CompanyPrefix
-                               , _businessTransactionEpcDocType       :: DocumentType
-                               , _businessTransactionEpcSerialNum     :: SerialNumber
+data BusinessTransactionEPC =  GDTI {
+                                 _gdtiCompanyPrefix :: GS1CompanyPrefix
+                               , _gdtiDocType       :: DocumentType
+                               , _gdtiSerialNum     :: SerialNumber
                                }
-                             | GSRN GS1CompanyPrefix SerialReference
+                             | GSRN {
+                                 _gsrnCompanyPrefix :: GS1CompanyPrefix
+                               , _gsrnSerialRef     :: SerialReference
+                               }
                               deriving (Show, Read, Eq, Generic)
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
