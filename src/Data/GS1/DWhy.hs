@@ -13,7 +13,6 @@ import           Data.Swagger
 import           Database.SQLite.Simple.ToField
 import qualified Data.Text.Lazy as TxtL
 
---        should this be BizStep now? - @sa
 data DWhy = DWhy (Maybe BizStep) (Maybe Disposition)
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
