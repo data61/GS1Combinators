@@ -3,7 +3,6 @@
 
 module Data.GS1.DWhat where
 
-import           Control.Lens
 import           GHC.Generics
 
 import           Data.List.Split
