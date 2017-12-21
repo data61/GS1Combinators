@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 
 module Tests.Utils where
@@ -6,6 +7,7 @@ module Tests.Utils where
 import           Data.GS1.Utils
 import           Test.Hspec
 import           GHC.Generics
+import qualified Data.Text as T
 
 data TestDataType = Foo
                   | Bar
@@ -14,7 +16,7 @@ data TestDataType = Foo
 
 -- $(deriveJSON defaultOptions ''TestDataType)
 
-testDataTypeURI :: String
+testDataTypeURI :: T.Text
 testDataTypeURI = "blah:foo:bar"
 
 {-
@@ -58,4 +60,5 @@ testParseURI :: Spec
 testParseURI =
   describe "parse a URI" $
     it "parse TestDataType" $
-      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` Just Foo
+      parseURI (T.append testDataTypeURI ":foo") testDataTypeURI
+        `shouldBe` Just Foo
