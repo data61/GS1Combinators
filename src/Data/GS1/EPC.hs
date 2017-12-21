@@ -6,15 +6,11 @@
 module Data.GS1.EPC where
 
 import           Control.Lens
-import           Data.Char
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
-import           Data.List.Split
-import           Data.Maybe
-import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
