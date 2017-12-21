@@ -98,7 +98,7 @@ parseDisposition c = parseSingleElem readURI
 parseAction :: Cursor -> Either ParseFailure Action
 parseAction c = parseSingleElem mkAction (c $// element "action" &/ content)
 
--- |The name of the current cursor stays at ObjectEvent
+-- |Requires Event Level cursor
 parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
