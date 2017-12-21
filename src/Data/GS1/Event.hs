@@ -5,7 +5,6 @@
 
 module Data.GS1.Event where
 
--- import           Control.Lens
 import GHC.Generics
 
 import Data.GS1.DWhat
