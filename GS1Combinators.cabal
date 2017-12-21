@@ -56,6 +56,18 @@ library
 executable Parser-exe
   hs-source-dirs:      src
   main-is:             Main.hs
+  other-modules:       Data.GS1
+                     , Data.GS1.DWhat
+                     , Data.GS1.DWhy
+                     , Data.GS1.DWhen
+                     , Data.GS1.DWhere
+                     , Data.GS1.EPC
+                     , Data.GS1.ErrorDeclaration
+                     , Data.GS1.Event
+                     , Data.GS1.EventID
+                     , Data.GS1.Utils
+                     , Data.GS1.Parser.Parser
+                     , Data.GS1.URI
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:       base
                      , GS1Combinators
