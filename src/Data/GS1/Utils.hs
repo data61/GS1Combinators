@@ -9,30 +9,22 @@ module Data.GS1.Utils (
 
 import           Data.Char
 import           Data.List.Split
-import qualified Data.Text as T
+import qualified Data.Text       as T
 import           Text.Read
 
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
--- insertUs :: String -> String
--- insertUs s = s >>= f
---   where f c = if isUpper c
---                 then T.singleton '_' : [T.toLower c]
---                 else [T.toLower c]
-
-insertUs :: String -> String
-insertUs s = error "a"
-
+insertUs' :: String -> String
+insertUs' s = s >>= f
+  where f c = if isUpper c then '_' : [toLower c] else [toLower c]
 
 
 revertCamelCase :: String -> String
-revertCamelCase = error "aa"
--- revertCamelCase str 
---   | T.null str  = T.empty
---   | otherwise   = let r = insertUs str in
---                           case r of
---                             '_':t -> t
---                             _     -> r
+revertCamelCase "" = ""
+revertCamelCase str = let r = insertUs' str in
+                          case r of
+                            '_':t -> t
+                            _     -> r
 
 {-
 XXX - this is a good exercise, the camelCase function can be rewritten using the _head prism and the modify function (called (%~)) https://github.csiro.au/Blockchain/GS1Combinators/blob/master/src/Data/GS1/Utils.hs#L29
