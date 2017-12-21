@@ -5,7 +5,6 @@
 
 module Data.GS1.Event where
 
--- import           Control.Lens
 import GHC.Generics
 
 import Data.GS1.DWhat
@@ -17,7 +16,6 @@ import Data.GS1.Utils
 import Data.Aeson
 import Data.Aeson.TH
 import Data.Swagger
-import Data.XML.Types      hiding (Event)
 
 import Data.ByteString.Char8 (pack)
 import Database.SQLite.Simple.ToField

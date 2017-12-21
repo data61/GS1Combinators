@@ -4,9 +4,6 @@
 
 module Data.GS1.EPC where
 
-import           Control.Lens.TH
-import           Control.Monad.Error.Lens
-import           Control.Monad.Except     (MonadError)
 import           Control.Lens
 import           Data.Char
 import           GHC.Generics
