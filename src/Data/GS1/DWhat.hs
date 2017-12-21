@@ -6,7 +6,6 @@ module Data.GS1.DWhat where
 
 import           GHC.Generics
 
-import           Data.List.Split
 import           Data.Semigroup
 
 import           Data.Aeson
