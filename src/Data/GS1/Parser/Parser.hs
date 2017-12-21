@@ -11,8 +11,6 @@
 
 module Data.GS1.Parser.Parser where
 import           Data.List
-import           Data.List.Split
-import           Data.Maybe
 import           Data.Either
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
@@ -20,13 +18,10 @@ import           Data.UUID           hiding (null)
 import           Data.XML.Types      hiding (Event)
 import           Data.Time
 
-import           Text.Read
 import           Text.XML.Cursor
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Monad.Except     (MonadError)
-import           Control.Monad.Error.Lens
 
 import           Data.GS1.Utils
 import           Data.GS1.DWhat
@@ -81,7 +76,7 @@ isoFormats = [
 
 getFirstJust :: [Maybe a] -> Either ParseFailure a
 getFirstJust [] = Left TimeZoneError
-getFirstJust (Just x : xs) = Right x
+getFirstJust (Just x : _) = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
 -- tries the different ISO8601 formats and gets the first one that parses

@@ -14,24 +14,25 @@ import           Text.Read
 
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
--- insertUs :: T.Text -> T.Text
+-- insertUs :: String -> String
 -- insertUs s = s >>= f
 --   where f c = if isUpper c
 --                 then T.singleton '_' : [T.toLower c]
 --                 else [T.toLower c]
 
-insertUs :: T.Text -> T.Text
+insertUs :: String -> String
 insertUs s = error "a"
 
 
 
-revertCamelCase :: T.Text -> T.Text
-revertCamelCase str 
-  | T.null str  = T.empty
-  | otherwise   = let r = insertUs str in
-                          case r of
-                            '_':t -> t
-                            _     -> r
+revertCamelCase :: String -> String
+revertCamelCase = error "aa"
+-- revertCamelCase str 
+--   | T.null str  = T.empty
+--   | otherwise   = let r = insertUs str in
+--                           case r of
+--                             '_':t -> t
+--                             _     -> r
 
 {-
 XXX - this is a good exercise, the camelCase function can be rewritten using the _head prism and the modify function (called (%~)) https://github.csiro.au/Blockchain/GS1Combinators/blob/master/src/Data/GS1/Utils.hs#L29
@@ -39,20 +40,20 @@ XXX - this is a good exercise, the camelCase function can be rewritten using the
 another question, do revertCamelCase and camelCase functions form an Iso?
 -}
 
-camelCase :: T.Text -> T.Text
+camelCase :: String -> String
 camelCase []     = []
 camelCase (x:xs) = toUpper x : xs
 
-mkCamelCaseWord' :: [T.Text] -> [T.Text]
+mkCamelCaseWord' :: [String] -> [String]
 mkCamelCaseWord' sl = camelCase <$> sl
 
-mkCamelCase :: T.Text -> T.Text
+mkCamelCase :: String -> String
 mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord' . splitOn "_"
 
-mkByName :: Read a => T.Text -> Maybe a
+mkByName :: Read a => String -> Maybe a
 mkByName s = readMaybe (mkCamelCase s)
 
-parseURI :: Read a => T.Text -> T.Text -> Maybe a
+parseURI :: Read a => String -> String -> Maybe a
 parseURI s uri = let puri = T.pack uri
                      ps = T.pack s
                      (_, s') = T.breakOn puri ps in

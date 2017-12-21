@@ -4,8 +4,6 @@
 
 module Data.GS1.DWhen where
 
-import Control.Lens
-import Data.Either.Combinators
 import Data.Time
 import GHC.Generics
 import Data.Aeson
