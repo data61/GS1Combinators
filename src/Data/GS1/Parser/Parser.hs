@@ -120,7 +120,6 @@ parseDWhen c = do
 -- true if no disposition is found
 checkValidBizDisp :: Either ParseFailure BizStep
                       -> Either ParseFailure Disposition -> Bool
--- checkValidBizDisp _ _ = True                      
 checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
 checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
 checkValidBizDisp _ (Left TagNotFound) = True
@@ -165,14 +164,25 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
+{- 
+c --> Can be a top level / event-level cursor
+list --> The Name of the cursor under which the list of epcs lie
+         e.g -> sourceList, destinationList
+el --> The Name of cursor which has the epc string as its content
+         e.g -> source, destination
+         The content of this forms the LocationEPC
+attr --> The name of the attribute to look into for epc content, e.g, "type"
+         The content found with this form the SourceDestTypes
+ -}
 parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
                             [Either ParseFailure SrcDestLocation]
-parseSourceDestLocation c lst el attr = do
+parseSourceDestLocation c listTag el attr = do
+  -- scope for optimisation: factor out (c $// element listTag &/ element el)
   let locations =
-        T.unpack . T.strip <$> (c $// element lst &/ element el &/ content)
+        T.unpack . T.strip <$> (c $// element listTag &/ element el &/ content)
   let srcDestTypes =
         T.unpack . T.strip <$> concat
-          (c $// element lst &/ element el &| attribute attr)
+          (c $// element listTag &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 
