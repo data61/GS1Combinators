@@ -14,12 +14,12 @@ import           Text.Read
 
 -- |insert underscore for each uppercase letter it encounters
 -- and make each uppercase letter to lowercase
-insertUs' :: String -> String
+insertUs' :: T.Text -> T.Text
 insertUs' s = s >>= f
   where f c = if isUpper c then '_' : [toLower c] else [toLower c]
 
 
-revertCamelCase :: String -> String
+revertCamelCase :: T.Text -> T.Text
 revertCamelCase "" = ""
 revertCamelCase str = let r = insertUs' str in
                           case r of
@@ -32,20 +32,20 @@ XXX - this is a good exercise, the camelCase function can be rewritten using the
 another question, do revertCamelCase and camelCase functions form an Iso?
 -}
 
-camelCase :: String -> String
+camelCase :: T.Text -> T.Text
 camelCase []     = []
 camelCase (x:xs) = toUpper x : xs
 
-mkCamelCaseWord' :: [String] -> [String]
+mkCamelCaseWord' :: [T.Text] -> [T.Text]
 mkCamelCaseWord' sl = camelCase <$> sl
 
-mkCamelCase :: String -> String
+mkCamelCase :: T.Text -> T.Text
 mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord' . splitOn "_"
 
-mkByName :: Read a => String -> Maybe a
+mkByName :: Read a => T.Text -> Maybe a
 mkByName s = readMaybe (mkCamelCase s)
 
-parseURI :: Read a => String -> String -> Maybe a
+parseURI :: Read a => T.Text -> T.Text -> Maybe a
 parseURI s uri = let puri = T.pack uri
                      ps = T.pack s
                      (_, s') = T.breakOn puri ps in
