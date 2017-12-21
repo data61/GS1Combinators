@@ -37,9 +37,9 @@ getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
 -- parseSingleElem returns an Either
-parseSingleElem :: (String -> Either ParseFailure a) -> [T.Text]
+parseSingleElem :: (T.Text -> Either ParseFailure a) -> [T.Text]
                       -> Either ParseFailure a
-parseSingleElem f (x:_) = f . T.unpack $ x
+parseSingleElem f (x:_) = f x
 parseSingleElem _ []    = Left TagNotFound
 
 parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
@@ -48,15 +48,15 @@ parseTimeXML = parseSingleElem parseStr2Time
 parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
 parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 
--- |parse the string and obtain TimeZone,
-parseStr2TimeZone :: String -> Either ParseFailure TimeZone
+-- |parse the T.Text and obtain TimeZone,
+parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
       Just t -> pure t
       Nothing -> Left TimeZoneError
       where
         parsedStr =
-            parseTimeM True defaultTimeLocale "%z" s :: Maybe TimeZone
+          parseTimeM True defaultTimeLocale "%z" (T.unpack s) :: Maybe TimeZone
 {-
 All three should have tests
 "%FT%X%Q%z" -> 2017-12-20T04:11:43+00:00
@@ -80,9 +80,9 @@ getFirstJust (Just x : _) = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
 -- tries the different ISO8601 formats and gets the first one that parses
-parseStr2Time :: String -> Either ParseFailure EPCISTime
+parseStr2Time :: T.Text -> Either ParseFailure EPCISTime
 parseStr2Time s = getFirstJust $
-    fmap (\i -> parseTimeM True defaultTimeLocale i s :: Maybe EPCISTime)
+    fmap (\i -> parseTimeM True defaultTimeLocale i (T.unpack s) :: Maybe EPCISTime)
       isoFormats
 
 -- |Parse BizStep by Name
@@ -135,9 +135,6 @@ parseDWhy c = do
   --   else
   --     Left InvalidDispBizCombination
 
-extractLocationEPCList :: T.Text -> Either ParseFailure LocationEPC
-extractLocationEPCList = readURI . T.unpack
-
 -- there could be multiple readpoints and bizlocations
 -- and there could be no srcDest Type involved
 -- the sgln could be irregular
@@ -175,18 +172,18 @@ parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
 parseSourceDestLocation c listTag el attr = do
   -- scope for optimisation: factor out (c $// element listTag &/ element el)
   let locations =
-        T.unpack . T.strip <$> (c $// element listTag &/ element el &/ content)
+        T.strip <$> (c $// element listTag &/ element el &/ content)
   let srcDestTypes =
-        T.unpack . T.strip <$> concat
+        T.strip <$> concat
           (c $// element listTag &/ element el &| attribute attr)
   uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
-  let (rpsErrs, rps) = partitionEithers $ extractLocationEPCList <$>
+  let (rpsErrs, rps) = partitionEithers $ readURI <$>
           (c $/ element "readPoint"   &/ element "id" &/ content)
-  let (blsErrs, bls) = partitionEithers $ extractLocationEPCList <$>
+  let (blsErrs, bls) = partitionEithers $ readURI <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
   let (srcTypeErrs, srcTypes) = partitionEithers $
         parseSourceDestLocation c "sourceList" "source" "type"
@@ -206,10 +203,8 @@ parseQuantity c = do
 
   case [qt, uom] of
     [[], _] -> Nothing
-    [[q], []] -> let q' = T.unpack q in
-        Just $ ItemCount (read q' :: Integer)
-    [[q], [u]] -> let [q', u'] = T.unpack <$> [q, u] in
-        Just $ MeasuredQuantity (read q' :: Amount) u'
+    [[q], []] -> Just $ ItemCount (read (T.unpack q) :: Integer)
+    [[q], [u]] -> Just $ MeasuredQuantity (read (T.unpack q) :: Amount) u
     _       -> Nothing
 
 {-
@@ -221,7 +216,7 @@ The cursor level should be:
 -}
 parseInstanceLabel :: Cursor -> [Either ParseFailure LabelEPC]
 parseInstanceLabel c =
-  readLabelEPC Nothing . T.unpack <$> (c $/ element "epc" &/ content)
+  readLabelEPC Nothing <$> (c $/ element "epc" &/ content)
 
 {-
 This function expects a cursor that resembles something like:
@@ -235,7 +230,7 @@ parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
 parseClassLabel c = readLabelEPC mQt labelStr
   where
     mQt = parseQuantity c
-    [labelStr] = T.unpack <$> (c $/ element "epcClass" &/ content)
+    [labelStr] = c $/ element "epcClass" &/ content
     -- possible runtime exception
 
 
@@ -248,7 +243,7 @@ parseClassLabel c = readLabelEPC mQt labelStr
 parseParentID :: Cursor -> Maybe ParentID
 parseParentID c =
   case c $/ element "parentID" &/ content of
-    (p:_) -> (either2Maybe . readURI . T.unpack) p
+    (p:_) -> (either2Maybe . readURI) p
     _   -> Nothing
 
 
@@ -308,7 +303,7 @@ parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
   let tId = c $/ element "transformationID" &/ content
   case tId of
-    [t] -> Just $ T.unpack t
+    [t] -> Just t
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
@@ -327,8 +322,8 @@ parseTransformationDWhat c = do
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
-  let tId   = T.unpack . T.strip $ a
-  let tType = readURI (T.unpack . T.strip $ b)
+  let tId   = T.strip a
+  let tType = readURI $ T.strip b
   case tType of
     Right t -> Right $ BizTransaction tId t
     Left  e -> Left e
@@ -362,10 +357,11 @@ parseEventList t = fmap asEvent
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem parseEventID' eid where
-    parseEventID' eid' = case fromString eid' of
-                           Nothing -> Left InvalidEvent
-                           Just u  -> Right $ EventID u
+  parseSingleElem parseEventID' eid
+    where
+      parseEventID' eid' = case fromString (T.unpack eid') of
+                            Nothing -> Left InvalidEvent
+                            Just u  -> Right $ EventID u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
 parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors

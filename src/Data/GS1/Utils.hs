@@ -6,6 +6,7 @@ module Data.GS1.Utils (
 , mkByName
 , parseURI
 , either2Maybe
+, getTotalLength
 ) where
 
 import           Data.Char
@@ -63,3 +64,6 @@ parseURI s uri = let(_, s') = T.breakOn uri s in
 either2Maybe :: Either a b -> Maybe b
 either2Maybe (Right x) = Just x
 either2Maybe (Left _) = Nothing
+
+getTotalLength :: [T.Text] -> Int
+getTotalLength ts = sum $ T.length <$> ts

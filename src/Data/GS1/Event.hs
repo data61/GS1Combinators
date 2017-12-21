@@ -5,20 +5,19 @@
 
 module Data.GS1.Event where
 
-import GHC.Generics
-
-import Data.GS1.DWhat
-import Data.GS1.DWhen
-import Data.GS1.DWhere
-import Data.GS1.DWhy
-import Data.GS1.EventID
-import Data.GS1.Utils
-import Data.Aeson
-import Data.Aeson.TH
-import Data.Swagger
-
-import Data.ByteString.Char8 (pack)
-import Database.SQLite.Simple.ToField
+import            GHC.Generics
+import            Data.GS1.DWhat
+import            Data.GS1.DWhen
+import            Data.GS1.DWhere
+import            Data.GS1.DWhy
+import            Data.GS1.EventID
+import            Data.GS1.Utils
+import            Data.Aeson
+import qualified  Data.Text as T
+import            Data.Aeson.TH
+import            Data.Swagger
+import            Data.ByteString.Char8 (pack)
+import            Database.SQLite.Simple.ToField
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -31,7 +30,7 @@ instance ToSchema EventType
 instance ToField EventType where
   toField = toField . pack . show
 
-mkEventType :: String -> Maybe EventType
+mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
 allEvents :: [EventType]
