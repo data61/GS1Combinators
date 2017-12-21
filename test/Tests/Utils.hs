@@ -5,19 +5,15 @@ module Tests.Utils where
 
 import           Data.GS1.Utils
 import           Test.Hspec
-import           Data.GS1.EPC
 import           GHC.Generics
 
 data TestDataType = Foo
                   | Bar
                   | Jaja
                   deriving (Show, Eq, Generic, Read)
-{-
-$(deriveJSON defaultOptions ''TestDataType)
-instance ToSchema TestDataType
 
-makeClassyPrisms ''TestDataType
--}
+-- $(deriveJSON defaultOptions ''TestDataType)
+
 testDataTypeURI :: String
 testDataTypeURI = "blah:foo:bar"
 
@@ -62,4 +58,4 @@ testParseURI :: Spec
 testParseURI =
   describe "parse a URI" $
     it "parse TestDataType" $
-      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` (Just Foo)
+      parseURI (testDataTypeURI++":foo") testDataTypeURI `shouldBe` Just Foo
