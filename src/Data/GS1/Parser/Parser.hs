@@ -120,6 +120,7 @@ checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
 checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
 checkValidBizDisp _ (Left TagNotFound) = True
 checkValidBizDisp (Left _) (Right _) = False
+checkValidBizDisp _        _         = False
 
 -- @todo check for valid combinations of BizStep and Disp
 -- |Parse DWhy
