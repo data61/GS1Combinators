@@ -53,6 +53,7 @@ dispositionValidList SellableNotAccessible =
     [Receiving, Storing, Loading, Holding, Inspecting] 
 dispositionValidList Stolen =  [] -- nothing defined - page 25 of spec
 dispositionValidList Unknown =  [] -- nothing defined - page 25 of spec
+dispositionValidList Disposed =  [] -- nothing defined - page 25 of spec
 
 
 dispositionValidFor :: BizStep -> Disposition -> Bool

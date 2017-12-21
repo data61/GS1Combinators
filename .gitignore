@@ -26,3 +26,7 @@ cabal.project.local
 *.out
 *.tix
 
+# executable from compiling Main
+testParser
+parser
+
