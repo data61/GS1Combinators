@@ -4,7 +4,6 @@ import           Tests.DWhat
 import           Tests.DWhen
 import           Tests.DWhere
 import           Tests.DWhy
-import           Tests.Object
 import           Tests.Parser -- it's not being used right now
 import           Tests.Utils
 
@@ -12,10 +11,15 @@ import           Test.Hspec   (hspec)
 
 main :: IO ()
 main = do
+  -- Utils
+  hspec testRevertCamelCase
+  hspec testMkCamelCase
+  hspec testParseURI
+  
   -- DWhere
   hspec testReadSGLN
   hspec testPrintSGLN
-  
+
   -- DWhat
   hspec testBizStep
   hspec testBizTransaction
@@ -26,15 +30,6 @@ main = do
 
   -- DWhen
   hspec testParseTime
-  hspec testMkDWhen
-  
-  -- Object
-  hspec testObjectID
-  
+
   -- Parser
-  -- hspec testParser
-  
-  -- Utils
-  hspec testRevertCamelCase
-  hspec testMkCamelCase
-  hspec testParseURI
+  hspec testParser

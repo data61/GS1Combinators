@@ -4,6 +4,7 @@ module Data.GS1.Utils (
 , mkCamelCase
 , mkByName
 , parseURI
+, either2Maybe
 ) where
 
 import           Data.Char
@@ -19,7 +20,7 @@ insertUs' s = s >>= f
 
 
 revertCamelCase :: String -> String
-revertCamelCase [] = []
+revertCamelCase "" = ""
 revertCamelCase str = let r = insertUs' str in
                           case r of
                             '_':t -> t
@@ -48,5 +49,11 @@ parseURI :: Read a => String -> String -> Maybe a
 parseURI s uri = let puri = T.pack uri
                      ps = T.pack s
                      (_, s') = T.breakOn puri ps in
-                     if T.unpack s' == s then mkByName . last $ splitOn ":" s
-                                                      else Nothing
+                     if T.unpack s' == s
+                        then mkByName . last $ splitOn ":" s
+                        else Nothing
+
+-- returns (Just Right) or Nothing
+either2Maybe :: Either a b -> Maybe b
+either2Maybe (Right x) = Just x
+either2Maybe (Left _) = Nothing

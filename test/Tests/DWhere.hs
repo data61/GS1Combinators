@@ -1,7 +1,7 @@
 module Tests.DWhere where
 
 import           Data.GS1.EPC
-import           Data.GS1.DWhere
+-- import           Data.GS1.DWhere
 import           Test.Hspec
 
 testReadSGLN :: Spec
@@ -9,7 +9,7 @@ testReadSGLN =
   describe "Location - Testing readURI" $
     describe "SGLN with location reference" $ do
       it "LocationReferenceNum with extension" $
-        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe` 
+        readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe`
           Right (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
       it "LocationReferenceNum without extension" $
         readURI "urn:epc:id:sgln:0614141.12345" `shouldBe`
