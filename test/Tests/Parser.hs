@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
--- {-# LANGUAGE TemplateHaskell #-}
 
 module Tests.Parser where
 
@@ -31,7 +30,6 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      --mapM_ print $ parseDWhen <$> oeCursors
       let et = "2005-04-03T20:33:31.116-06:00"
       let et1 = "2005-04-04T20:33:31.116-06:00"
       let tzStr = "-06:00"
@@ -49,20 +47,20 @@ testParser = do
       let oeCursors = getCursorsByName "ObjectEvent" cursor
       parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
 
-  
-  -- TODO = fix issue in Parser.hs
-  -- PROBLEM NOTICED IN Parser.hs src = in parseDWhen, it assumes that parseTimeZoneXML' produces a Just value into value tz
-  -- .. add DWhen test for Aggregation
-
-    -- it "AggregationEvent" $ do
-    --   error "@todo Add DWhen test for Aggregation"
   describe "parse DWhen AggregationEvent" $
     it "create DWhen from AggregationEvent" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "AggregationEvent" cursor  
       parseDWhen <$> oeCursors `shouldBe`
-        [Right (DWhen (read "2013-06-08 12:58:56.591" :: UTCTime) Nothing (read "+02:00" :: TimeZone))]
+        [Right 
+          (
+            DWhen
+              (read "2013-06-08 12:58:56.591" :: UTCTime)
+              Nothing
+              (read "+02:00" :: TimeZone)
+          )
+        ]
 
   describe "parse XML to obtain Action" $
     it "finds action from Single ObjectEventNoEventTime XML" $ do
@@ -136,10 +134,7 @@ testParser = do
       parseDWhy <$> teCursors `shouldBe`
         [Right $ DWhy Nothing Nothing]
 
-    -- @todo create a dummy xml with no disposition or bizStep
-    -- it "AggregationEvent" $ do
-    --   error "@todo Add DWhy test for Aggregation"
-  describe "parse DWhy from AggregationEvent" $ do
+  describe "parse DWhy from AggregationEvent" $
     it "create DWhy from AggregationEvent" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
@@ -148,12 +143,11 @@ testParser = do
         [Right (DWhy (Just Receiving) (Just InProgress))]
 
   -- the Nothing extension used because a value of 0 indicates no extension
-  describe "parse XML to obtain DWhere" $ do
+  describe "parse XML to obtain DWhere" $
     it "ObjectEvent" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc2
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      --mapM_ print $ parseDWhere <$> oeCursors
       parseDWhere <$> oeCursors `shouldBe`
         [Right DWhere {
           _readPoint =
@@ -170,20 +164,22 @@ testParser = do
           , _destType = []
         }]
 
-    -- it "AggregationEvent" $ do
-    --   error "@todo Add DWhere test for Aggregation"
-  describe "parse DWhere from AggregationEvent" $ do
+  describe "parse DWhere from AggregationEvent" $
     it "create DWhere from AggregationEvent" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "AggregationEvent" cursor
       parseDWhere <$> oeCursors `shouldBe`
-        -- NOTE that according to EPCIS_Guideline.pdf page 35, a plain GLN indicated by extension valued 0
-        [Right (DWhere{_readPoint=[SGLN "0614141" (LocationReferenceNum "00777") Nothing],
-                       _bizLocation=[SGLN "0614141" (LocationReferenceNum "00888") Nothing],
-                       -- TODO = check these should be empty
-                      _srcType=[],
-                      _destType=[]})]
+        -- NOTE that according to EPCIS_Guideline.pdf page 35,
+        -- a plain GLN indicated by extension valued 0
+        [Right
+          DWhere {
+            readPoint = [SGLN "0614141" (LocationReferenceNum "00777") Nothing],
+            _bizLocation =
+                [SGLN "0614141" (LocationReferenceNum "00888") Nothing],
+            _srcType=[],
+            _destType=[]
+          }]
     
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
@@ -192,7 +188,6 @@ testParser = do
       let oeCursors = getCursorsByName "quantityElement" cursor
       parseQuantity <$> oeCursors `shouldBe` [Just $ MeasuredQuantity 200 "KGM"]
 
-      -- TODO = check... may be incorrect!
   describe "parse BizTransaction" $ do
     it "parse BizTransaction element" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
@@ -281,7 +276,6 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let aeCursors = getCursorsByName "AggregationEvent" cursor
-      -- TODO = check Nothings are appropriate below
       parseAggregationDWhat <$> aeCursors `shouldBe`
         [
           Right $ AggregationDWhat Observe (Just $ SSCC "0614141" "1234567890")
@@ -294,12 +288,10 @@ testParser = do
             ]
         ]
 
-    -- TODO = check... may be incorrect!
     it "parses a valid TransactionDWhat" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
       let teCursors = getCursorsByName "TransactionEvent" cursor
-      -- TODO = check Nothings are appropriate in below
       parseTransactionDWhat <$> teCursors `shouldBe`
         [Right (TransactionDWhat Observe Nothing
           [BizTransaction {
@@ -347,11 +339,9 @@ testParser = do
         doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
         let cursor = fromDocument doc
         let parsedEvents = parseEventByType cursor ObjectEventT
-        -- this is a template to write tests for the events
         parsedEvents`shouldBe`
-              -- a huge dwhat element
+          -- a huge dwhat element
           [Right $ Event
-            -- @todo annonate the attributes with comments about what they are
             ObjectEventT -- type
             (Just (EventID (fromJust $
                 fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3")))
@@ -411,7 +401,6 @@ testParser = do
               -- a huge dwhat element
           [
             Right $ Event
-            -- @todo annonate the attributes with comments about what they are
               ObjectEventT -- type
               -- eid
               (Just (EventID (fromJust $
@@ -480,7 +469,6 @@ testParser = do
       parsedEvents`shouldBe`
             -- a huge dwhat element
         [Right $ Event
-          -- @todo annonate the attributes with comments about what they are
           TransformationEventT -- type
           Nothing -- eid
           -- a dwhat element
@@ -521,8 +509,7 @@ testParser = do
           )
         ]
 
-    -- @todo change this!    
-    it "parses a valid transaction event" $ do -- @matt
+    it "parses a valid transaction event" $ do
       doc <- Text.XML.readFile def "test/test-xml/TransactionEvent.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor TransactionEventT
@@ -530,7 +517,6 @@ testParser = do
       parsedEvents`shouldBe`
             -- a huge dwhat element
         [Right $ Event
-          -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
           (Just (EventID (fromJust $
               fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
@@ -568,7 +554,6 @@ testParser = do
 
           -- second element
           Right $ Event
-          -- @todo annonate the attributes with comments about what they are
           TransactionEventT -- type
           (Just (EventID (fromJust $
               fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
@@ -604,26 +589,19 @@ testParser = do
           )
         ]
     
-    -- @todo change this!
-    it "parses a valid aggregation event" $ do -- @matt
+    it "parses a valid aggregation event" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
       let parsedEvents = parseEventByType cursor AggregationEventT
-      -- this is a template to write tests for the events
       parsedEvents`shouldBe`
             -- a huge dwhat element
         [Right $ Event
-          -- @todo annonate the attributes with comments about what they are
           AggregationEventT -- type
           (Just (EventID (fromJust $
-              fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5")))
-          -- eid
+              fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5"))) -- eid
           -- a dwhat element
           (
             AggregationDWhat Observe
-            -- <parentID>urn:epc:id:sscc:0614141.1234567890</parentID>
-                                  -- | SSCC GS1CompanyPrefix SerialNumber
-
             (Just (SSCC "0614141" "1234567890")) -- Maybe ParentID
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
