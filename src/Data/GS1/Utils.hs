@@ -13,25 +13,25 @@ import           Data.Char
 import qualified Data.Text       as T
 import           Text.Read
 
--- |insert underscore for each uppercase letter it encounters
--- and make each uppercase letter to lowercase
--- insertUs' :: T.Text -> T.Text
--- insertUs' s = s >>= f
---   where f c = if isUpper c then '_' : [toLower c] else [toLower c]
-
-func :: Char -> T.Text
-func c
+-- a helper function
+-- if it's a capital char, inserts an '_' before
+-- else just returns the character
+-- sample usage:
+-- 'c' returns 'c'
+-- 'C' returns '_c'
+putUsOrReturnChar :: Char -> T.Text
+putUsOrReturnChar c
   | isUpper c = T.append "_" (T.singleton $ toLower c)
   | otherwise = T.singleton c
 
-insertUs' :: T.Text -> T.Text
-insertUs' = T.concatMap func
+insertUs :: T.Text -> T.Text
+insertUs = T.concatMap putUsOrReturnChar
 
 
 revertCamelCase :: T.Text -> T.Text
 revertCamelCase t
   | T.null t  = T.empty
-  | otherwise = let r = insertUs' t in
+  | otherwise = let r = insertUs t in
                     case T.head r of
                       '_' -> T.tail r
                       _     -> r
@@ -45,11 +45,11 @@ another question, do revertCamelCase and camelCase functions form an Iso?
 camelCase :: T.Text -> T.Text
 camelCase = T.toTitle
 
-mkCamelCaseWord' :: [T.Text] -> [T.Text]
-mkCamelCaseWord' sl = camelCase <$> sl
+mkCamelCaseWord :: [T.Text] -> [T.Text]
+mkCamelCaseWord sl = camelCase <$> sl
 
 mkCamelCase :: T.Text -> T.Text
-mkCamelCase =  T.filter (/=' ') . T.unwords . mkCamelCaseWord' . T.splitOn "_"
+mkCamelCase =  T.filter (/=' ') . T.unwords . mkCamelCaseWord . T.splitOn "_"
 
 mkByName :: Read a => T.Text -> Maybe a
 mkByName s = readMaybe $ T.unpack $ mkCamelCase s
