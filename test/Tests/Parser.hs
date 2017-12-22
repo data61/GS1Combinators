@@ -2,25 +2,22 @@
 
 module Tests.Parser where
 
-import           Test.Hspec
-import           Text.XML
-import           Text.XML.Cursor
-
-import qualified Data.Text              as T
-import           Data.Time.LocalTime
-import           Data.Either.Combinators
-
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhere
-import           Data.GS1.DWhy
-import           Data.GS1.EPC
-import           Data.GS1.Event
-import           Data.GS1.Parser.Parser
-import           Data.GS1.EventID
-import           Data.UUID as UUID
-import           Data.Maybe
-import           Data.Time
+import Test.Hspec
+import Text.XML
+import Text.XML.Cursor
+import Data.Time.LocalTime
+import Data.Either.Combinators
+import Data.GS1.DWhat
+import Data.GS1.DWhen
+import Data.GS1.DWhere
+import Data.GS1.DWhy
+import Data.GS1.EPC
+import Data.GS1.Event
+import Data.GS1.Parser.Parser
+import Data.GS1.EventID
+import Data.UUID as UUID
+import Data.Maybe
+import Data.Time
 
 testParser :: Spec
 testParser = do
@@ -174,11 +171,12 @@ testParser = do
         -- a plain GLN indicated by extension valued 0
         [Right
           DWhere {
-            readPoint = [SGLN "0614141" (LocationReferenceNum "00777") Nothing],
+            _readPoint =
+                [SGLN "0614141" (LocationReferenceNum "00777") Nothing],
             _bizLocation =
                 [SGLN "0614141" (LocationReferenceNum "00888") Nothing],
-            _srcType=[],
-            _destType=[]
+            _srcType = [],
+            _destType = []
           }]
     
   describe "parse QuantityElement" $
