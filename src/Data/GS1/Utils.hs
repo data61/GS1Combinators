@@ -10,7 +10,6 @@ module Data.GS1.Utils (
 ) where
 
 import           Data.Char
-import           Data.List.Split
 import qualified Data.Text       as T
 import           Text.Read
 
@@ -38,7 +37,8 @@ revertCamelCase t
                       _     -> r
 
 {-
-XXX - this is a good exercise, the camelCase function can be rewritten using the _head prism and the modify function (called (%~)) 
+XXX - this is a good exercise, the camelCase function can be rewritten using
+the _head prism and the modify function (called (%~)) 
 another question, do revertCamelCase and camelCase functions form an Iso?
 -}
 
