@@ -230,8 +230,7 @@ parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
 parseClassLabel c = readLabelEPC mQt labelStr
   where
     mQt = parseQuantity c
-    [labelStr] = c $/ element "epcClass" &/ content
-    -- possible runtime exception
+    labelStr = head (c $/ element "epcClass" &/ content)
 
 
 -- |parse group of text to obtain ParentID
