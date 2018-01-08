@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings     #-}
 module Tests.DWhen (
   testParseTime
 ) where

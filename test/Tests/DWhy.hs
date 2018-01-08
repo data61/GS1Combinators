@@ -1,9 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhy where
 
-import Test.Hspec
-
--- import Data.GS1.DWhy
-import Data.GS1.EPC
+import           Test.Hspec
+import qualified Data.Text as T
+import           Data.GS1.EPC
 
 testDisposition :: Spec
 testDisposition =
@@ -18,13 +18,13 @@ testDisposition =
       it "parse the valid uri to disposition" $
         readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Right Active
       it "parses the invalid uri to Nothing" $
-        (readURI :: String -> Either ParseFailure Disposition)
+        (readURI :: T.Text -> Either ParseFailure Disposition)
           "urn:epcglobal:cbv:disp:active2"
             `shouldBe` Left InvalidFormat
       it "parse invalid string to Nothing" $
-        (readURI :: String -> Either ParseFailure Disposition)
+        (readURI :: T.Text -> Either ParseFailure Disposition)
           "somerandomstring"
             `shouldBe` Left InvalidFormat
       it "parse empty string to Nothing" $
-        (readURI :: String -> Either ParseFailure Disposition) ""
+        (readURI :: T.Text -> Either ParseFailure Disposition) ""
           `shouldBe` Left InvalidFormat
