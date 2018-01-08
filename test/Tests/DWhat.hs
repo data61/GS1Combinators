@@ -1,10 +1,11 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Tests.DWhat where
 
 -- import           Data.Maybe
 import           Test.Hspec
-
+import qualified Data.Text as T
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
 
@@ -30,19 +31,19 @@ testBizStep = do
 
   describe "Invalid urns" $ do
     it "parse valid uri but invalid step to Nothing" $
-      (readURI :: String -> Either ParseFailure BizStep)
+      (readURI :: T.Text -> Either ParseFailure BizStep)
         "urn:epcglobal:cbv:bizstep:s"
           `shouldBe` Left InvalidFormat
 
     it "parse invalid uri to Nothing" $
-      (readURI :: String -> Either ParseFailure BizStep)
+      (readURI :: T.Text -> Either ParseFailure BizStep)
         "urn:invalidns:cbv:bizstep:void_shipping"
           `shouldBe` Left InvalidFormat
     it "A component of the urn missing" $
-      (readURI :: String -> Either ParseFailure BizStep) "urn:epc:cbv:bizstep"
+      (readURI :: T.Text -> Either ParseFailure BizStep) "urn:epc:cbv:bizstep"
         `shouldBe` Left InvalidFormat
     it "empty" $
-      (readURI :: String -> Either ParseFailure BizStep) ""
+      (readURI :: T.Text -> Either ParseFailure BizStep) ""
         `shouldBe` Left InvalidFormat
 
 testBizTransaction :: Spec
@@ -53,18 +54,18 @@ testBizTransaction = do
 
   describe "Invalid urns" $ do
     it "parse the invalid uri to Nothing" $
-      (readURI :: String -> Either ParseFailure BizTransactionType)
+      (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "urn:epcglobal:cbv:btt:somethingelse"
           `shouldBe` Left InvalidFormat
     it "parse the empty uri to Nothing" $
-      (readURI :: String -> Either ParseFailure BizTransactionType)
+      (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "" `shouldBe` Left InvalidFormat
     it "parse a uri missing component with to Nothing" $
-      (readURI :: String -> Either ParseFailure BizTransactionType)
+      (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "urn:epcglobal:cbv:po"
           `shouldBe` Left InvalidFormat
     it "parse a rubbish uri with no : to Nothing" $
-      (readURI :: String -> Either ParseFailure BizTransactionType)
+      (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "fooblahjaja" `shouldBe` Left InvalidFormat
 
   describe "print BizTransaction" $ do

@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Data.GS1.DWhat where
 
 import           GHC.Generics
 
-import           Data.List.Split
 import           Data.Semigroup
 
 import           Data.Aeson
@@ -16,6 +16,7 @@ import           Database.SQLite.Simple.ToField
 import           Data.Aeson.Text
 import           Data.ByteString.Char8 (pack)
 import qualified Data.Text.Lazy as TxtL
+import qualified Data.Text      as T
 
 import           Data.GS1.EPC
 
@@ -43,13 +44,13 @@ type OutputEPC = LabelEPC
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
 -- @todo deprecate this function
-readLabelEPC :: Maybe Quantity -> String -> Either ParseFailure LabelEPC
+readLabelEPC :: Maybe Quantity -> T.Text -> Either ParseFailure LabelEPC
 readLabelEPC mQt epcStr =
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
     <>
       fmap IL (readURIInstanceLabelEPC epcTokens)
   where
-    epcTokens = splitOn ":" epcStr
+    epcTokens = T.splitOn ":" epcStr
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
