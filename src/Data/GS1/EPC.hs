@@ -1,36 +1,24 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
 
 module Data.GS1.EPC where
 
 import           Control.Lens
-import           Data.Char
 import           GHC.Generics
 import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
-import           Data.List.Split
-import           Data.Maybe
-import           Data.List
 
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
 import           Data.GS1.Utils
 
 import           Database.SQLite.Simple.ToField
-
--- TODO add typeclass URI constraint to all the `a`s
-
--- More Refernce: TDS 1.9
-type URIPrefix = String
-type URIQuantifier = String
-type URIPayload = String
-
-type Reason = String
-type XMLSnippet = T.Text
 
 -- add more type values to this if need be
 data ParseFailure = InvalidLength
@@ -61,20 +49,20 @@ data ParseFailure = InvalidLength
 
 -- |Anything that could be converted into URI
 class URI a where
-  printURI      :: a -> String
-  readURI       :: URI a => String -> Either ParseFailure a
+  printURI      :: a -> T.Text
+  readURI       :: URI a => T.Text -> Either ParseFailure a
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
-type GS1CompanyPrefix = String
-type ItemReference = String
+type GS1CompanyPrefix = T.Text
+type ItemReference = T.Text
 type ExtensionDigit = Int
-type SerialReference = String
+type SerialReference = T.Text
 -- |Calculated according to an algorithm https://en.wikipedia.org/wiki/Global_Location_Number
 type CheckDigit = Int
-type Lot = String
-type IndividualAssetReference = String
-type SerialNumber = String
-type SGLNExtension = String
+type Lot = T.Text
+type IndividualAssetReference = T.Text
+type SerialNumber = T.Text
+type SGLNExtension = T.Text
 
 data SGTINFilterValue =  AllOthers
                        | POSTradeItem
@@ -99,9 +87,9 @@ instance ToSchema SGTINFilterValue
   and treating the result as a single numeric string.
 -}
 
-type Uom = String
+type Uom = T.Text
 type Amount = Float
-type AssetType = String
+type AssetType = T.Text
 
 data Quantity = MeasuredQuantity
                 {
@@ -119,8 +107,8 @@ instance ToSchema Quantity
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
 -- to make it more generalised
-getSuffixTokens :: [String] -> [String]
-getSuffixTokens suffix = splitOn "." $ concat suffix
+getSuffixTokens :: [T.Text] -> [T.Text]
+getSuffixTokens suffix = T.splitOn "." $ T.concat suffix
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
 data ClassLabelEPC =  LGTIN
@@ -140,14 +128,14 @@ data ClassLabelEPC =  LGTIN
 
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
-    readURI epcStr = readURIClassLabelEPC $ splitOn ":" epcStr
+    readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
 
 instance ToField ClassLabelEPC where
   toField = toField . pack . show
 
 -- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
-readURIClassLabelEPC :: [String] -> Either ParseFailure ClassLabelEPC
+readURIClassLabelEPC :: [T.Text] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
   Right $ LGTIN gs1CompanyPrefix itemReference lot
     where [gs1CompanyPrefix, itemReference, lot] = getSuffixTokens rest
@@ -156,14 +144,18 @@ readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
     where (gs1CompanyPrefix:itemReference:_) = getSuffixTokens rest
 readURIClassLabelEPC _ = Left InvalidFormat
 
-printURIClassLabelEPC :: ClassLabelEPC -> String
+printURIClassLabelEPC :: ClassLabelEPC -> T.Text
 printURIClassLabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
-  "urn:epc:class:lgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference ++ "." ++ lot
+  T.append "urn:epc:class:lgtin:"
+      (T.intercalate "." [gs1CompanyPrefix, itemReference, lot])
+
 printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
-  "urn:epc:idpat:sgtin:" ++ gs1CompanyPrefix ++ "." ++ itemReference
+  T.append "urn:epc:idpat:sgtin:"
+      (T.intercalate "." [gs1CompanyPrefix, itemReference])
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
+
 
 data InstanceLabelEPC = GIAI 
                         {
@@ -197,7 +189,7 @@ data InstanceLabelEPC = GIAI
 
 instance URI InstanceLabelEPC where
     printURI = printURIInstanceLabelEPC
-    readURI epcStr = readURIInstanceLabelEPC $ splitOn ":" epcStr
+    readURI epcStr = readURIInstanceLabelEPC $ T.splitOn ":" epcStr
 
 -- GS1_EPC_TDS_i1_11.pdf Page 28
 sgtinPadLen :: Int
@@ -207,44 +199,50 @@ sgtinPadLen = 13
 ssccPadLen :: Int
 ssccPadLen = 17
 
-readURIInstanceLabelEPC :: [String] -> Either ParseFailure InstanceLabelEPC
+readURIInstanceLabelEPC :: [T.Text] -> Either ParseFailure InstanceLabelEPC
+
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Right $ GIAI gs1CompanyPrefix individualAssetReference
     where [gs1CompanyPrefix, individualAssetReference] = getSuffixTokens rest
+
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
   | isCorrectLen = Right $ SSCC gs1CompanyPrefix serialNumber
   | otherwise = Left InvalidLength
       where
         [gs1CompanyPrefix, serialNumber] = getSuffixTokens rest
-        isCorrectLen = length (gs1CompanyPrefix ++ serialNumber) == ssccPadLen
+        isCorrectLen =
+            getTotalLength [gs1CompanyPrefix, serialNumber] == ssccPadLen
+
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI gs1CompanyPrefix assetType serialNumber
     where [gs1CompanyPrefix, assetType, serialNumber] = getSuffixTokens rest
+
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
       Right $ SGTIN gs1CompanyPrefix Nothing itemReference serialNumber
---                                               Nothing, for the moment
+                                  -- Nothing, for the moment
   | otherwise = Left InvalidLength
       where
         [gs1CompanyPrefix, itemReference, serialNumber] = getSuffixTokens rest
-        isCorrectLen = length (gs1CompanyPrefix ++ itemReference) == sgtinPadLen
+        isCorrectLen =
+            getTotalLength [gs1CompanyPrefix, itemReference] == sgtinPadLen
+
 readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
-printURIInstanceLabelEPC :: InstanceLabelEPC -> String
+printURIInstanceLabelEPC :: InstanceLabelEPC -> T.Text
 printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
-  "urn:epc:id:giai:" ++
-    intercalate "." [gs1CompanyPrefix, individualAssetReference]
+  T.append "urn:epc:id:giai:"
+    (T.intercalate "." [gs1CompanyPrefix, individualAssetReference])
 printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
-  "urn:epc:id:sscc:" ++
-    intercalate "." [gs1CompanyPrefix, serialNumber]
+  T.append "urn:epc:id:sscc:"
+    (T.intercalate "." [gs1CompanyPrefix, serialNumber])
 printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
-  "urn:epc:id:sgtin:" ++
-    intercalate "." [gs1CompanyPrefix, itemReference, serialNumber]
+  T.append "urn:epc:id:sgtin:"
+    (T.intercalate "." [gs1CompanyPrefix, itemReference, serialNumber])
 printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
-  "urn:epc:id:grai:" ++
-    intercalate "." [gs1CompanyPrefix, assetType, serialNumber]
-    --FIXME: add Maybe SGTINFilterValue
+  T.append "urn:epc:id:grai:"
+    (T.intercalate "." [gs1CompanyPrefix, assetType, serialNumber])
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
@@ -257,7 +255,7 @@ type Lng = Float
 type Lat = Float
 data LocationReference = LocationReferenceNum
                          {
-                           _locationRefNum :: String
+                           _locationRefNum :: T.Text
                          }
   deriving (Read, Eq, Generic, Show)
 $(deriveJSON defaultOptions ''LocationReference)
@@ -281,48 +279,38 @@ instance ToSchema LocationReference
 
 instance URI LocationEPC where
   printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str ++ "." ++ ext
+    T.append "urn:epc:id:sgln:"
+      (T.intercalate "." [companyPrefix, str, ext])
   printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
-    "urn:epc:id:sgln:" ++ companyPrefix ++ "." ++ str
+    T.append "urn:epc:id:sgln:"
+      (T.intercalate "." [companyPrefix, str])
 
   readURI epcStr
-   | isLocationEPC (splitOn ":" epcStr) =
-      readURILocationEPC $ splitOn "." $ last $ splitOn ":" epcStr
+   | isLocationEPC (T.splitOn ":" epcStr) =
+      readURILocationEPC $ T.splitOn "." $ last $ T.splitOn ":" epcStr
    | otherwise            = Left InvalidFormat
 
-isLocationEPC :: [String] -> Bool
+isLocationEPC :: [T.Text] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
 isLocationEPC _                                   = False
-
--- returns Nothing if string cannot be parsed into lat and long
--- now deprecated
-parseCoord :: [String] -> Maybe [String]
-parseCoord ["latLong", lat, long] = Just [lat, long]
-parseCoord _                      = Nothing
-
--- checks if the string has coords. not a fully generalised function
--- now deprecated
-hasCoord :: String -> Bool
-hasCoord s = isJust obj
-  where
-    obj = parseCoord $ splitOn "-" s
 
 -- GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPadLen :: Int
 sglnPadLen = 12
 
-getExt :: String -> Maybe SGLNExtension
+getExt :: T.Text -> Maybe SGLNExtension
 getExt "0" = Nothing
 getExt s   = Just s
 
-readURILocationEPC :: [String] -> Either ParseFailure LocationEPC
+readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
   | isCorrectLen =
       Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
   | otherwise    = Left InvalidLength
     where
-      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
+      isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
+
 -- with extension
 readURILocationEPC [companyPrefix, locationStr, extNum]
   | isCorrectLen =
@@ -330,7 +318,7 @@ readURILocationEPC [companyPrefix, locationStr, extNum]
         SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
-      isCorrectLen = length (companyPrefix ++ locationStr) == sglnPadLen
+      isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
 
 readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
@@ -345,34 +333,25 @@ instance ToSchema SourceDestType
 
 instance URI SourceDestType where
   printURI = printSrcDestURI
-  readURI epc = readSrcDestURI $ last $ splitOn ":" epc
+  readURI epc = readSrcDestURI $ last $ T.splitOn ":" epc
 
-srcDestPrefixStr :: String
+srcDestPrefixStr :: T.Text
 srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
 
-printSrcDestURI :: SourceDestType -> String
-printSrcDestURI SDOwningParty = srcDestPrefixStr ++ "owning_party"
-printSrcDestURI SDPossessingParty = srcDestPrefixStr ++ "possessing_party"
-printSrcDestURI SDLocation = srcDestPrefixStr ++ "location"
+printSrcDestURI :: SourceDestType -> T.Text
+printSrcDestURI SDOwningParty = T.append srcDestPrefixStr "owning_party"
+printSrcDestURI SDPossessingParty = T.append srcDestPrefixStr "possessing_party"
+printSrcDestURI SDLocation = T.append srcDestPrefixStr "location"
 
-readSrcDestURI :: String -> Either ParseFailure SourceDestType
+readSrcDestURI :: T.Text -> Either ParseFailure SourceDestType
 readSrcDestURI "owning_party" = Right SDOwningParty
 readSrcDestURI "possessing_party" = Right SDPossessingParty
 readSrcDestURI "location" = Right SDLocation
 readSrcDestURI _ = Left InvalidFormat
 
-{-
-mkSourceDestType :: String -> Maybe SourceDestType
-mkSourceDestType = mkByName
-
-parseSourceDestType :: String -> Maybe SourceDestType
-parseSourceDestType s = let uri = "urn:epcglobal:cbv:sdt" in
-                            parseURI s uri :: Maybe SourceDestType
-
--}
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
-type DocumentType = String
-type ServiceReference = String
+type DocumentType = T.Text
+type ServiceReference = T.Text
 data BusinessTransactionEPC =  GDTI {
                                  _gdtiCompanyPrefix :: GS1CompanyPrefix
                                , _gdtiDocType       :: DocumentType
@@ -388,17 +367,19 @@ data BusinessTransactionEPC =  GDTI {
 instance URI BusinessTransactionEPC where
   printURI = printURIBizTransactionEPC
   readURI epcStr = readURIBusinessTransactionEPC $
-                      getSuffixTokens [last $ splitOn ":" epcStr]
+                      getSuffixTokens [last $ T.splitOn ":" epcStr]
 --                    Getting the uri body out of the string
-printURIBizTransactionEPC :: BusinessTransactionEPC -> String
-printURIBizTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
-  "urn:epc:id:gsrn:" ++
-    intercalate "." [gs1CompanyPrefix, documentType, serialNumber]
-printURIBizTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
-  "urn:epc:id:gsrn:" ++
-    intercalate "." [gs1CompanyPrefix, serialReference]
 
--- the length of the arguments should equal to the following, according to the spec
+printURIBizTransactionEPC :: BusinessTransactionEPC -> T.Text
+printURIBizTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
+  T.append "urn:epc:id:gsrn:"
+    (T.intercalate "." [gs1CompanyPrefix, documentType, serialNumber])
+printURIBizTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
+  T.append "urn:epc:id:gsrn:"
+    (T.intercalate "." [gs1CompanyPrefix, serialReference])
+
+-- the length of the arguments should equal to the following,
+-- according to the spec
 -- used for the purposes of validation
 
 -- GS1_EPC_TDS_i1_11.pdf Page 31
@@ -409,17 +390,21 @@ gsrnPadLen = 17
 gdtiPadLen :: Int
 gdtiPadLen = 12
 
-readURIBusinessTransactionEPC :: [String] -> Either ParseFailure BusinessTransactionEPC
+readURIBusinessTransactionEPC :: [T.Text] ->
+                                  Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC [gs1CompanyPrefix, serialReference]
   | isCorrectLen = Right $ GSRN gs1CompanyPrefix serialReference
   | otherwise = Left InvalidLength
   where
-    isCorrectLen = length (gs1CompanyPrefix ++ serialReference) == gsrnPadLen
+    isCorrectLen =
+        getTotalLength [gs1CompanyPrefix, serialReference] == gsrnPadLen
 readURIBusinessTransactionEPC [gs1CompanyPrefix, documentType, serialNumber]
   | isCorrectLen = Right $ GDTI documentType documentType serialNumber
   | otherwise = Left InvalidLength
   where
-    isCorrectLen = length (gs1CompanyPrefix ++ documentType ++ serialNumber) == gdtiPadLen
+    isCorrectLen =
+        getTotalLength [gs1CompanyPrefix, documentType, serialNumber] ==
+          gdtiPadLen
 readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
@@ -427,7 +412,7 @@ instance ToSchema BusinessTransactionEPC
 
 
 -- |Allocated by the company to a specific location
-type LocationRef = String
+type LocationRef = T.Text
 
 
 data LocationError
@@ -483,10 +468,10 @@ data BizStep = Accepting
 $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
-ppBizStep :: BizStep -> String
-ppBizStep = revertCamelCase . show
+ppBizStep :: BizStep -> T.Text
+ppBizStep = revertCamelCase . T.pack . show
 
-bizstepPrefixStr :: String
+bizstepPrefixStr :: T.Text
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 readURIBizStep :: Maybe BizStep -> Either ParseFailure BizStep
@@ -495,7 +480,7 @@ readURIBizStep (Just bizstep) = Right bizstep
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 16
 instance URI BizStep where
-  printURI epc = bizstepPrefixStr ++ ppBizStep epc
+  printURI epc = T.append bizstepPrefixStr (ppBizStep epc)
   readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
                    in readURIBizStep pURI
 
@@ -511,7 +496,7 @@ instance URI BizStep where
 -}
 
 
-type BizTransactionID = String
+type BizTransactionID = T.Text
 
 data BizTransactionType = Bol       -- Bill of Lading
                         | Desadv    -- Dispatch Advice
@@ -526,17 +511,18 @@ data BizTransactionType = Bol       -- Bill of Lading
 $(deriveJSON defaultOptions ''BizTransactionType)
 instance ToSchema BizTransactionType
 
-ppBizTransactionType :: BizTransactionType -> String
-ppBizTransactionType = revertCamelCase . show
+ppBizTransactionType :: BizTransactionType -> T.Text
+ppBizTransactionType = revertCamelCase . T.pack . show
 
-readURIBizTransactionType :: Maybe BizTransactionType -> Either ParseFailure BizTransactionType
+readURIBizTransactionType :: Maybe BizTransactionType ->
+                              Either ParseFailure BizTransactionType
 readURIBizTransactionType Nothing = Left InvalidFormat
 readURIBizTransactionType (Just btt) = Right btt
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 28
 instance URI BizTransactionType where
-  printURI   btt  = "urn:epcglobal:cbv:btt:" ++ ppBizTransactionType btt
-  readURI    s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
+  printURI btt  = T.append "urn:epcglobal:cbv:btt:" (ppBizTransactionType btt)
+  readURI s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
                       in readURIBizTransactionType pURI
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
@@ -552,7 +538,7 @@ instance ToSchema BizTransaction
 
 
 -- | TransformationID
-type TransformationID = String
+type TransformationID = T.Text
 
 data Action = Add
             | Observe
@@ -561,9 +547,9 @@ data Action = Add
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 
-mkAction :: String -> Either ParseFailure Action
-mkAction s =
-  case mkByName . camelCase $ toLower <$> s of
+mkAction :: T.Text -> Either ParseFailure Action
+mkAction t =
+  case mkByName . camelCase $ T.toLower t of
     Nothing -> Left InvalidAction
     Just x  -> Right x
 
@@ -605,12 +591,8 @@ $(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
 
 
-ppDisposition :: Disposition -> String
-ppDisposition = revertCamelCase . show
-
--- DELETEME since redundant, not used
--- mkDisposition' :: String -> Maybe Disposition
--- mkDisposition' = mkByName
+ppDisposition :: Disposition -> T.Text
+ppDisposition = revertCamelCase . T.pack . show
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 24
 readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
@@ -618,7 +600,7 @@ readURIDisposition Nothing = Left InvalidFormat
 readURIDisposition (Just disp) = Right disp
 
 instance URI Disposition where
-  printURI disp = "urn:epcglobal:cbv:disp:" ++ ppDisposition disp
+  printURI disp = T.append "urn:epcglobal:cbv:disp:" (ppDisposition disp)
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
                     in readURIDisposition pURI
 
