@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Data.GS1.Utils (
   camelCase
 , revertCamelCase
@@ -5,55 +6,64 @@ module Data.GS1.Utils (
 , mkByName
 , parseURI
 , either2Maybe
+, getTotalLength
 ) where
 
 import           Data.Char
-import           Data.List.Split
 import qualified Data.Text       as T
 import           Text.Read
 
--- |insert underscore for each uppercase letter it encounters
--- and make each uppercase letter to lowercase
-insertUs' :: String -> String
-insertUs' s = s >>= f
-  where f c = if isUpper c then '_' : [toLower c] else [toLower c]
+-- a helper function
+-- if it's a capital char, inserts an '_' before
+-- else just returns the character
+-- sample usage:
+-- 'c' returns 'c'
+-- 'C' returns '_c'
+putUsOrReturnChar :: Char -> T.Text
+putUsOrReturnChar c
+  | isUpper c = T.append "_" (T.singleton $ toLower c)
+  | otherwise = T.singleton c
+
+insertUs :: T.Text -> T.Text
+insertUs = T.concatMap putUsOrReturnChar
 
 
-revertCamelCase :: String -> String
-revertCamelCase "" = ""
-revertCamelCase str = let r = insertUs' str in
-                          case r of
-                            '_':t -> t
-                            _     -> r
+revertCamelCase :: T.Text -> T.Text
+revertCamelCase t
+  | T.null t  = T.empty
+  | otherwise = let r = insertUs t in
+                    case T.head r of
+                      '_' -> T.tail r
+                      _     -> r
 
 {-
-XXX - this is a good exercise, the camelCase function can be rewritten using the _head prism and the modify function (called (%~)) https://github.csiro.au/Blockchain/GS1Combinators/blob/master/src/Data/GS1/Utils.hs#L29
-
+XXX - this is a good exercise, the camelCase function can be rewritten using
+the _head prism and the modify function (called (%~)) 
 another question, do revertCamelCase and camelCase functions form an Iso?
 -}
 
-camelCase :: String -> String
-camelCase []     = []
-camelCase (x:xs) = toUpper x : xs
+camelCase :: T.Text -> T.Text
+camelCase = T.toTitle
 
-mkCamelCaseWord' :: [String] -> [String]
-mkCamelCaseWord' sl = camelCase <$> sl
+mkCamelCaseWord :: [T.Text] -> [T.Text]
+mkCamelCaseWord sl = camelCase <$> sl
 
-mkCamelCase :: String -> String
-mkCamelCase =  filter (/=' ') . unwords . mkCamelCaseWord' . splitOn "_"
+mkCamelCase :: T.Text -> T.Text
+mkCamelCase =  T.filter (/=' ') . T.unwords . mkCamelCaseWord . T.splitOn "_"
 
-mkByName :: Read a => String -> Maybe a
-mkByName s = readMaybe (mkCamelCase s)
+mkByName :: Read a => T.Text -> Maybe a
+mkByName s = readMaybe $ T.unpack $ mkCamelCase s
 
-parseURI :: Read a => String -> String -> Maybe a
-parseURI s uri = let puri = T.pack uri
-                     ps = T.pack s
-                     (_, s') = T.breakOn puri ps in
-                     if T.unpack s' == s
-                        then mkByName . last $ splitOn ":" s
-                        else Nothing
+parseURI :: Read a => T.Text -> T.Text -> Maybe a
+parseURI s uri = let(_, s') = T.breakOn uri s in
+                    if s' == s
+                      then mkByName . last $ T.splitOn ":" s
+                      else Nothing
 
 -- returns (Just Right) or Nothing
 either2Maybe :: Either a b -> Maybe b
 either2Maybe (Right x) = Just x
 either2Maybe (Left _) = Nothing
+
+getTotalLength :: [T.Text] -> Int
+getTotalLength ts = sum $ T.length <$> ts
