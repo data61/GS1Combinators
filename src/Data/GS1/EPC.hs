@@ -2,6 +2,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 
 module Data.GS1.EPC where
 

@@ -70,15 +70,15 @@ isoFormats = [
     "%Y%m%dT%H%M%S%QZ"
   ]
 
--- example format: 2005-04-03T20:33:31.116-06:00
--- |parse the string to UTC time,
--- the time zone information will be merged into the time
 
 getFirstJust :: [Maybe a] -> Either ParseFailure a
 getFirstJust [] = Left TimeZoneError
 getFirstJust (Just x : _) = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
+-- example format: 2005-04-03T20:33:31.116-06:00
+-- |parse the string to UTC time,
+-- the time zone information will be merged into the time
 -- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: T.Text -> Either ParseFailure EPCISTime
 parseStr2Time s = getFirstJust $
