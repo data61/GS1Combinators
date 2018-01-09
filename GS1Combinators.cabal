@@ -26,7 +26,6 @@ library
                      , Data.GS1.EventID
                      , Data.GS1.Utils
                      , Data.GS1.Parser.Parser
-                    --  , Data.GS1.URI
   build-depends:       base >= 4.7 && < 5
                      , time >= 1.4.1
                      , bytestring
@@ -67,7 +66,6 @@ executable Parser-exe
                      , Data.GS1.EventID
                      , Data.GS1.Utils
                      , Data.GS1.Parser.Parser
-                    --  , Data.GS1.URI
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:       base
                      , GS1Combinators
