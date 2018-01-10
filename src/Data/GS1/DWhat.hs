@@ -41,7 +41,7 @@ type ParentID  = InstanceLabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
 
--- applies the string to the correct readURI function
+-- |applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
 readLabelEPC :: Maybe Quantity -> T.Text -> Either ParseFailure LabelEPC
 readLabelEPC mQt epcStr =
@@ -51,7 +51,7 @@ readLabelEPC mQt epcStr =
   where
     epcTokens = T.splitOn ":" epcStr
 
--- this is an agnosting version of readLabelEPC
+-- |this is an agnosting version of readLabelEPC
 -- what i mean by that is, it applies the text to the appropriate
 -- readURI function, but in the case of the result being a CL, there would
 -- be no quantity with it, because quantities are read from a separate
