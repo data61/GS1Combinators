@@ -43,7 +43,6 @@ type OutputEPC = LabelEPC
 
 -- applies the string to the correct readURI function
 -- i.e, figures out whether to return InstanceLabel or ClassLabel
--- @todo deprecate this function
 readLabelEPC :: Maybe Quantity -> T.Text -> Either ParseFailure LabelEPC
 readLabelEPC mQt epcStr =
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
@@ -51,6 +50,16 @@ readLabelEPC mQt epcStr =
       fmap IL (readURIInstanceLabelEPC epcTokens)
   where
     epcTokens = T.splitOn ":" epcStr
+
+-- this is an agnosting version of readLabelEPC
+-- what i mean by that is, it applies the text to the appropriate
+-- readURI function, but in the case of the result being a CL, there would
+-- be no quantity with it, because quantities are read from a separate
+-- tag in the XML
+-- so, use this function only when you are certain that you don't have/care about
+-- the quantity information
+urn2LabelEPC :: T.Text -> Either ParseFailure LabelEPC
+urn2LabelEPC = readLabelEPC Nothing 
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
