@@ -59,7 +59,7 @@ readLabelEPC mQt epcStr =
 -- so, use this function only when you are certain that you don't have/care about
 -- the quantity information
 urn2LabelEPC :: T.Text -> Either ParseFailure LabelEPC
-urn2LabelEPC = readLabelEPC Nothing 
+urn2LabelEPC = readLabelEPC Nothing
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
