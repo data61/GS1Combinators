@@ -9,6 +9,28 @@ import qualified Data.Text as T
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
 
+testLabelEPC :: Spec
+testLabelEPC = do
+  describe "Agnostic readLabelEPC -> urn2LabelEPC" $ do
+    -- since SGTIN can be both Instance and Class
+    describe "SGTINs" $ do
+      it "Instance SGTIN" $
+        urn2LabelEPC "urn:epc:id:sgtin:0614141.107346.2017"
+          `shouldBe`
+            (Right $ IL $ SGTIN "0614141" Nothing "107346" "2017")
+      it "Class SGTIN" $
+        urn2LabelEPC "urn:epc:idpat:sgtin:4012345.098765.*"
+          `shouldBe`
+            (Right $ CL (CSGTIN "4012345" Nothing "098765") Nothing)
+    describe "Non SGTINs" $ do
+      it "Instance SSCC" $
+        urn2LabelEPC "urn:epc:id:sscc:0614141.1234567890"
+          `shouldBe`
+            (Right $ IL $ SSCC "0614141" "1234567890")
+      it "Class LGTIN" $
+        urn2LabelEPC "urn:epc:class:lgtin:4012345.012345.998877"
+          `shouldBe`
+            (Right $ CL (LGTIN "4012345" "012345" "998877") Nothing)
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
