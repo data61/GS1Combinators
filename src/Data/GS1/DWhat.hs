@@ -41,8 +41,9 @@ type ParentID  = InstanceLabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
 
--- |applies the string to the correct readURI function
--- i.e, figures out whether to return InstanceLabel or ClassLabel
+-- | Parses an EPC URN into a LabelEPC.
+-- As no quantity information is provided in a URN,
+-- Maybe Quantity is provided so ClassLabel EPCs can be instantiated with it.
 readLabelEPC :: Maybe Quantity -> T.Text -> Either ParseFailure LabelEPC
 readLabelEPC mQt epcStr =
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
@@ -51,13 +52,10 @@ readLabelEPC mQt epcStr =
   where
     epcTokens = T.splitOn ":" epcStr
 
--- |this is an agnosting version of readLabelEPC
--- what i mean by that is, it applies the text to the appropriate
--- readURI function, but in the case of the result being a CL, there would
--- be no quantity with it, because quantities are read from a separate
--- tag in the XML
--- so, use this function only when you are certain that you don't have/care about
--- the quantity information
+-- | Given an EPC URN, return a LabelEPC.
+-- As no quantity information is provided in the URN,
+-- the quantity field in ClassLabelEPC is set to Nothing.
+-- Use this when you do not need Quantity information
 urn2LabelEPC :: T.Text -> Either ParseFailure LabelEPC
 urn2LabelEPC = readLabelEPC Nothing
 
