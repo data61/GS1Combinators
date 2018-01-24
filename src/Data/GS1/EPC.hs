@@ -327,7 +327,7 @@ instance ToSchema LocationEPC
 data SourceDestType = SDOwningParty
                     | SDPossessingParty
                     | SDLocation
-                    deriving (Show, Eq, Generic, Read)
+                    deriving (Show, Eq, Generic, Read, Enum)
 $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
