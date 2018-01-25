@@ -14,8 +14,10 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     Data.GS1
+  exposed-modules:     RunApp.Main
+                    -- exposed for tests
+                     , Data.GS1.Utils
+                     , Data.GS1.Parser.Parser
                      , Data.GS1.DWhat
                      , Data.GS1.DWhy
                      , Data.GS1.DWhen
