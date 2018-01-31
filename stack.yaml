@@ -44,12 +44,6 @@ extra-deps:
 - servant-swagger-1.1.2.1
 - validation-0.6.2
 - storable-tuple-0.0.3.3
-- haddock-api-2.18.1
-# - Cabal-2.0.1.1
-- haddock-library-1.4.4
-- xhtml-3000.2.2
-- base-4.10.1.0
-# - ghc-8.2.1
 # Override default flag values for local packages and extra-deps
 flags: {}
 
