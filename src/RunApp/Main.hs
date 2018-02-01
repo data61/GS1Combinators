@@ -3,8 +3,8 @@
 module RunApp.Main (run) where
 
 import           Data.Aeson.Encode.Pretty
-import           Data.GS1.Parser.Parser
-import           Data.GS1.Event
+import           Data.GS1.Parser.Parser (parseEventByType)
+import           Data.GS1.Event (allEventTypes)
 import           Data.Either
 import           Text.XML
 import           Text.XML.Cursor
