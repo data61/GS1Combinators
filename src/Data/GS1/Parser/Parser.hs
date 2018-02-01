@@ -373,18 +373,13 @@ parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 -- and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
-  let tagS = case et of
-               ObjectEventT         -> "ObjectEvent"
-               AggregationEventT    -> "AggregationEvent"
-               TransactionEventT    -> "TransactionEvent"
-               TransformationEventT -> "TransformationEvent"
-
-  let eCursors = getCursorsByName tagS c
-  let eid = either2Maybe . parseEventID <$> eCursors
-
-  let dwhat = parseDWhat et eCursors
-  let dwhen = parseDWhen <$> eCursors
-  let dwhy = parseDWhy <$> eCursors
-  let dwhere = parseDWhere <$> eCursors
-  let zipd = zip5 eid dwhat dwhen dwhy dwhere
-  parseEventList et zipd
+  let tagS = evTypeToTextLike et
+      eCursors = getCursorsByName tagS c
+      eid = either2Maybe . parseEventID <$> eCursors
+      dwhat = parseDWhat et eCursors
+      dwhen = parseDWhen <$> eCursors
+      dwhy = parseDWhy <$> eCursors
+      dwhere = parseDWhere <$> eCursors
+      zipd = zip5 eid dwhat dwhen dwhy dwhere
+      in
+      parseEventList et zipd
