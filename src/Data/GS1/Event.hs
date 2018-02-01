@@ -34,8 +34,9 @@ instance ToField EventType where
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
-allEvents :: [EventType]
-allEvents = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
+-- Perhaps a better name is ``allEventTypes``
+allEventTypes :: [EventType]
+allEventTypes = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
 
 data Event = Event
   {
