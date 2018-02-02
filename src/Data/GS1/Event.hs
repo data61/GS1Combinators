@@ -49,7 +49,7 @@ allEventTypes = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
 data Event = Event
   {
     _type  :: EventType
-  , _eid   :: Maybe EventID
+  , _eid   :: Maybe EventID -- foreign event id, comes from the XML
   , _what  :: DWhat
   , _when  :: DWhen
   , _why   :: DWhy
