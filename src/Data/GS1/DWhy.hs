@@ -59,8 +59,9 @@ dispositionValidList Disposed =  [] -- nothing defined - page 25 of spec
 dispositionValidFor :: BizStep -> Disposition -> Bool
 dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 
-mkDWhy :: Either ParseFailure BizStep -> Either ParseFailure Disposition
-          -> Either ParseFailure DWhy
+mkDWhy :: Either ParseFailure BizStep
+       -> Either ParseFailure Disposition
+       -> Either ParseFailure DWhy
 mkDWhy (Right step) (Right disp) = Right $ DWhy (Just step) (Just disp)
 mkDWhy (Left TagNotFound) (Left TagNotFound) = Right $ DWhy Nothing Nothing
 mkDWhy (Left TagNotFound) (Right disp) = Right $ DWhy Nothing (Just disp)
