@@ -263,8 +263,8 @@ $(deriveJSON defaultOptions ''LocationReference)
 
 data LocationEPC = SGLN {
     _sglnCompanyPrefix :: GS1CompanyPrefix
-  , _locationRef :: LocationReference
-  , _sglnExt :: Maybe SGLNExtension
+  , _locationRef       :: LocationReference
+  , _sglnExt           :: Maybe SGLNExtension
   }
   deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''LocationEPC)
