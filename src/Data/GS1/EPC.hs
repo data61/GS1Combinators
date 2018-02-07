@@ -253,7 +253,7 @@ instance ToField InstanceLabelEPC where
 
 type Lng = Float
 type Lat = Float
-data LocationReference = LocationReferenceNum
+data LocationReference = LocationReference
                          {
                            _locationRefNum :: T.Text
                          }
@@ -273,15 +273,15 @@ $(deriveJSON defaultOptions ''LocationEPC)
 -- deprecated, kept momentarily for reference
 -- ppLocationReference :: LocationReference -> String
 -- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
--- ppLocationReference (LocationReferenceNum str) = str
+-- ppLocationReference (LocationReference str) = str
 
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
-  printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
+  printURI (SGLN companyPrefix (LocationReference str) (Just ext)) =
     T.append "urn:epc:id:sgln:"
       (T.intercalate "." [companyPrefix, str, ext])
-  printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
+  printURI (SGLN companyPrefix (LocationReference str) Nothing) =
     T.append "urn:epc:id:sgln:"
       (T.intercalate "." [companyPrefix, str])
 
@@ -306,7 +306,7 @@ readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
   | isCorrectLen =
-      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+      Right $ SGLN companyPrefix (LocationReference locationStr) Nothing
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
@@ -315,7 +315,7 @@ readURILocationEPC [companyPrefix, locationStr]
 readURILocationEPC [companyPrefix, locationStr, extNum]
   | isCorrectLen =
       Right $
-        SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
+        SGLN companyPrefix (LocationReference locationStr) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
