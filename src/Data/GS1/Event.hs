@@ -42,7 +42,6 @@ evTypeToTextLike TransformationEventT = "TransformationEvent"
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
--- Perhaps a better name is ``allEventTypes``
 allEventTypes :: [EventType]
 allEventTypes = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
 
