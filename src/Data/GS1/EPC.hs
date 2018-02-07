@@ -17,7 +17,7 @@ import           Data.Swagger
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
 import           Data.GS1.Utils
-
+import           Data.UUID (UUID)
 import           Database.SQLite.Simple.ToField
 
 -- add more type values to this if need be
@@ -253,9 +253,9 @@ instance ToField InstanceLabelEPC where
 
 type Lng = Float
 type Lat = Float
-data LocationReference = LocationReferenceNum
+data LocationReference = LocationReference
                          {
-                           _locationRefNum :: T.Text
+                           _locationRefVal :: T.Text
                          }
   deriving (Read, Eq, Generic, Show)
 $(deriveJSON defaultOptions ''LocationReference)
@@ -263,8 +263,8 @@ $(deriveJSON defaultOptions ''LocationReference)
 
 data LocationEPC = SGLN {
     _sglnCompanyPrefix :: GS1CompanyPrefix
-  , _locationRef :: LocationReference
-  , _sglnExt :: Maybe SGLNExtension
+  , _locationRef       :: LocationReference
+  , _sglnExt           :: Maybe SGLNExtension
   }
   deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''LocationEPC)
@@ -273,15 +273,15 @@ $(deriveJSON defaultOptions ''LocationEPC)
 -- deprecated, kept momentarily for reference
 -- ppLocationReference :: LocationReference -> String
 -- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
--- ppLocationReference (LocationReferenceNum str) = str
+-- ppLocationReference (LocationReference str) = str
 
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
-  printURI (SGLN companyPrefix (LocationReferenceNum str) (Just ext)) =
+  printURI (SGLN companyPrefix (LocationReference str) (Just ext)) =
     T.append "urn:epc:id:sgln:"
       (T.intercalate "." [companyPrefix, str, ext])
-  printURI (SGLN companyPrefix (LocationReferenceNum str) Nothing) =
+  printURI (SGLN companyPrefix (LocationReference str) Nothing) =
     T.append "urn:epc:id:sgln:"
       (T.intercalate "." [companyPrefix, str])
 
@@ -306,7 +306,7 @@ readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 -- without extension
 readURILocationEPC [companyPrefix, locationStr]
   | isCorrectLen =
-      Right $ SGLN companyPrefix (LocationReferenceNum locationStr) Nothing
+      Right $ SGLN companyPrefix (LocationReference locationStr) Nothing
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
@@ -315,7 +315,7 @@ readURILocationEPC [companyPrefix, locationStr]
 readURILocationEPC [companyPrefix, locationStr, extNum]
   | isCorrectLen =
       Right $
-        SGLN companyPrefix (LocationReferenceNum locationStr) (getExt extNum)
+        SGLN companyPrefix (LocationReference locationStr) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
       isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
@@ -538,7 +538,13 @@ instance ToSchema BizTransaction
 
 
 -- | TransformationID
-type TransformationID = T.Text
+-- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
+-- Some transformation business processes take place over a long period of time, and so it is more
+-- appropriate to represent them as a series of EPCIS events. A TransfomationID may be included
+-- in two or more TransformationEvents to link them together. When events share an identical
+-- TransformationID, the meaning is that the inputs to any of those events may have contributed in
+-- some way to each of the outputs in any of those same events.
+type TransformationID = UUID
 
 data Action = Add
             | Observe
