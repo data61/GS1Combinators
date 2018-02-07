@@ -255,7 +255,7 @@ type Lng = Float
 type Lat = Float
 data LocationReference = LocationReference
                          {
-                           _locationRefNum :: T.Text
+                           _locationRefVal :: T.Text
                          }
   deriving (Read, Eq, Generic, Show)
 $(deriveJSON defaultOptions ''LocationReference)
