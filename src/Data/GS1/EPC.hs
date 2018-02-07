@@ -17,7 +17,7 @@ import           Data.Swagger
 import           Data.Time
 import           Data.ByteString.Char8 (pack)
 import           Data.GS1.Utils
-
+import           Data.UUID (UUID)
 import           Database.SQLite.Simple.ToField
 
 -- add more type values to this if need be
@@ -538,7 +538,13 @@ instance ToSchema BizTransaction
 
 
 -- | TransformationID
-type TransformationID = T.Text
+-- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
+-- Some transformation business processes take place over a long period of time, and so it is more
+-- appropriate to represent them as a series of EPCIS events. A TransfomationID may be included
+-- in two or more TransformationEvents to link them together. When events share an identical
+-- TransformationID, the meaning is that the inputs to any of those events may have contributed in
+-- some way to each of the outputs in any of those same events.
+type TransformationID = UUID
 
 data Action = Add
             | Observe

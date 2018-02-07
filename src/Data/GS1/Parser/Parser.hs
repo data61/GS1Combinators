@@ -17,7 +17,7 @@ import           Data.Time.LocalTime
 import           Data.UUID           hiding (null)
 import           Data.XML.Types      hiding (Event)
 import           Data.Time
-
+import           Data.UUID (fromString)
 import           Text.XML.Cursor
 
 import           Control.Applicative
@@ -302,7 +302,7 @@ parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
   let tId = c $/ element "transformationID" &/ content
   case tId of
-    [t] -> Just t
+    [t] -> fromString . T.unpack $ t
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
