@@ -39,6 +39,14 @@ evTypeToTextLike AggregationEventT    = "AggregationEvent"
 evTypeToTextLike TransactionEventT    = "TransactionEvent"
 evTypeToTextLike TransformationEventT = "TransformationEvent"
 
+-- | Calls the appropriate evTypeToTextLike for a DWhat
+dwhatToEventTextLike :: IsString a => DWhat -> a
+dwhatToEventTextLike (ObjectDWhat _ _ ) = evTypeToTextLike ObjectEventT
+dwhatToEventTextLike (AggregationDWhat _ _ _ ) = evTypeToTextLike AggregationEventT
+dwhatToEventTextLike (TransactionDWhat _ _ _ _) = evTypeToTextLike TransactionEventT
+dwhatToEventTextLike (TransformationDWhat _ _ _) = evTypeToTextLike TransformationEventT
+
+
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
