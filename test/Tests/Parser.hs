@@ -600,7 +600,7 @@ testParser = do
           -- a dwhat element
           (
             AggregationDWhat Observe
-            (Just (SSCC "0614141" "1234567890")) -- Maybe ParentID
+            (Just (SSCC "0614141" "1234567890")) -- Maybe ParentLabel
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
               IL $ SGTIN "0614141" Nothing "107346" "2018",

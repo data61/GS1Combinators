@@ -37,7 +37,7 @@ instance ToSchema LabelEPC
 instance ToField LabelEPC where
     toField = toField . pack . show
 
-type ParentID  = InstanceLabelEPC
+type ParentLabel  = InstanceLabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
 
@@ -67,19 +67,19 @@ data DWhat = -- ObjectDWhat action epcList
               _objAction  :: Action
             , _objEpcList :: [LabelEPC]
             }
-          -- AggregationDWhat action parentID childEPC
+          -- AggregationDWhat action parentLabel childEPC
           | AggregationDWhat
             {
               _aggAction       :: Action
-            , _aggParentId     :: Maybe ParentID
+            , _aggParentLabel     :: Maybe ParentLabel
             , _aggChildEpcList :: [LabelEPC]
             }
-          -- TransactionDWhat action parentID(URI) bizTransactionList epcList
+          -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
           | TransactionDWhat
             {
               _transactionAction             :: Action 
-            , _transactionParentIdURI        :: Maybe ParentID
+            , _transactionParentLabel        :: Maybe ParentLabel
             , _transactionBizTransactionList :: [BizTransaction]
             , _transactionEpcList            :: [LabelEPC]
             }
