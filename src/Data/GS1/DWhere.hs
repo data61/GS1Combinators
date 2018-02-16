@@ -2,6 +2,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
+-- | module for the Where dimension
+-- contains a DWhere type and relevant type aliases
+
 module Data.GS1.DWhere where
 
 import           GHC.Generics

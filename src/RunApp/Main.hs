@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | contains the main function if we want to run the app
+
 module RunApp.Main (run) where
 
 import           Data.Aeson.Encode.Pretty
