@@ -3,6 +3,9 @@
 {-# LANGUAGE TypeOperators   #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-} --, UndecidableInstances #-}
 
+-- | module for an EventID
+-- just contains the EventID type
+
 module Data.GS1.EventID where
 
 import           Control.Lens
