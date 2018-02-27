@@ -4,6 +4,14 @@
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
+-- | module for events
+-- events can be an ObjectEvent (when the object is created),
+--   an aggegation (collection of multiple events),
+--   a transaction (some transaction has been made between 2 parties),
+--   or a transformation (some product has been converted into another)
+-- contains Event-related types helper functions,
+--   and functions for converting a DWhat to a string representation of the relevant event
+
 module Data.GS1.Event where
 
 import            GHC.Generics
