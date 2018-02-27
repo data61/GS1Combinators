@@ -1,4 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
+
+-- | module containing various utility functions
+-- none of these functions are specific to GS1
+
 module Data.GS1.Utils (
   camelCase
 , revertCamelCase

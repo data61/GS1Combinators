@@ -2,6 +2,9 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | module for the What Dimension
+-- contains labelepc and printer and parser for it, and DWhat type
+
 module Data.GS1.DWhat where
 
 import           GHC.Generics

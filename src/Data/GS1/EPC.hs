@@ -4,6 +4,8 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | module containing error types, URI class, epc types
+-- the types in this file cover all dimensions
 
 module Data.GS1.EPC where
 

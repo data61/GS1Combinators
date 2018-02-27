@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | module providing parser helper functions
+
 {- 
   Unless otherwise stated, all `parse` functions take in a top level cursor
   Here, top level cursor means an event level cursor. following is an example,
