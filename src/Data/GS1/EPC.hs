@@ -545,7 +545,10 @@ data Action = Add
             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
-instance ToParamSchema Action
+instance ToParamSchema Action where
+  toParamSchema _ = mempty
+    & type_ .~ SwaggerString
+
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
