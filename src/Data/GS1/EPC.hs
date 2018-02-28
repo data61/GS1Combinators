@@ -554,6 +554,7 @@ data Action = Add
             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
+instance ToParamSchema Action
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
