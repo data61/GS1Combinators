@@ -26,9 +26,6 @@ import qualified  Data.Text as T
 import            Data.String (IsString)
 import            Data.Aeson.TH
 import            Data.Swagger
-import            Data.ByteString.Char8 (pack)
-import            Database.SQLite.Simple.ToField
-
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -38,8 +35,6 @@ data EventType = ObjectEventT
 
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
-instance ToField EventType where
-  toField = toField . pack . show
 
 evTypeToTextLike :: IsString a => EventType -> a
 evTypeToTextLike ObjectEventT         = "ObjectEvent"

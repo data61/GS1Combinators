@@ -15,8 +15,6 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           GHC.Generics
 import           Data.Swagger
-import           Database.SQLite.Simple.ToField
-import           Data.ByteString.Char8 (pack)
 import           Web.HttpApiData
 
 newtype EventID = EventID {getEventId :: UUID}
@@ -26,10 +24,6 @@ makeWrapped ''EventID
 
 instance FromHttpApiData EventID where
   parseQueryParam httpData = liftM EventID $ parseQueryParam httpData
-
-instance ToField EventID where
-  toField = toField . pack . show
-
 
 --instance ToSchema UUID
 $(deriveJSON defaultOptions ''EventID)
