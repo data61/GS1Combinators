@@ -17,10 +17,8 @@ import           Data.Aeson.TH
 import           Data.Swagger
 
 import           Data.Time
-import           Data.ByteString.Char8 (pack)
 import           Data.GS1.Utils
 import           Data.UUID (UUID)
-import           Database.SQLite.Simple.ToField
 
 -- add more type values to this if need be
 data ParseFailure = InvalidLength
@@ -131,9 +129,6 @@ data ClassLabelEPC =  LGTIN
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
     readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
-
-instance ToField ClassLabelEPC where
-  toField = toField . pack . show
 
 -- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
@@ -248,10 +243,6 @@ printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
-
-instance ToField InstanceLabelEPC where
-    toField = toField . pack . show
-
 
 type Lng = Float
 type Lat = Float
@@ -651,9 +642,6 @@ $(deriveJSON defaultOptions ''TimeZone)
 instance ToParamSchema TimeZone where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
-
-instance ToField TimeZone where
-  toField = toField . pack . show
 
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477

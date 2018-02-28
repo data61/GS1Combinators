@@ -15,10 +15,6 @@ import           Data.Aeson
 import           Data.Aeson.TH
 
 import           Data.Swagger
-import           Database.SQLite.Simple.ToField
-import           Data.Aeson.Text
-import           Data.ByteString.Char8 (pack)
-import qualified Data.Text.Lazy as TxtL
 import qualified Data.Text      as T
 
 import           Data.GS1.EPC
@@ -36,9 +32,6 @@ data LabelEPC = CL
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
-
-instance ToField LabelEPC where
-    toField = toField . pack . show
 
 type ParentLabel  = InstanceLabelEPC
 type InputEPC  = LabelEPC
@@ -97,9 +90,6 @@ data DWhat = -- ObjectDWhat action epcList
 
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
-
-instance ToField DWhat where
-  toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
 ppDWhat (ObjectDWhat a epcs) =
