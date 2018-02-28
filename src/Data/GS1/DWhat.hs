@@ -74,7 +74,7 @@ data DWhat = -- ObjectDWhat action epcList
           | AggregationDWhat
             {
               _aggAction       :: Action
-            , _aggParentLabel     :: Maybe ParentLabel
+            , _aggParentLabel  :: Maybe ParentLabel
             , _aggChildEpcList :: [LabelEPC]
             }
           -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
