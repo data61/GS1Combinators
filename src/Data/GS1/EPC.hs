@@ -15,10 +15,12 @@ import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
+import           Web.HttpApiData
 
 import           Data.Time
 import           Data.GS1.Utils
 import           Data.UUID (UUID)
+import           Data.Bifunctor (first)
 
 -- add more type values to this if need be
 data ParseFailure = InvalidLength
@@ -548,7 +550,8 @@ instance ToSchema Action
 instance ToParamSchema Action where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
-
+instance FromHttpApiData Action where
+  parseQueryParam t = first (T.pack . show) (mkAction t)
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
