@@ -35,5 +35,5 @@ sent to us by the GS1 team, not present in the documentation.
 
 # Dimensions
 
-There are What, When, Where and Why dimensions for suppy chain events,
+There are `What`, `When`, `Where` and `Why` dimensions for suppy chain events,
 representing all information about the event.
