@@ -26,24 +26,14 @@ You  may be asked to create an account.
 
 # Info about GS1Combinators
 
-Information about the standard comes from the following documents:
-
-doc/CBV-Standard-1-2-r-2016-09-29.pdf
-
-doc/EPCIS_Guideline.pdf
-
-doc/EPCIS-Standard-1.2-r-2016-09-29.pdf
-
-doc/GS1_EPC_TDS_i1_11.pdf
+The documents specifying the implemented standard can be found in the directory `doc`.
 
 GS1Combinators contains types representing all the business events.
 
-The files in "test/test-xml/EPCIS xml files" contain additional examples sent to us by the GS1 team, not present in the documentation.
+The files in `test/test-xml/EPCIS xml files` contain additional examples
+sent to us by the GS1 team, not present in the documentation.
 
 # Dimensions
 
-There are What, When, Where and Why dimensions for business events, representing all information about the event. They each represent their obvious meaning.
-
-# Tests
-
-The tests filenames correspond to the module they test. They generally parse XML and check the result.
+There are What, When, Where and Why dimensions for suppy chain events,
+representing all information about the event.

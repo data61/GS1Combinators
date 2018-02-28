@@ -1,10 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE TypeOperators   #-}
-{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-} --, UndecidableInstances #-}
-
--- | module for an EventID
--- just contains the EventID type
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Data.GS1.EventID where
 
@@ -25,7 +23,6 @@ makeWrapped ''EventID
 instance FromHttpApiData EventID where
   parseQueryParam httpData = liftM EventID $ parseQueryParam httpData
 
---instance ToSchema UUID
 $(deriveJSON defaultOptions ''EventID)
 instance ToSchema EventID
 

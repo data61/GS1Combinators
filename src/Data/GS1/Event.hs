@@ -4,14 +4,6 @@
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
--- | module for events
--- events can be an ObjectEvent (when the object is created),
---   an aggegation (collection of multiple events),
---   a transaction (some transaction has been made between 2 parties),
---   or a transformation (some product has been converted into another)
--- contains Event-related types helper functions,
---   and functions for converting a DWhat to a string representation of the relevant event
-
 module Data.GS1.Event where
 
 import            GHC.Generics
@@ -28,9 +20,14 @@ import            Data.Aeson.TH
 import            Data.Swagger
 
 data EventType = ObjectEventT
+               -- When something is created
                | AggregationEventT
+               -- When something gets packaged into a container, or gets unpacked.
                | TransactionEventT
+               -- Some transaction has been made between 2 or more parties
                | TransformationEventT
+               -- Some product has been converted into another
+               -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
                deriving (Show, Eq, Generic, Enum, Read)
 
 $(deriveJSON defaultOptions ''EventType)
