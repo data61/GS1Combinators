@@ -2,9 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
--- | module for the When dimension
--- just contains a DWhen type
-
 module Data.GS1.DWhen where
 
 import Data.Time
