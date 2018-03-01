@@ -2,9 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
--- | module for Where dimension
--- contains a DWhy type, function to make a DWhy, and information about valid bizsteps for a disposition
-
 module Data.GS1.DWhy where
 
 import           GHC.Generics
