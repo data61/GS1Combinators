@@ -40,11 +40,11 @@ stringify TransactionEventT    = "TransactionEvent"
 stringify TransformationEventT = "TransformationEvent"
 
 -- | Calls the appropriate stringify for a DWhat
-getEventType :: IsString a => DWhat -> a
-getEventType (ObjectDWhat _ _ ) = stringify ObjectEventT
-getEventType (AggregationDWhat _ _ _ ) = stringify AggregationEventT
-getEventType (TransactionDWhat _ _ _ _) = stringify TransactionEventT
-getEventType (TransformationDWhat _ _ _) = stringify TransformationEventT
+getEventType :: DWhat -> EventType
+getEventType (ObjectDWhat _ _ ) = ObjectEventT
+getEventType (AggregationDWhat _ _ _ ) = AggregationEventT
+getEventType (TransactionDWhat _ _ _ _) = TransactionEventT
+getEventType (TransformationDWhat _ _ _) = TransformationEventT
 
 
 mkEventType :: T.Text -> Maybe EventType
