@@ -33,18 +33,18 @@ data EventType = ObjectEventT
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
 
-evTypeToTextLike :: IsString a => EventType -> a
-evTypeToTextLike ObjectEventT         = "ObjectEvent"
-evTypeToTextLike AggregationEventT    = "AggregationEvent"
-evTypeToTextLike TransactionEventT    = "TransactionEvent"
-evTypeToTextLike TransformationEventT = "TransformationEvent"
+stringify :: IsString a => EventType -> a
+stringify ObjectEventT         = "ObjectEvent"
+stringify AggregationEventT    = "AggregationEvent"
+stringify TransactionEventT    = "TransactionEvent"
+stringify TransformationEventT = "TransformationEvent"
 
--- | Calls the appropriate evTypeToTextLike for a DWhat
-dwhatToEventTextLike :: IsString a => DWhat -> a
-dwhatToEventTextLike (ObjectDWhat _ _ ) = evTypeToTextLike ObjectEventT
-dwhatToEventTextLike (AggregationDWhat _ _ _ ) = evTypeToTextLike AggregationEventT
-dwhatToEventTextLike (TransactionDWhat _ _ _ _) = evTypeToTextLike TransactionEventT
-dwhatToEventTextLike (TransformationDWhat _ _ _) = evTypeToTextLike TransformationEventT
+-- | Calls the appropriate stringify for a DWhat
+getEventType :: IsString a => DWhat -> a
+getEventType (ObjectDWhat _ _ ) = stringify ObjectEventT
+getEventType (AggregationDWhat _ _ _ ) = stringify AggregationEventT
+getEventType (TransactionDWhat _ _ _ _) = stringify TransactionEventT
+getEventType (TransformationDWhat _ _ _) = stringify TransformationEventT
 
 
 mkEventType :: T.Text -> Maybe EventType

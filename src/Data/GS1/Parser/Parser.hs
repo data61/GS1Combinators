@@ -375,7 +375,7 @@ parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 -- and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
-  let tagS = evTypeToTextLike et
+  let tagS = stringify et
       eCursors = getCursorsByName tagS c
       eid = either2Maybe . parseEventID <$> eCursors
       dwhat = parseDWhat et eCursors
