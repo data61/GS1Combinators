@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | module providing parser helper functions
+
 {- 
   Unless otherwise stated, all `parse` functions take in a top level cursor
   Here, top level cursor means an event level cursor. following is an example,
@@ -239,11 +241,11 @@ parseClassLabel c = readLabelEPC mQt labelStr
 <parentID>urn:epc:id:sscc:0614141.1234567890</parentID>
 -}
 -- and returns the equivalent instanceLabel data-type
-parseParentID :: Cursor -> Maybe ParentID
-parseParentID c =
+parseParentLabel :: Cursor -> Maybe ParentLabel
+parseParentLabel c =
   case c $/ element "parentID" &/ content of
     (p:_) -> (either2Maybe . readURI) p
-    _   -> Nothing
+    _     -> Nothing
 
 
 -- insName --> The name of the cursor under which the instanceLabelEPCs lie
@@ -277,7 +279,7 @@ parseObjectDWhat c = do
 -- |parse and construct AggregationDWhat dimension
 parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
 parseAggregationDWhat c = do
-  let pid = parseParentID c
+  let pid = parseParentLabel c
   let (errs, epcs) = partitionEithers $
         parseLabelEPCs "childEPCs" "childQuantityList" c
   let act = parseAction c
@@ -289,7 +291,7 @@ parseAggregationDWhat c = do
 parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
-  let pid = parseParentID c
+  let pid = parseParentLabel c
   let (epcErrs, epcs) = partitionEithers $
         parseLabelEPCs "epcList" "quantityList" c
   let act = parseAction c
@@ -373,7 +375,7 @@ parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 -- and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et = do
-  let tagS = evTypeToTextLike et
+  let tagS = stringify et
       eCursors = getCursorsByName tagS c
       eid = either2Maybe . parseEventID <$> eCursors
       dwhat = parseDWhat et eCursors

@@ -4,6 +4,8 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | module containing error types, URI class, epc types
+-- the types in this file cover all dimensions
 
 module Data.GS1.EPC where
 
@@ -13,12 +15,12 @@ import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
+import           Web.HttpApiData
 
 import           Data.Time
-import           Data.ByteString.Char8 (pack)
 import           Data.GS1.Utils
 import           Data.UUID (UUID)
-import           Database.SQLite.Simple.ToField
+import           Data.Bifunctor (first)
 
 -- add more type values to this if need be
 data ParseFailure = InvalidLength
@@ -129,9 +131,6 @@ data ClassLabelEPC =  LGTIN
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
     readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
-
-instance ToField ClassLabelEPC where
-  toField = toField . pack . show
 
 -- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
@@ -246,10 +245,6 @@ printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
-
-instance ToField InstanceLabelEPC where
-    toField = toField . pack . show
-
 
 type Lng = Float
 type Lat = Float
@@ -552,6 +547,11 @@ data Action = Add
             deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
+instance ToParamSchema Action where
+  toParamSchema _ = mempty
+    & type_ .~ SwaggerString
+instance FromHttpApiData Action where
+  parseQueryParam t = first (T.pack . show) (mkAction t)
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
@@ -648,9 +648,6 @@ $(deriveJSON defaultOptions ''TimeZone)
 instance ToParamSchema TimeZone where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
-
-instance ToField TimeZone where
-  toField = toField . pack . show
 
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477

@@ -12,10 +12,6 @@ import           Data.Aeson
 import           Data.Aeson.TH
 
 import           Data.Swagger
-import           Database.SQLite.Simple.ToField
-import           Data.Aeson.Text
-import           Data.ByteString.Char8 (pack)
-import qualified Data.Text.Lazy as TxtL
 import qualified Data.Text      as T
 
 import           Data.GS1.EPC
@@ -34,10 +30,7 @@ data LabelEPC = CL
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
-instance ToField LabelEPC where
-    toField = toField . pack . show
-
-type ParentID  = InstanceLabelEPC
+type ParentLabel  = InstanceLabelEPC
 type InputEPC  = LabelEPC
 type OutputEPC = LabelEPC
 
@@ -67,19 +60,19 @@ data DWhat = -- ObjectDWhat action epcList
               _objAction  :: Action
             , _objEpcList :: [LabelEPC]
             }
-          -- AggregationDWhat action parentID childEPC
+          -- AggregationDWhat action parentLabel childEPC
           | AggregationDWhat
             {
               _aggAction       :: Action
-            , _aggParentId     :: Maybe ParentID
+            , _aggParentLabel  :: Maybe ParentLabel
             , _aggChildEpcList :: [LabelEPC]
             }
-          -- TransactionDWhat action parentID(URI) bizTransactionList epcList
+          -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
           -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
           | TransactionDWhat
             {
               _transactionAction             :: Action 
-            , _transactionParentIdURI        :: Maybe ParentID
+            , _transactionParentLabel        :: Maybe ParentLabel
             , _transactionBizTransactionList :: [BizTransaction]
             , _transactionEpcList            :: [LabelEPC]
             }
@@ -94,9 +87,6 @@ data DWhat = -- ObjectDWhat action epcList
 
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
-
-instance ToField DWhat where
-  toField = toField . TxtL.toStrict . encodeToLazyText
 
 ppDWhat :: DWhat -> String
 ppDWhat (ObjectDWhat a epcs) =
