@@ -17,7 +17,7 @@ import           Data.ByteString.Char8 (pack)
 import           Web.HttpApiData
 
 newtype EventID = EventID UUID.UUID
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Read)
 
 makeWrapped ''EventID
 
