@@ -16,8 +16,10 @@ import           Database.SQLite.Simple.ToField
 import           Data.ByteString.Char8 (pack)
 import           Web.HttpApiData
 
-newtype EventID = EventID UUID.UUID
+
+newtype EventID = EventID {getEventId :: UUID}
   deriving (Show, Eq, Generic, Read)
+
 
 makeWrapped ''EventID
 

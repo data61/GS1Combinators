@@ -9,6 +9,28 @@ import qualified Data.Text as T
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
 
+testLabelEPC :: Spec
+testLabelEPC = do
+  describe "Agnostic readLabelEPC -> urn2LabelEPC" $ do
+    -- since SGTIN can be both Instance and Class
+    describe "SGTINs" $ do
+      it "Instance SGTIN" $
+        urn2LabelEPC "urn:epc:id:sgtin:0614141.107346.2017"
+          `shouldBe`
+            (Right $ IL $ SGTIN "0614141" Nothing "107346" "2017")
+      it "Class SGTIN" $
+        urn2LabelEPC "urn:epc:idpat:sgtin:4012345.098765.*"
+          `shouldBe`
+            (Right $ CL (CSGTIN "4012345" Nothing "098765") Nothing)
+    describe "Non SGTINs" $ do
+      it "Instance SSCC" $
+        urn2LabelEPC "urn:epc:id:sscc:0614141.1234567890"
+          `shouldBe`
+            (Right $ IL $ SSCC "0614141" "1234567890")
+      it "Class LGTIN" $
+        urn2LabelEPC "urn:epc:class:lgtin:4012345.012345.998877"
+          `shouldBe`
+            (Right $ CL (LGTIN "4012345" "012345" "998877") Nothing)
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
@@ -206,19 +228,6 @@ testPpDWhat = do
 
 
   describe "work with a TransformationDWhat" $ do
-    it "create TransformationDWhat" $
-      ppDWhat (TransformationDWhat (Just "12345")
-        [IL (SGTIN "0614141__" Nothing "107346__" "2017__"),
-        IL (SGTIN "0614141__" Nothing "107346__" "2018__")]
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
-          `shouldBe`
-          "TRANSFORMATION WHAT\nJust \"12345\"\n" ++
-          "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141__\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346__\", _sgtinSerialNum = \"2017__\"}}," ++
-          "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141__\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346__\", _sgtinSerialNum = \"2018__\"}}]\n" ++
-          "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-          "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
-
     it "create TransformationDWhat, empty" $
       ppDWhat (TransformationDWhat Nothing [] [])
         `shouldBe` "TRANSFORMATION WHAT\nNothing\n[]\n[]\n"

@@ -15,10 +15,12 @@ import            Data.GS1.EventID
 import            Data.GS1.Utils
 import            Data.Aeson
 import qualified  Data.Text as T
+import            Data.String (IsString)
 import            Data.Aeson.TH
 import            Data.Swagger
 import            Data.ByteString.Char8 (pack)
 import            Database.SQLite.Simple.ToField
+
 
 data EventType = ObjectEventT
                | AggregationEventT
@@ -31,16 +33,22 @@ instance ToSchema EventType
 instance ToField EventType where
   toField = toField . pack . show
 
+evTypeToTextLike :: IsString a => EventType -> a
+evTypeToTextLike ObjectEventT         = "ObjectEvent"
+evTypeToTextLike AggregationEventT    = "AggregationEvent"
+evTypeToTextLike TransactionEventT    = "TransactionEvent"
+evTypeToTextLike TransformationEventT = "TransformationEvent"
+
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
-allEvents :: [EventType]
-allEvents = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
+allEventTypes :: [EventType]
+allEventTypes = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
 
 data Event = Event
   {
     _type  :: EventType
-  , _eid   :: Maybe EventID
+  , _eid   :: Maybe EventID -- foreign event id, comes from the XML
   , _what  :: DWhat
   , _when  :: DWhen
   , _why   :: DWhy
