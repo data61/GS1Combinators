@@ -1,6 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
-
-import Data.GS1()
+import RunApp.Main (run)
 
 main :: IO ()
-main = pure ()
+main = run

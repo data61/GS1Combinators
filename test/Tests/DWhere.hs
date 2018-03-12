@@ -9,12 +9,12 @@ testReadSGLN :: Spec
 testReadSGLN =
   describe "Location - Testing readURI" $
     describe "SGLN with location reference" $ do
-      it "LocationReferenceNum with extension" $
+      it "LocationReference with extension" $
         readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe`
-          Right (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
-      it "LocationReferenceNum without extension" $
+          Right (SGLN "0614141" (LocationReference "12345") (Just "400"))
+      it "LocationReference without extension" $
         readURI "urn:epc:id:sgln:0614141.12345" `shouldBe`
-          Right (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
+          Right (SGLN "0614141" (LocationReference "12345") Nothing)
       it "Invalid URI" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC)
           "this:is:invalid"
@@ -41,9 +41,9 @@ testPrintSGLN :: Spec
 testPrintSGLN =
   describe "Location - Testing printURI" $
     describe "SGLN with location reference" $ do
-      it "LocationReferenceNum with extension" $
-        printURI (SGLN "0614141" (LocationReferenceNum "12345") (Just "400"))
+      it "LocationReference with extension" $
+        printURI (SGLN "0614141" (LocationReference "12345") (Just "400"))
           `shouldBe` "urn:epc:id:sgln:0614141.12345.400"
-      it "LocationReferenceNum without extension" $
-        printURI (SGLN "0614141" (LocationReferenceNum "12345") Nothing)
+      it "LocationReference without extension" $
+        printURI (SGLN "0614141" (LocationReference "12345") Nothing)
           `shouldBe` "urn:epc:id:sgln:0614141.12345"
