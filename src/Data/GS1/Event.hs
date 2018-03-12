@@ -18,26 +18,34 @@ import qualified  Data.Text as T
 import            Data.String (IsString)
 import            Data.Aeson.TH
 import            Data.Swagger
-import            Data.ByteString.Char8 (pack)
-import            Database.SQLite.Simple.ToField
-
 
 data EventType = ObjectEventT
+               -- When something is created
                | AggregationEventT
+               -- When something gets packaged into a container, or gets unpacked.
                | TransactionEventT
+               -- Some transaction has been made between 2 or more parties
                | TransformationEventT
+               -- Some product has been converted into another
+               -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
                deriving (Show, Eq, Generic, Enum, Read)
 
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
-instance ToField EventType where
-  toField = toField . pack . show
 
-evTypeToTextLike :: IsString a => EventType -> a
-evTypeToTextLike ObjectEventT         = "ObjectEvent"
-evTypeToTextLike AggregationEventT    = "AggregationEvent"
-evTypeToTextLike TransactionEventT    = "TransactionEvent"
-evTypeToTextLike TransformationEventT = "TransformationEvent"
+stringify :: IsString a => EventType -> a
+stringify ObjectEventT         = "ObjectEvent"
+stringify AggregationEventT    = "AggregationEvent"
+stringify TransactionEventT    = "TransactionEvent"
+stringify TransformationEventT = "TransformationEvent"
+
+-- | Calls the appropriate stringify for a DWhat
+getEventType :: DWhat -> EventType
+getEventType (ObjectDWhat _ _ ) = ObjectEventT
+getEventType (AggregationDWhat _ _ _ ) = AggregationEventT
+getEventType (TransactionDWhat _ _ _ _) = TransactionEventT
+getEventType (TransformationDWhat _ _ _) = TransformationEventT
+
 
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName

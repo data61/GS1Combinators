@@ -10,7 +10,6 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Aeson.Text
 import           Data.Swagger
-import           Database.SQLite.Simple.ToField
 import qualified Data.Text.Lazy as TxtL
 
 data DWhy = DWhy
@@ -21,9 +20,6 @@ data DWhy = DWhy
   deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DWhy)
 instance ToSchema DWhy
-
-instance ToField DWhy where
-  toField = toField . TxtL.toStrict . encodeToLazyText
 
 -- given a disposition, returns the list of valid BizSteps
 dispositionValidList :: Disposition -> [BizStep] 
