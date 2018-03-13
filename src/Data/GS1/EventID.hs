@@ -15,8 +15,10 @@ import           GHC.Generics
 import           Data.Swagger
 import           Web.HttpApiData
 
+
 newtype EventID = EventID {getEventId :: UUID}
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Read)
+
 
 makeWrapped ''EventID
 
