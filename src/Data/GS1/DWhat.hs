@@ -79,9 +79,9 @@ data DWhat = -- ObjectDWhat action epcList
           -- TransformationDWhat transformationID inputEPCList outputEPCList
           | TransformationDWhat
             {
-              _TransformationId            :: Maybe TransformationID
-            , _TransformationInputEpcList  :: [InputEPC]
-            , _TransformationOutputEpcList :: [OutputEPC]
+              _transformationId            :: Maybe TransformationID
+            , _transformationInputEpcList  :: [InputEPC]
+            , _transformationOutputEpcList :: [OutputEPC]
             }
           deriving (Show, Eq, Generic)
 
