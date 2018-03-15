@@ -231,3 +231,18 @@ testPpDWhat = do
     it "create TransformationDWhat, empty" $
       ppDWhat (TransformationDWhat Nothing [] [])
         `shouldBe` "TRANSFORMATION WHAT\nNothing\n[]\n[]\n"
+
+    it "create TransformationDWhat, empty" $
+      ppDWhat
+        (TransformationDWhat Nothing
+          [IL (SGTIN "0614141" Nothing "107346" "2017"),
+          IL (SGTIN "0614141" Nothing "107346" "2018")]
+
+          [CL (CSGTIN "4012345" Nothing "098765") Nothing]
+          )
+        `shouldBe`
+          "TRANSFORMATION WHAT\nNothing\n" ++
+          "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
+          "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n" ++
+          "[CL {_clClassLabelEpc = CSGTIN {_csgtinCompanyPrefix = \"4012345\", _csgtinSgtinFilterValue = Nothing, _csgtinItemReference = \"098765\"}, " ++
+          "_clQuantity = Nothing}]\n"
