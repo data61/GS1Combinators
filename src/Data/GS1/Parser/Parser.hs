@@ -16,7 +16,7 @@ import           Data.List
 import           Data.Either
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
-import           Data.UUID           hiding (null)
+-- import           Data.UUID           hiding (null)
 import           Data.XML.Types      hiding (Event)
 import           Data.Time
 import           Data.UUID (fromString)
