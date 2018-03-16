@@ -1,34 +1,35 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeOperators         #-}
-{-# LANGUAGE OverloadedStrings     #-}
 
 module Data.GS1.Event where
 
-import            GHC.Generics
-import            Data.GS1.DWhat
-import            Data.GS1.DWhen
-import            Data.GS1.DWhere
-import            Data.GS1.DWhy
-import            Data.GS1.EventID
-import            Data.GS1.Utils
-import            Data.Aeson
-import qualified  Data.Text as T
-import            Data.String (IsString)
-import            Data.Aeson.TH
-import            Data.Swagger
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EventID
+import           Data.GS1.Utils
+import           Data.String      (IsString)
+import           Data.Swagger
+import qualified Data.Text        as T
+import           GHC.Generics
 
-data EventType = ObjectEventT
-               -- When something is created
-               | AggregationEventT
-               -- When something gets packaged into a container, or gets unpacked.
-               | TransactionEventT
-               -- Some transaction has been made between 2 or more parties
-               | TransformationEventT
-               -- Some product has been converted into another
-               -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
-               deriving (Show, Eq, Generic, Enum, Read)
+data EventType
+  -- | When something is created
+  = ObjectEventT
+  -- | When something gets packaged into a container, or gets unpacked.
+  | AggregationEventT
+  -- | Some transaction has been made between 2 or more parties
+  | TransactionEventT
+  -- | Some product has been converted into another
+  -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
+  | TransformationEventT
+  deriving (Show, Eq, Generic, Enum, Read)
 
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
@@ -41,21 +42,21 @@ stringify TransformationEventT = "TransformationEvent"
 
 -- | Calls the appropriate stringify for a DWhat
 getEventType :: DWhat -> EventType
-getEventType (ObjectDWhat _ _ ) = ObjectEventT
-getEventType (AggregationDWhat _ _ _ ) = AggregationEventT
-getEventType (TransactionDWhat _ _ _ _) = TransactionEventT
-getEventType (TransformationDWhat _ _ _) = TransformationEventT
+getEventType ObjectDWhat{}         = ObjectEventT
+getEventType AggregationDWhat{}    = AggregationEventT
+getEventType TransactionDWhat{}    = TransactionEventT
+getEventType TransformationDWhat{} = TransformationEventT
 
 
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
 allEventTypes :: [EventType]
-allEventTypes = [(ObjectEventT)..] -- bug in hlint! brackets are not redundant
+allEventTypes = [ObjectEventT ..]
 
 data Event = Event
   {
-    _type  :: EventType
+    _etype :: EventType
   , _eid   :: Maybe EventID -- foreign event id, comes from the XML
   , _what  :: DWhat
   , _when  :: DWhen
