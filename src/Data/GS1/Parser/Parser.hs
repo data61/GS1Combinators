@@ -2,7 +2,7 @@
 
 -- | module providing parser helper functions
 
-{- 
+{-
   Unless otherwise stated, all `parse` functions take in a top level cursor
   Here, top level cursor means an event level cursor. following is an example,
   <TransformationEvent>
@@ -12,20 +12,17 @@
 -}
 
 module Data.GS1.Parser.Parser where
-import           Data.List
 import           Data.Either
+import           Data.List
 import qualified Data.Text           as T
-import           Data.Time.LocalTime
-import           Data.UUID           hiding (null)
-import           Data.XML.Types      hiding (Event)
 import           Data.Time
-import           Data.UUID (fromString)
+import           Data.UUID           (fromString)
+import           Data.XML.Types      hiding (Event)
 import           Text.XML.Cursor
 
 import           Control.Applicative
 import           Control.Arrow
 
-import           Data.GS1.Utils
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -33,6 +30,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -54,7 +52,7 @@ parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
-      Just t -> pure t
+      Just t  -> pure t
       Nothing -> Left TimeZoneError
       where
         parsedStr =
@@ -74,8 +72,8 @@ isoFormats = [
 
 
 getFirstJust :: [Maybe a] -> Either ParseFailure a
-getFirstJust [] = Left TimeZoneError
-getFirstJust (Just x : _) = Right x
+getFirstJust []             = Left TimeZoneError
+getFirstJust (Just x : _)   = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
 -- example format: 2005-04-03T20:33:31.116-06:00
@@ -84,7 +82,7 @@ getFirstJust (Nothing : xs) = getFirstJust xs
 -- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: T.Text -> Either ParseFailure EPCISTime
 parseStr2Time s = getFirstJust $
-    fmap (\i -> parseTimeM True defaultTimeLocale i (T.unpack s) :: Maybe EPCISTime)
+    fmap (\i -> EPCISTime <$> parseTimeM True defaultTimeLocale i (T.unpack s) :: Maybe EPCISTime)
       isoFormats
 
 -- |Parse BizStep by Name
@@ -159,7 +157,7 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-{- 
+{-
 c --> Can be a top level / event-level cursor
 list --> The Name of the cursor under which the list of epcs lie
          e.g -> sourceList, destinationList
@@ -178,9 +176,10 @@ parseSourceDestLocation c listTag el attr = do
   let srcDestTypes =
         T.strip <$> concat
           (c $// element listTag &/ element el &| attribute attr)
-  uncurry (liftA2 (,)) . (readURI *** readURI) <$> zip srcDestTypes locations
+  uncurry (liftA2 (curry SrcDestLocation)) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 
+  -- TODO: This looks like a great place to use the Validation type
 parseDWhere :: Cursor -> Either ParseFailure DWhere
 parseDWhere c = do
   let (rpsErrs, rps) = partitionEithers $ readURI <$>
@@ -206,7 +205,7 @@ parseQuantity c = do
   case [qt, uom] of
     [[], _] -> Nothing
     [[q], []] -> Just $ ItemCount (read (T.unpack q) :: Integer)
-    [[q], [u]] -> Just $ MeasuredQuantity (read (T.unpack q) :: Amount) u
+    [[q], [u]] -> Just $ MeasuredQuantity (Amount $ read (T.unpack q) :: Amount) (Uom u)
     _       -> Nothing
 
 {-
@@ -232,7 +231,7 @@ parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
 parseClassLabel c = readLabelEPC mQt labelStr
   where
     mQt = parseQuantity c
-    labelStr = head (c $/ element "epcClass" &/ content)
+    labelStr = head (c $/ element "epcClass" &/ content) -- BUG: Head is unsafe
 
 
 -- |parse group of text to obtain ParentID
@@ -263,8 +262,8 @@ parseLabelEPCs insName clName c = do
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
                     -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure (act : concat errs)
-returnLeftErrors (Right _, errs) = ChildFailure $ concat errs
+returnLeftErrors (Left act, errs) = ChildFailure (act : concat errs)
+returnLeftErrors (Right _, errs)  = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
@@ -304,7 +303,7 @@ parseTransformationID :: Cursor -> Maybe TransformationID
 parseTransformationID c = do
   let tId = c $/ element "transformationID" &/ content
   case tId of
-    [t] -> fromString . T.unpack $ t
+    [t] -> fmap TransformationID . fromString . T.unpack $ t
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
@@ -312,9 +311,9 @@ parseTransformationDWhat :: Cursor -> Either ParseFailure DWhat
 parseTransformationDWhat c = do
   -- get transformaiton id
   let tId = parseTransformationID c
-  let (inputErrs, inputEpcs) = partitionEithers $
+  let (inputErrs, inputEpcs) = fmap (fmap InputEPC) . partitionEithers $
         parseLabelEPCs "inputEPCList" "inputQuantityList" c
-  let (outputErrs, outputEpcs) = partitionEithers $
+  let (outputErrs, outputEpcs) = fmap (fmap OutputEPC ) . partitionEithers $
         parseLabelEPCs "outputEPCList" "outputQuantityList" c
   case (inputErrs, outputErrs) of
     ([], []) -> Right $ TransformationDWhat tId inputEpcs outputEpcs
@@ -323,7 +322,7 @@ parseTransformationDWhat c = do
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
-  let tId   = T.strip a
+  let tId   = BizTransactionID $ T.strip a
   let tType = readURI $ T.strip b
   case tType of
     Right t -> Right $ BizTransaction tId t
@@ -374,7 +373,7 @@ parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
 -- | Find all events (that match the specified EventType)
 -- and put them into an event list
 parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
-parseEventByType c et = do
+parseEventByType c et =
   let tagS = stringify et
       eCursors = getCursorsByName tagS c
       eid = either2Maybe . parseEventID <$> eCursors
@@ -383,5 +382,5 @@ parseEventByType c et = do
       dwhy = parseDWhy <$> eCursors
       dwhere = parseDWhere <$> eCursors
       zipd = zip5 eid dwhat dwhen dwhy dwhere
-      in
+  in
       parseEventList et zipd
