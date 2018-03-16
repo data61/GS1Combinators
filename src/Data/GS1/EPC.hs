@@ -28,35 +28,50 @@ import           Data.Monoid
 -- add more type values to this if need be
 data ParseFailure
   = InvalidLength
-  -- Length is not correct
+  -- ^ Length is not correct
   -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
   | InvalidFormat
-  -- Components Missing, incorrectly structured
+  -- ^ Components Missing, incorrectly structured
   | InvalidAction
-  -- When parsing an action failed
+  -- ^ When parsing an action failed
   | InvalidBizTransaction
-  -- When parsing a bizTransaction failed
+  -- ^ When parsing a bizTransaction failed
   | InvalidEvent
-  -- When parsing an event failed
+  -- ^ When parsing an event failed
   | TimeZoneError
-  -- error in parsing timezone
+  -- ^ error in parsing timezone
   | TagNotFound
-  -- when a mandatory tag is not found
+  -- ^ when a mandatory tag is not found
   | InvalidDispBizCombination
-  -- when the disposition does not go with the bizstep
-  | ChildFailure
-    {
-      _childFailuresList :: [ParseFailure]
-    }
-  -- when there is a list of Parsefailures
+  -- ^ when the disposition does not go with the bizstep
+  | ChildFailure [ParseFailure]
+  -- ^ when there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
+
+  -- TODO: Make this type a Semigroup/Monoid so we can use the Validation type
   deriving (Show, Eq)
 
 -- |Anything that could be converted into URI
+
+{- TODO: This class could be improved with the vollowing change:
+
+class URI a where
+  uriPrefix :: Proxy a -> T.Text
+  -- Produce a list of components to be joined by dots, or a custom text value
+  uriComponents :: a -> Either T.Text [T.Text]
+  readURI  :: T.Text -> Either ParseFailure a
+
+renderURI :: URI a -> a -> T.Text
+renderURI a = uriPrefix (Proxy :: Proxy a) <> either id dots (uriComponents a)
+
+which would remove a lot of the redundant code in this module
+
+-}
 class URI a where
   printURI :: a -> T.Text
   readURI  :: T.Text -> Either ParseFailure a
+
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 newtype GS1CompanyPrefix  = GS1CompanyPrefix T.Text                deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
@@ -138,20 +153,21 @@ getSuffixTokens :: [T.Text] -> [T.Text]
 getSuffixTokens suffix = T.splitOn "." $ T.concat suffix
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
-data ClassLabelEPC =  LGTIN
-                      {
-                        _lgtinCompanyPrefix :: GS1CompanyPrefix
-                      , _lgtinItemReference :: ItemReference
-                      , _lgtinLot           :: Lot
-                      }
-                     -- e.g. olives in a vat, harvested in April 2017
-                    | CSGTIN
-                      {
-                        _csgtinCompanyPrefix    :: GS1CompanyPrefix
-                      , _csgtinSgtinFilterValue :: Maybe SGTINFilterValue
-                      , _csgtinItemReference    :: ItemReference
-                      }
-                     deriving (Show, Read, Eq, Generic)
+data ClassLabelEPC
+  = LGTIN
+    {
+      _lgtinCompanyPrefix :: GS1CompanyPrefix
+    , _lgtinItemReference :: ItemReference
+    , _lgtinLot           :: Lot
+    }
+    -- e.g. olives in a vat, harvested in April 2017
+  | CSGTIN
+    {
+      _csgtinCompanyPrefix    :: GS1CompanyPrefix
+    , _csgtinSgtinFilterValue :: Maybe SGTINFilterValue
+    , _csgtinItemReference    :: ItemReference
+    }
+    deriving (Show, Read, Eq, Generic)
 
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
@@ -169,8 +185,8 @@ readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
 readURIClassLabelEPC _ = Left InvalidFormat
 
 printURIClassLabelEPC :: ClassLabelEPC -> T.Text
-printURIClassLabelEPC (LGTIN (GS1CompanyPrefix prefix) (ItemReference ir) (Lot lot)) =
-  "urn:epc:class:lgtin:" <> dots [prefix, ir, lot]
+printURIClassLabelEPC (LGTIN (GS1CompanyPrefix pfix) (ItemReference ir) (Lot lot)) =
+  "urn:epc:class:lgtin:" <> dots [pfix, ir, lot]
 
 printURIClassLabelEPC (CSGTIN (GS1CompanyPrefix pref) _ (ItemReference ir)) =
   "urn:epc:idpat:sgtin:" <> dots [pref, ir]
@@ -224,54 +240,54 @@ ssccPadLen = 17
 
 
 -- TODO: This could be easily implemnted using proper parser combinators from attoparsec
--- parsxec, megaparsec or trifecta (parsers library)
+-- parsec, megaparsec or trifecta (parsers library)
 readURIInstanceLabelEPC :: [T.Text] -> Either ParseFailure InstanceLabelEPC
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
-  Right $ GIAI (GS1CompanyPrefix prefix) (SerialNumber sn)
-    where [prefix, sn] = getSuffixTokens rest
+  Right $ GIAI (GS1CompanyPrefix pfix) (SerialNumber sn)
+    where [pfix, sn] = getSuffixTokens rest
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
-  | isCorrectLen = Right $ SSCC (GS1CompanyPrefix prefix) (SerialNumber sn)
+  | isCorrectLen = Right $ SSCC (GS1CompanyPrefix pfix) (SerialNumber sn)
   | otherwise = Left InvalidLength
       where
-        [prefix, sn] = getSuffixTokens rest
+        [pfix, sn] = getSuffixTokens rest
         isCorrectLen =
-            getTotalLength [prefix, sn] == ssccPadLen
+            getTotalLength [pfix, sn] == ssccPadLen
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
-  Right $ GRAI (GS1CompanyPrefix prefix) (AssetType assetType) (SerialNumber sn)
-    where [prefix, assetType, sn] = getSuffixTokens rest
+  Right $ GRAI (GS1CompanyPrefix pfix) (AssetType assetType) (SerialNumber sn)
+    where [pfix, assetType, sn] = getSuffixTokens rest
 
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
-      Right $ SGTIN (GS1CompanyPrefix prefix) Nothing (ItemReference ir) (SerialNumber sn)
+      Right $ SGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference ir) (SerialNumber sn)
                                   -- Nothing, for the moment
   | otherwise = Left InvalidLength
       where
-        [prefix, ir, sn] = getSuffixTokens rest
+        [pfix, ir, sn] = getSuffixTokens rest
         isCorrectLen =
-            getTotalLength [prefix, ir] == sgtinPadLen
+            getTotalLength [pfix, ir] == sgtinPadLen
             -- TODO: BUG? no sn in check?
 
 readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
 printURIInstanceLabelEPC :: InstanceLabelEPC -> T.Text
-printURIInstanceLabelEPC (GIAI (GS1CompanyPrefix prefix) (SerialNumber sn)) = -- TODO: This was previously IndividualAssetReference????
-  "urn:epc:id:giai:" <> dots [prefix, sn]
-printURIInstanceLabelEPC (SSCC (GS1CompanyPrefix prefix) (SerialNumber serialNumber)) =
-  "urn:epc:id:sscc:" <> dots [prefix, serialNumber]
-printURIInstanceLabelEPC (SGTIN (GS1CompanyPrefix prefix) _ (ItemReference itemReference) (SerialNumber serialNumber)) =
-  "urn:epc:id:sgtin:" <> dots [prefix, itemReference, serialNumber]
-printURIInstanceLabelEPC (GRAI (GS1CompanyPrefix prefix) (AssetType assetType) (SerialNumber serialNumber)) =
-  "urn:epc:id:grai:" <> dots [prefix, assetType, serialNumber]
+printURIInstanceLabelEPC (GIAI (GS1CompanyPrefix pfix) (SerialNumber sn)) = -- TODO: SerialNumber was previously individualAssetReference????
+  "urn:epc:id:giai:" <> dots [pfix, sn]
+printURIInstanceLabelEPC (SSCC (GS1CompanyPrefix pfix) (SerialNumber sn)) =
+  "urn:epc:id:sscc:" <> dots [pfix, sn]
+printURIInstanceLabelEPC (SGTIN (GS1CompanyPrefix pfix) _ (ItemReference ref) (SerialNumber sn)) =
+  "urn:epc:id:sgtin:" <> dots [pfix, ref, sn]
+printURIInstanceLabelEPC (GRAI (GS1CompanyPrefix pfix) (AssetType aType) (SerialNumber sn)) =
+  "urn:epc:id:grai:" <> dots [pfix, aType, sn]
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
 
-type Lng = Double
-type Lat = Double
+newtype Lng = Lng Double deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype Lat = Lat Double deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 newtype LocationReference
   = LocationReference
   {
@@ -298,10 +314,10 @@ $(deriveJSON defaultOptions ''LocationEPC)
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
-  printURI (SGLN (GS1CompanyPrefix companyPrefix) (LocationReference str) (Just (SGLNExtension ext))) =
-    "urn:epc:id:sgln:" <> dots [companyPrefix, str, ext]
-  printURI (SGLN (GS1CompanyPrefix companyPrefix) (LocationReference str) Nothing) =
-    "urn:epc:id:sgln:" <> dots [companyPrefix, str]
+  printURI (SGLN (GS1CompanyPrefix pfix) (LocationReference lr) (Just (SGLNExtension ext))) =
+    "urn:epc:id:sgln:" <> dots [pfix, lr, ext]
+  printURI (SGLN (GS1CompanyPrefix pfix) (LocationReference lr) Nothing) =
+    "urn:epc:id:sgln:" <> dots [pfix, lr]
 
   readURI epcStr
    | isLocationEPC (T.splitOn ":" epcStr) =
@@ -322,21 +338,21 @@ getExt s   = Just (SGLNExtension s)
 
 readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 -- without extension
-readURILocationEPC [companyPrefix, locationStr]
+readURILocationEPC [pfix, loc]
   | isCorrectLen =
-      Right $ SGLN (GS1CompanyPrefix companyPrefix) (LocationReference locationStr) Nothing
+      Right $ SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing
   | otherwise    = Left InvalidLength
     where
-      isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
+      isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
 -- with extension
-readURILocationEPC [companyPrefix, locationStr, extNum]
+readURILocationEPC [pfix, loc, extNum]
   | isCorrectLen =
       Right $
-        SGLN (GS1CompanyPrefix companyPrefix) (LocationReference locationStr) (getExt extNum)
+        SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (getExt extNum)
   | otherwise    = Left InvalidLength
     where
-      isCorrectLen = getTotalLength [companyPrefix, locationStr] == sglnPadLen
+      isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
 readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
@@ -391,10 +407,10 @@ instance URI BusinessTransactionEPC where
 --                    Getting the uri body out of the string
 
 printURIBizTransactionEPC :: BusinessTransactionEPC -> T.Text
-printURIBizTransactionEPC (GDTI (GS1CompanyPrefix prefix) (DocumentType docType) (SerialNumber sn)) =
-  "urn:epc:id:gsrn:" <> dots [prefix, docType, sn]
-printURIBizTransactionEPC (GSRN (GS1CompanyPrefix prefix) (SerialReference sref)) =
-  "urn:epc:id:gsrn:" <> dots [prefix, sref]
+printURIBizTransactionEPC (GDTI (GS1CompanyPrefix pfix) (DocumentType docType) (SerialNumber sn)) =
+  "urn:epc:id:gsrn:" <> dots [pfix, docType, sn]
+printURIBizTransactionEPC (GSRN (GS1CompanyPrefix pfix) (SerialReference sref)) =
+  "urn:epc:id:gsrn:" <> dots [pfix, sref]
 
 -- the length of the arguments should equal to the following,
 -- according to the spec
@@ -410,18 +426,18 @@ gdtiPadLen = 12
 
 readURIBusinessTransactionEPC :: [T.Text] ->
                                   Either ParseFailure BusinessTransactionEPC
-readURIBusinessTransactionEPC [prefix, sref]
-  | isCorrectLen = Right $ GSRN (GS1CompanyPrefix prefix) (SerialReference sref)
+readURIBusinessTransactionEPC [pfix, sref]
+  | isCorrectLen = Right $ GSRN (GS1CompanyPrefix pfix) (SerialReference sref)
   | otherwise = Left InvalidLength
   where
     isCorrectLen =
-        getTotalLength [prefix, sref] == gsrnPadLen
-readURIBusinessTransactionEPC [prefix, docType, sn]
-  | isCorrectLen = Right $ GDTI (GS1CompanyPrefix prefix) (DocumentType docType) (SerialNumber sn) -- BUG!
+        getTotalLength [pfix, sref] == gsrnPadLen
+readURIBusinessTransactionEPC [pfix, docType, sn]
+  | isCorrectLen = Right $ GDTI (GS1CompanyPrefix pfix) (DocumentType docType) (SerialNumber sn) -- BUG!
   | otherwise = Left InvalidLength
   where
     isCorrectLen =
-        getTotalLength [prefix, docType, sn] ==
+        getTotalLength [pfix, docType, sn] ==
           gdtiPadLen
 readURIBusinessTransactionEPC _ = Left InvalidFormat
 
@@ -515,18 +531,20 @@ instance URI BizStep where
 -}
 
 
-type BizTransactionID = T.Text
+newtype BizTransactionID = BizTransactionID T.Text deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+instance ToSchema BizTransactionID
 
-data BizTransactionType = Bol       -- Bill of Lading
-                        | Desadv    -- Dispatch Advice
-                        | Inv       -- Invoice
-                        | Pedigree  -- Pedigree
-                        | Po        -- Purchase Order
-                        | Poc       -- Purchase Order Confirmation
-                        | Prodorder -- Production Order
-                        | Recadv    -- Receiving Advice
-                        | Rma       -- Return Mechandise Authorisation
-                        deriving (Show, Eq, Generic, Read)
+data BizTransactionType
+  = Bol       -- Bill of Lading
+  | Desadv    -- Dispatch Advice
+  | Inv       -- Invoice
+  | Pedigree  -- Pedigree
+  | Po        -- Purchase Order
+  | Poc       -- Purchase Order Confirmation
+  | Prodorder -- Production Order
+  | Recadv    -- Receiving Advice
+  | Rma       -- Return Mechandise Authorisation
+  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''BizTransactionType)
 instance ToSchema BizTransactionType
 
@@ -563,7 +581,8 @@ instance ToSchema BizTransaction
 -- in two or more TransformationEvents to link them together. When events share an identical
 -- TransformationID, the meaning is that the inputs to any of those events may have contributed in
 -- some way to each of the outputs in any of those same events.
-type TransformationID = UUID
+newtype TransformationID = TransformationID UUID deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+instance ToSchema TransformationID
 
 data Action = Add
             | Observe
@@ -587,36 +606,38 @@ mkAction t =
 -- WHY  -------------------
 ---------------------------
 
-data DispositionError = InvalidDisposition
-                      | OtherDispositionError
-                      deriving (Show, Eq, Generic)
+data DispositionError
+  = InvalidDisposition
+  | OtherDispositionError
+  deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''DispositionError)
 instance ToSchema DispositionError
 
 
-data Disposition = Active
-                 | ContainerClosed
-                 | Damaged
-                 | Destroyed
-                 | Dispensed
-                 | Disposed
-                 | Encoded
-                 | Expired
-                 | InProgress
-                 | InTransit
-                 | Inactive
-                 | NoPedigreeMatch
-                 | NonSellableOther
-                 | PartiallyDispensed
-                 | Recalled
-                 | Reserved
-                 | RetailSold
-                 | Returned
-                 | SellableAccessible
-                 | SellableNotAccessible
-                 | Stolen
-                 | Unknown
-                 deriving (Show, Eq, Generic, Read)
+data Disposition
+  = Active
+  | ContainerClosed
+  | Damaged
+  | Destroyed
+  | Dispensed
+  | Disposed
+  | Encoded
+  | Expired
+  | InProgress
+  | InTransit
+  | Inactive
+  | NoPedigreeMatch
+  | NonSellableOther
+  | PartiallyDispensed
+  | Recalled
+  | Reserved
+  | RetailSold
+  | Returned
+  | SellableAccessible
+  | SellableNotAccessible
+  | Stolen
+  | Unknown
+  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
 
@@ -630,6 +651,7 @@ readURIDisposition Nothing     = Left InvalidFormat
 readURIDisposition (Just disp) = Right disp
 
 instance URI Disposition where
+  -- Is this a different format from the rest of the URI instances?
   printURI disp = T.append "urn:epcglobal:cbv:disp:" (ppDisposition disp)
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
                     in readURIDisposition pURI
@@ -643,7 +665,8 @@ instance URI Disposition where
    an ISO-8601 compliant representation SHOULD be used.
 -}
 -- |The TimeZone will be saved independently
-type EPCISTime = UTCTime
+newtype EPCISTime = EPCISTime UTCTime deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+instance ToSchema EPCISTime
 
 -- copied from https://github.com/data61/bom-solar-webservice/blob/master/app/Main.hs
 -- | A datatype representing a UTCTime shown and read using the ISO 8601 format with HH:MM:SS and timezone
