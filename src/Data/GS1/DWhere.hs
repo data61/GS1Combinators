@@ -1,26 +1,32 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Data.GS1.DWhere where
 
 import           GHC.Generics
 
-import           Data.GS1.EPC
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.GS1.EPC
 import           Data.Swagger
 
-import           Data.Aeson.Text
-import qualified Data.Text.Lazy as TxtL
+-- import           Data.Aeson.Text
+-- import qualified Data.Text.Lazy  as TxtL
 
 -- |Location synonym
-type ReadPointLocation = LocationEPC
+newtype ReadPointLocation = ReadPointLocation LocationEPC deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+instance ToSchema ReadPointLocation
+
 
 -- |Location synonym
-type BizLocation = LocationEPC
+newtype BizLocation = BizLocation LocationEPC deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+instance ToSchema BizLocation
 
-type SrcDestLocation = (SourceDestType, LocationEPC)
+newtype SrcDestLocation = SrcDestLocation (SourceDestType, LocationEPC) deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+instance ToSchema SrcDestLocation
+
 
 data DWhere = DWhere
   {
