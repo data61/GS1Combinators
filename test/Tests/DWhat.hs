@@ -1,36 +1,36 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Tests.DWhat where
 
 -- import           Data.Maybe
-import           Test.Hspec
-import qualified Data.Text as T
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
+import qualified Data.Text      as T
+import           Test.Hspec
 
 testLabelEPC :: Spec
-testLabelEPC = do
+testLabelEPC =
   describe "Agnostic readLabelEPC -> urn2LabelEPC" $ do
     -- since SGTIN can be both Instance and Class
     describe "SGTINs" $ do
       it "Instance SGTIN" $
         urn2LabelEPC "urn:epc:id:sgtin:0614141.107346.2017"
           `shouldBe`
-            (Right $ IL $ SGTIN "0614141" Nothing "107346" "2017")
+            (Right $ IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"))
       it "Class SGTIN" $
         urn2LabelEPC "urn:epc:idpat:sgtin:4012345.098765.*"
           `shouldBe`
-            (Right $ CL (CSGTIN "4012345" Nothing "098765") Nothing)
+            (Right $ CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "098765")) Nothing)
     describe "Non SGTINs" $ do
       it "Instance SSCC" $
         urn2LabelEPC "urn:epc:id:sscc:0614141.1234567890"
           `shouldBe`
-            (Right $ IL $ SSCC "0614141" "1234567890")
+            (Right $ IL $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890"))
       it "Class LGTIN" $
         urn2LabelEPC "urn:epc:class:lgtin:4012345.012345.998877"
           `shouldBe`
-            (Right $ CL (LGTIN "4012345" "012345" "998877") Nothing)
+            (Right $ CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877")) Nothing)
 testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
@@ -101,27 +101,36 @@ testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
     it "creates ObjectDWhat from valid input, Observe" $
       ppDWhat (ObjectDWhat Observe
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "OBJECT WHAT\nObserve\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+          ["OBJECT WHAT"
+          ,"Observe"
+          ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+            ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+          ]
 
     it "creates ObjectDWhat from valid input, Add" $
-      ppDWhat (ObjectDWhat Add [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+      ppDWhat (ObjectDWhat Add [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "OBJECT WHAT\nAdd\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}" ++
-            ",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+          ["OBJECT WHAT"
+          ,"Add"
+          ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+            ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+          ]
     it "creates ObjectDWhat from valid input, Delete" $
-      ppDWhat (ObjectDWhat Delete [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+      ppDWhat (ObjectDWhat Delete [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "OBJECT WHAT\nDelete\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+          ["OBJECT WHAT"
+          ,"Delete"
+          ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+            ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+          ]
 
   describe "create from empty epcs" $ do
     it "creates DWhat from empty epc list, Add" $
@@ -134,36 +143,45 @@ testPpDWhat = do
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
       ppDWhat (AggregationDWhat Observe
-        (Just (SSCC "0614141" "1234567890"))
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "AGGREGATION WHAT\nObserve\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+            ["AGGREGATION WHAT"
+            ,"Observe"
+            ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+            ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+              ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+            ]
 
     it "creates AggregationDWhat from valid input, Add" $
       ppDWhat (AggregationDWhat Add
-        (Just (SSCC "0614141" "1234567890"))
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "AGGREGATION WHAT\nAdd\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+            ["AGGREGATION WHAT"
+            ,"Add"
+            ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+            ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+              ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+            ]
 
     it "creates AggregationDWhat from valid input, Delete" $
       ppDWhat (AggregationDWhat Delete
-        (Just (SSCC "0614141" "1234567890"))
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "AGGREGATION WHAT\nDelete\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+          unlines
+            ["AGGREGATION WHAT"
+            ,"Delete"
+            ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+            ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+              ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+            ]
 
     it "createAggregationDWhat from empty, Delete" $
       ppDWhat (AggregationDWhat Delete Nothing [])
@@ -179,42 +197,51 @@ testPpDWhat = do
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
       ppDWhat (TransactionDWhat Add
-        (Just (SSCC "0614141" "1234567890"))
-        [BizTransaction{_btid="12345", _bt=Bol}]
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [BizTransaction{_btid=BizTransactionID "12345", _bt=Bol}]
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "TRANSACTION WHAT\nAdd\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+            unlines
+              ["TRANSACTION WHAT"
+              ,"Add"
+              ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+              ,"[BizTransaction {_btid = BizTransactionID \"12345\", _bt = Bol}]"
+              ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+                ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+              ]
 
     it "create TransactionDWhat from valid input, Observe" $
       ppDWhat (TransactionDWhat Observe
-        (Just (SSCC "0614141" "1234567890"))
-        [BizTransaction{_btid="12345", _bt=Bol}]
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [BizTransaction{_btid= BizTransactionID "12345", _bt=Bol}]
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "TRANSACTION WHAT\nObserve\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+            unlines
+              ["TRANSACTION WHAT"
+              ,"Observe"
+              ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+              ,"[BizTransaction {_btid = BizTransactionID \"12345\", _bt = Bol}]"
+              ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+                ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+              ]
 
     it "create TransactionDWhat from valid input, Delete" $
       ppDWhat (TransactionDWhat Delete
-        (Just (SSCC "0614141" "1234567890"))
-        [BizTransaction{_btid="12345", _bt=Bol}]
-        [IL (SGTIN "0614141" Nothing "107346" "2017"),
-        IL (SGTIN "0614141" Nothing "107346" "2018")])
+        (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890")))
+        [BizTransaction{_btid= BizTransactionID "12345", _bt=Bol}]
+        [IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+        IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))])
           `shouldBe`
-            "TRANSACTION WHAT\nDelete\n" ++
-            "Just (SSCC {_ssccCompanyPrefix = \"0614141\", _ssccSerialNum = \"1234567890\"})\n" ++
-            "[BizTransaction {_btid = \"12345\", _bt = Bol}]\n" ++
-            "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-            "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
+            unlines
+              ["TRANSACTION WHAT"
+              ,"Delete"
+              ,"Just (ParentLabel (SSCC {_ssccCompanyPrefix = GS1CompanyPrefix \"0614141\", _ssccSerialNum = SerialNumber \"1234567890\"}))"
+              ,"[BizTransaction {_btid = BizTransactionID \"12345\", _bt = Bol}]"
+              ,"[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}"
+                ++",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}}]"
+              ]
 
     it "empty TransactionDWhat with empty, Add" $
       ppDWhat (TransactionDWhat Add Nothing [] [])

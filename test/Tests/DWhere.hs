@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhere where
 
 import           Data.GS1.EPC
-import qualified Data.Text as T
+import qualified Data.Text    as T
 import           Test.Hspec
 
 testReadSGLN :: Spec
@@ -11,10 +11,10 @@ testReadSGLN =
     describe "SGLN with location reference" $ do
       it "LocationReference with extension" $
         readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe`
-          Right (SGLN "0614141" (LocationReference "12345") (Just "400"))
+          Right (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") (Just (SGLNExtension "400")))
       it "LocationReference without extension" $
         readURI "urn:epc:id:sgln:0614141.12345" `shouldBe`
-          Right (SGLN "0614141" (LocationReference "12345") Nothing)
+          Right (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") Nothing)
       it "Invalid URI" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC)
           "this:is:invalid"
@@ -42,8 +42,8 @@ testPrintSGLN =
   describe "Location - Testing printURI" $
     describe "SGLN with location reference" $ do
       it "LocationReference with extension" $
-        printURI (SGLN "0614141" (LocationReference "12345") (Just "400"))
+        printURI (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") (Just (SGLNExtension "400")))
           `shouldBe` "urn:epc:id:sgln:0614141.12345.400"
       it "LocationReference without extension" $
-        printURI (SGLN "0614141" (LocationReference "12345") Nothing)
+        printURI (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") Nothing)
           `shouldBe` "urn:epc:id:sgln:0614141.12345"
