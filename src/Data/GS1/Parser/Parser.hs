@@ -2,7 +2,7 @@
 
 -- | module providing parser helper functions
 
-{- 
+{-
   Unless otherwise stated, all `parse` functions take in a top level cursor
   Here, top level cursor means an event level cursor. following is an example,
   <TransformationEvent>
@@ -12,20 +12,17 @@
 -}
 
 module Data.GS1.Parser.Parser where
-import           Data.List
 import           Data.Either
+import           Data.List
 import qualified Data.Text           as T
-import           Data.Time.LocalTime
-import           Data.UUID           hiding (null)
-import           Data.XML.Types      hiding (Event)
 import           Data.Time
-import           Data.UUID (fromString)
+import           Data.UUID           (fromString)
+import           Data.XML.Types      hiding (Event)
 import           Text.XML.Cursor
 
 import           Control.Applicative
 import           Control.Arrow
 
-import           Data.GS1.Utils
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -33,6 +30,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -54,7 +52,7 @@ parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
-      Just t -> pure t
+      Just t  -> pure t
       Nothing -> Left TimeZoneError
       where
         parsedStr =
@@ -74,8 +72,8 @@ isoFormats = [
 
 
 getFirstJust :: [Maybe a] -> Either ParseFailure a
-getFirstJust [] = Left TimeZoneError
-getFirstJust (Just x : _) = Right x
+getFirstJust []             = Left TimeZoneError
+getFirstJust (Just x : _)   = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
 -- example format: 2005-04-03T20:33:31.116-06:00
@@ -159,7 +157,7 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-{- 
+{-
 c --> Can be a top level / event-level cursor
 list --> The Name of the cursor under which the list of epcs lie
          e.g -> sourceList, destinationList
@@ -204,10 +202,10 @@ parseQuantity c = do
   let uom = c $/ element "uom" &/ content
 
   case [qt, uom] of
-    [[], _] -> Nothing
-    [[q], []] -> Just $ ItemCount (read (T.unpack q) :: Integer)
+    [[], _]    -> Nothing
+    [[q], []]  -> Just $ ItemCount (read (T.unpack q) :: Integer)
     [[q], [u]] -> Just $ MeasuredQuantity (read (T.unpack q) :: Amount) u
-    _       -> Nothing
+    _          -> Nothing
 
 {-
 The cursor level should be:
@@ -263,8 +261,8 @@ parseLabelEPCs insName clName c = do
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
                     -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure (act : concat errs)
-returnLeftErrors (Right _, errs) = ChildFailure $ concat errs
+returnLeftErrors (Left act, errs) = ChildFailure (act : concat errs)
+returnLeftErrors (Right _, errs)  = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
 parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
