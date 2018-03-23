@@ -6,13 +6,10 @@ module Data.GS1.DWhere where
 
 import           GHC.Generics
 
-import           Data.GS1.EPC
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.GS1.EPC
 import           Data.Swagger
-
-import           Data.Aeson.Text
-import qualified Data.Text.Lazy as TxtL
 
 -- |Location synonym
 type ReadPointLocation = LocationEPC
