@@ -23,7 +23,8 @@ import           Data.GS1.Utils
 import           Data.Time
 import           Data.UUID       (UUID)
 
-import           Data.Monoid
+import           Data.Monoid     hiding ((<>))
+import           Data.Semigroup
 
 -- add more type values to this if need be
 data ParseFailure
@@ -52,6 +53,18 @@ data ParseFailure
   -- TODO: Make this type a Semigroup/Monoid so we can use the Validation type
   deriving (Show, Eq)
 
+instance Semigroup ParseFailure where
+  ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
+  ChildFailure [] <> y               = y -- Needed for mempty <> x = x law
+  x <> ChildFailure []               = x
+  ChildFailure xs <> y               = ChildFailure (xs++[y])
+  x <> ChildFailure ys               = ChildFailure (x:ys)
+  x <> y                             = ChildFailure [x,y]
+
+instance Monoid ParseFailure where
+  mempty = ChildFailure []
+  mappend = (<>)
+
 -- |Anything that could be converted into URI
 
 {- TODO: This class could be improved with the vollowing change:
@@ -62,7 +75,7 @@ class URI a where
   uriComponents :: a -> Either T.Text [T.Text]
   readURI  :: T.Text -> Either ParseFailure a
 
-renderURI :: URI a -> a -> T.Text
+renderURI :: URI a => a -> T.Text
 renderURI a = uriPrefix (Proxy :: Proxy a) <> either id dots (uriComponents a)
 
 which would remove a lot of the redundant code in this module
@@ -155,15 +168,13 @@ getSuffixTokens suffix = T.splitOn "." $ T.concat suffix
 --GS1_EPC_TDS_i1_10.pdf (page 27)
 data ClassLabelEPC
   = LGTIN
-    {
-      _lgtinCompanyPrefix :: GS1CompanyPrefix
+    { _lgtinCompanyPrefix :: GS1CompanyPrefix
     , _lgtinItemReference :: ItemReference
     , _lgtinLot           :: Lot
     }
     -- e.g. olives in a vat, harvested in April 2017
   | CSGTIN
-    {
-      _csgtinCompanyPrefix    :: GS1CompanyPrefix
+    { _csgtinCompanyPrefix    :: GS1CompanyPrefix
     , _csgtinSgtinFilterValue :: Maybe SGTINFilterValue
     , _csgtinItemReference    :: ItemReference
     }
@@ -172,6 +183,7 @@ data ClassLabelEPC
 instance URI ClassLabelEPC where
     printURI = printURIClassLabelEPC
     readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
+
 
 -- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
