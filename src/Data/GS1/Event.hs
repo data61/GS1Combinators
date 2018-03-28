@@ -19,16 +19,17 @@ import           Data.Swagger
 import qualified Data.Text        as T
 import           GHC.Generics
 
-data EventType = ObjectEventT
-               -- When something is created
-               | AggregationEventT
-               -- When something gets packaged into a container, or gets unpacked.
-               | TransactionEventT
-               -- Some transaction has been made between 2 or more parties
-               | TransformationEventT
-               -- Some product has been converted into another
-               -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
-               deriving (Show, Eq, Generic, Enum, Read)
+data EventType
+  -- | When something is created
+  = ObjectEventT
+  -- | When something gets packaged into a container, or gets unpacked.
+  | AggregationEventT
+  -- | Some transaction has been made between 2 or more parties
+  | TransactionEventT
+  -- | Some product has been converted into another
+  -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
+  | TransformationEventT
+  deriving (Show, Eq, Generic, Enum, Read)
 
 $(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
@@ -46,7 +47,6 @@ getEventType AggWhat{}       = AggregationEventT
 getEventType TransactWhat{}  = TransactionEventT
 getEventType TransformWhat{} = TransformationEventT
 
-
 mkEventType :: T.Text -> Maybe EventType
 mkEventType = mkByName
 
@@ -55,7 +55,7 @@ allEventTypes = [ObjectEventT ..]
 
 data Event = Event
   {
-    _type  :: EventType
+    _etype :: EventType
   , _eid   :: Maybe EventID -- foreign event id, comes from the XML
   , _what  :: DWhat
   , _when  :: DWhen

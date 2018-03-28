@@ -1,16 +1,14 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module RunApp.Main (run) where
 
 import           Data.Aeson.Encode.Pretty
-import           Data.GS1.Parser.Parser (parseEventByType)
-import           Data.GS1.Event (allEventTypes)
 import           Data.Either
+import           Data.GS1.Event           (allEventTypes)
+import           Data.GS1.Parser.Parser   (parseEventByType)
+import qualified Data.Text.Lazy.Encoding  as TLE
+import qualified Data.Text.Lazy.IO        as TL
+import           System.Environment
 import           Text.XML
 import           Text.XML.Cursor
-import qualified Data.Text.Lazy.IO as TL
-import qualified Data.Text.Lazy.Encoding as TLE
-import           System.Environment
 
 run :: IO ()
 run = do
