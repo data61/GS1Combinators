@@ -262,14 +262,19 @@ testPpDWhat = do
     it "create TransformationDWhat, empty" $
       ppDWhat
         (TransformWhat $ TransformationDWhat Nothing
-          [IL (SGTIN "0614141" Nothing "107346" "2017"),
-          IL (SGTIN "0614141" Nothing "107346" "2018")]
+          [
+            InputEPC $ IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017")),
+            InputEPC $ IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))
+          ]
 
-          [CL (CSGTIN "4012345" Nothing "098765") Nothing]
+          [OutputEPC $ CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "098765")) Nothing]
           )
         `shouldBe`
-          "TRANSFORMATION WHAT\nNothing\n" ++
-          "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}," ++
-          "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n" ++
-          "[CL {_clClassLabelEpc = CSGTIN {_csgtinCompanyPrefix = \"4012345\", _csgtinSgtinFilterValue = Nothing, _csgtinItemReference = \"098765\"}, " ++
-          "_clQuantity = Nothing}]\n"
+          unlines
+            ["TRANSFORMATION WHAT"
+            ,"Nothing"
+            ,"[InputEPC (IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2017\"}}),"
+            ++ "InputEPC (IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = GS1CompanyPrefix \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = ItemReference \"107346\", _sgtinSerialNum = SerialNumber \"2018\"}})]"
+            ,"[OutputEPC (CL {_clClassLabelEpc = CSGTIN {_csgtinCompanyPrefix = GS1CompanyPrefix \"4012345\", _csgtinSgtinFilterValue = Nothing, _csgtinItemReference = ItemReference \"098765\"}, _clQuantity = Nothing})]"
+            ]
+
