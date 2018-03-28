@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhere where
 
 import           Data.GS1.EPC
-import qualified Data.Text as T
+import qualified Data.Text    as T
 import           Test.Hspec
 
 testReadSGLN :: Spec
@@ -39,11 +39,11 @@ testReadSGLN =
 
 testPrintSGLN :: Spec
 testPrintSGLN =
-  describe "Location - Testing printURI" $
+  describe "Location - Testing renderURL" $
     describe "SGLN with location reference" $ do
       it "LocationReference with extension" $
-        printURI (SGLN "0614141" (LocationReference "12345") (Just "400"))
+        renderURL (SGLN "0614141" (LocationReference "12345") (Just "400"))
           `shouldBe` "urn:epc:id:sgln:0614141.12345.400"
       it "LocationReference without extension" $
-        printURI (SGLN "0614141" (LocationReference "12345") Nothing)
+        renderURL (SGLN "0614141" (LocationReference "12345") Nothing)
           `shouldBe` "urn:epc:id:sgln:0614141.12345"
