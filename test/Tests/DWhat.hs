@@ -1,13 +1,13 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Tests.DWhat where
 
 -- import           Data.Maybe
-import           Test.Hspec
-import qualified Data.Text as T
 import           Data.GS1.DWhat
 import           Data.GS1.EPC
+import qualified Data.Text      as T
+import           Test.Hspec
 
 testLabelEPC :: Spec
 testLabelEPC = do
@@ -35,12 +35,12 @@ testBizStep :: Spec
 testBizStep = do
   describe "BusinessStep" $ do
     it "produces correct URI" $
-      printURI Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
+      renderURL Accepting `shouldBe` "urn:epcglobal:cbv:bizstep:accepting"
     it "produces correct URI" $
-      printURI CycleCounting `shouldBe`
+      renderURL CycleCounting `shouldBe`
         "urn:epcglobal:cbv:bizstep:cycle_counting"
     it "produces correct URI" $
-      printURI CreatingClassInstance `shouldBe`
+      renderURL CreatingClassInstance `shouldBe`
         "urn:epcglobal:cbv:bizstep:creating_class_instance"
 
   describe "parseBizStep" $ do
@@ -92,15 +92,15 @@ testBizTransaction = do
 
   describe "print BizTransaction" $ do
     it "print BizTransaction 1" $
-      printURI Bol `shouldBe` "urn:epcglobal:cbv:btt:bol"
+      renderURL Bol `shouldBe` "urn:epcglobal:cbv:btt:bol"
     it "print BizTransaction 2" $
-      printURI Prodorder `shouldBe` "urn:epcglobal:cbv:btt:prodorder"
+      renderURL Prodorder `shouldBe` "urn:epcglobal:cbv:btt:prodorder"
 
 testPpDWhat :: Spec
 testPpDWhat = do
   describe "create valid ObjectDWhat" $ do
     it "creates ObjectDWhat from valid input, Observe" $
-      ppDWhat (ObjectDWhat Observe
+      ppDWhat (ObjWhat $ ObjectDWhat Observe
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
@@ -109,14 +109,14 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "creates ObjectDWhat from valid input, Add" $
-      ppDWhat (ObjectDWhat Add [IL (SGTIN "0614141" Nothing "107346" "2017"),
+      ppDWhat (ObjWhat $ ObjectDWhat Add [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nAdd\n" ++
             "[IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2017\"}}" ++
             ",IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
     it "creates ObjectDWhat from valid input, Delete" $
-      ppDWhat (ObjectDWhat Delete [IL (SGTIN "0614141" Nothing "107346" "2017"),
+      ppDWhat (ObjWhat $ ObjectDWhat Delete [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
           `shouldBe`
             "OBJECT WHAT\nDelete\n" ++
@@ -125,15 +125,15 @@ testPpDWhat = do
 
   describe "create from empty epcs" $ do
     it "creates DWhat from empty epc list, Add" $
-      ppDWhat (ObjectDWhat Add []) `shouldBe` "OBJECT WHAT\nAdd\n[]\n"
+      ppDWhat (ObjWhat $ ObjectDWhat Add []) `shouldBe` "OBJECT WHAT\nAdd\n[]\n"
     it "creates DWhat from empty epc list, Delete" $
-      ppDWhat (ObjectDWhat Delete []) `shouldBe` "OBJECT WHAT\nDelete\n[]\n"
+      ppDWhat (ObjWhat $ ObjectDWhat Delete []) `shouldBe` "OBJECT WHAT\nDelete\n[]\n"
     it "creates DWhat from empty epc list Observe" $
-      ppDWhat (ObjectDWhat Observe []) `shouldBe` "OBJECT WHAT\nObserve\n[]\n"
+      ppDWhat (ObjWhat $ ObjectDWhat Observe []) `shouldBe` "OBJECT WHAT\nObserve\n[]\n"
 
   describe "create valid AggregationDWhat" $ do
     it "creates AggregationDWhat from valid input, Observe" $
-      ppDWhat (AggregationDWhat Observe
+      ppDWhat (AggWhat $ AggregationDWhat Observe
         (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -144,7 +144,7 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "creates AggregationDWhat from valid input, Add" $
-      ppDWhat (AggregationDWhat Add
+      ppDWhat (AggWhat $ AggregationDWhat Add
         (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -155,7 +155,7 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "creates AggregationDWhat from valid input, Delete" $
-      ppDWhat (AggregationDWhat Delete
+      ppDWhat (AggWhat $ AggregationDWhat Delete
         (Just (SSCC "0614141" "1234567890"))
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
         IL (SGTIN "0614141" Nothing "107346" "2018")])
@@ -166,19 +166,19 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "createAggregationDWhat from empty, Delete" $
-      ppDWhat (AggregationDWhat Delete Nothing [])
+      ppDWhat (AggWhat $ AggregationDWhat Delete Nothing [])
         `shouldBe` "AGGREGATION WHAT\nDelete\nNothing\n[]\n"
     it "createAggregationDWhat from empty, Add" $
-      ppDWhat (AggregationDWhat Add Nothing [])
+      ppDWhat (AggWhat $ AggregationDWhat Add Nothing [])
         `shouldBe` "AGGREGATION WHAT\nAdd\nNothing\n[]\n"
     it "createAggregationDWhat from empty, Observe" $
-      ppDWhat (AggregationDWhat Observe Nothing [])
+      ppDWhat (AggWhat $ AggregationDWhat Observe Nothing [])
         `shouldBe` "AGGREGATION WHAT\nObserve\nNothing\n[]\n"
 
 
   describe "work with a TransactionDWhat" $ do
     it "create TransactionDWhat from valid input, Add" $
-      ppDWhat (TransactionDWhat Add
+      ppDWhat (TransactWhat $ TransactionDWhat Add
         (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
@@ -191,7 +191,7 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "create TransactionDWhat from valid input, Observe" $
-      ppDWhat (TransactionDWhat Observe
+      ppDWhat (TransactWhat $ TransactionDWhat Observe
         (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
@@ -204,7 +204,7 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "create TransactionDWhat from valid input, Delete" $
-      ppDWhat (TransactionDWhat Delete
+      ppDWhat (TransactWhat $ TransactionDWhat Delete
         (Just (SSCC "0614141" "1234567890"))
         [BizTransaction{_btid="12345", _bt=Bol}]
         [IL (SGTIN "0614141" Nothing "107346" "2017"),
@@ -217,24 +217,24 @@ testPpDWhat = do
             "IL {_ilInstanceLabelEpc = SGTIN {_sgtinCompanyPrefix = \"0614141\", _sgtinSgtinFilterValue = Nothing, _sgtinItemReference = \"107346\", _sgtinSerialNum = \"2018\"}}]\n"
 
     it "empty TransactionDWhat with empty, Add" $
-      ppDWhat (TransactionDWhat Add Nothing [] [])
+      ppDWhat (TransactWhat $ TransactionDWhat Add Nothing [] [])
         `shouldBe` "TRANSACTION WHAT\nAdd\nNothing\n[]\n[]\n"
     it "empty TransactionDWhat with empty, Delete" $
-      ppDWhat (TransactionDWhat Delete Nothing [] [])
+      ppDWhat (TransactWhat $ TransactionDWhat Delete Nothing [] [])
         `shouldBe` "TRANSACTION WHAT\nDelete\nNothing\n[]\n[]\n"
     it "empty TransactionDWhat with empty, Observe" $
-      ppDWhat (TransactionDWhat Observe Nothing [] [])
+      ppDWhat (TransactWhat $ TransactionDWhat Observe Nothing [] [])
         `shouldBe` "TRANSACTION WHAT\nObserve\nNothing\n[]\n[]\n"
 
 
   describe "work with a TransformationDWhat" $ do
     it "create TransformationDWhat, empty" $
-      ppDWhat (TransformationDWhat Nothing [] [])
+      ppDWhat (TransformWhat $ TransformationDWhat Nothing [] [])
         `shouldBe` "TRANSFORMATION WHAT\nNothing\n[]\n[]\n"
 
     it "create TransformationDWhat, empty" $
       ppDWhat
-        (TransformationDWhat Nothing
+        (TransformWhat $ TransformationDWhat Nothing
           [IL (SGTIN "0614141" Nothing "107346" "2017"),
           IL (SGTIN "0614141" Nothing "107346" "2018")]
 
