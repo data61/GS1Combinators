@@ -12,6 +12,9 @@
 -}
 
 module Data.GS1.Parser.Parser where
+import           Control.Applicative
+import           Control.Arrow       hiding (first, second)
+import           Data.Bifunctor      (second)
 import           Data.Either
 import           Data.List
 import qualified Data.Text           as T
@@ -19,9 +22,6 @@ import           Data.Time
 import           Data.UUID           (fromString)
 import           Data.XML.Types      hiding (Event)
 import           Text.XML.Cursor
-
-import           Control.Applicative
-import           Control.Arrow
 
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
@@ -265,7 +265,7 @@ returnLeftErrors (Left act, errs) = ChildFailure (act : concat errs)
 returnLeftErrors (Right _, errs)  = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
-parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
+parseObjectDWhat :: Cursor -> Either ParseFailure ObjectDWhat
 parseObjectDWhat c = do
   let act = parseAction c
   let (errs, epcs) = partitionEithers $
@@ -275,7 +275,7 @@ parseObjectDWhat c = do
     _             -> Left $ returnLeftErrors (act, [errs])
 
 -- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
+parseAggregationDWhat :: Cursor -> Either ParseFailure AggregationDWhat
 parseAggregationDWhat c = do
   let pid = parseParentLabel c
   let (errs, epcs) = partitionEithers $
@@ -286,7 +286,7 @@ parseAggregationDWhat c = do
     (Right a, []) -> Right $ AggregationDWhat a pid epcs
     _             -> Left $ returnLeftErrors (act, [errs])
 
-parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransactionDWhat :: Cursor -> Either ParseFailure TransactionDWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentLabel c
@@ -306,7 +306,7 @@ parseTransformationID c = do
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
-parseTransformationDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransformationDWhat :: Cursor -> Either ParseFailure TransformationDWhat
 parseTransformationDWhat c = do
   -- get transformaiton id
   let tId = parseTransformationID c
@@ -363,10 +363,14 @@ parseEventID c = do
                             Just u  -> Right $ EventID u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
-parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
-parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
-parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
-parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
+parseDWhat ObjectEventT eCursors =
+    (second ObjWhat) . parseObjectDWhat <$> eCursors
+parseDWhat AggregationEventT eCursors =
+    (second AggWhat) . parseAggregationDWhat <$> eCursors
+parseDWhat TransactionEventT eCursors =
+    (second TransactWhat) . parseTransactionDWhat <$> eCursors
+parseDWhat TransformationEventT eCursors =
+    (second TransformWhat) . parseTransformationDWhat <$> eCursors
 
 -- this function takes in the top-most cursor
 -- | Find all events (that match the specified EventType)
