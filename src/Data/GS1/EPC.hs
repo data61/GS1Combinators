@@ -23,7 +23,7 @@ import           Data.GS1.Utils
 import           Data.Time
 import           Data.UUID       (UUID)
 
-import           Data.Monoid     hiding ((<>))
+-- import           Data.Monoid     hiding ((<>))
 import           Data.Semigroup
 
 -- add more type values to this if need be
@@ -49,8 +49,6 @@ data ParseFailure
   -- ^ when there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-
-  -- TODO: Make this type a Semigroup/Monoid so we can use the Validation type
   deriving (Show, Eq)
 
 instance Semigroup ParseFailure where
