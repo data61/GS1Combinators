@@ -81,16 +81,27 @@ dots = T.intercalate "."
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
-newtype GS1CompanyPrefix  = GS1CompanyPrefix T.Text                deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype ItemReference     = ItemReference T.Text                   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype ExtensionDigit    = ExtensionDigit Int                     deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SerialReference   = SerialReference T.Text                 deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype GS1CompanyPrefix  = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype ItemReference     = ItemReference {unItemReference :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype ExtensionDigit    = ExtensionDigit {unExtensionDigit :: Int}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype SerialReference   = SerialReference {unSerialReference :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+
 -- |Calculated according to an algorithm https://en.wikipedia.org/wiki/Global_Location_Number
-newtype CheckDigit               = CheckDigit Int                  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype Lot                      = Lot T.Text                      deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype IndividualAssetReference = IndividualAssetReference T.Text deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SerialNumber             = SerialNumber T.Text             deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SGLNExtension            = SGLNExtension T.Text            deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype CheckDigit               = CheckDigit {unCheckDigit :: Int}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype Lot                      = Lot {unLot :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype IndividualAssetReference =
+  IndividualAssetReference {unIndividualAssetReference :: T.Text}
+    deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype SerialNumber             = SerialNumber {unSerialNumber :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype SGLNExtension            = SGLNExtension {unSGLNExtension :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
 instance ToSchema GS1CompanyPrefix
 instance ToSchema ItemReference
@@ -126,9 +137,13 @@ instance ToSchema SGTINFilterValue
   and treating the result as a single numeric string.
 -}
 
-newtype Uom       = Uom T.Text       deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype Amount    = Amount Float     deriving (Show, Read, Eq, Generic, FromJSON, ToJSON) -- TODO: Float is almost never the right type
-newtype AssetType = AssetType T.Text deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype Uom       = Uom {unUom :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+ -- TODO: Float is almost never the right type
+newtype Amount    = Amount {unAmount :: Float}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype AssetType = AssetType {unAssetType :: T.Text}
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
 instance ToSchema Amount
 instance ToSchema Uom
@@ -292,8 +307,10 @@ readURIInstanceLabelEPC _ = Left InvalidFormat
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
 
-newtype Lng = Lng Double deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-newtype Lat = Lat Double deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype Lng = Lng {unLng :: Double}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype Lat = Lat {unLat :: Double}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 newtype LocationReference
   = LocationReference
   {
@@ -386,8 +403,10 @@ readSrcDestURI "location"         = Right SDLocation
 readSrcDestURI _                  = Left InvalidFormat
 
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
-newtype DocumentType     = DocumentType T.Text     deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-newtype ServiceReference = ServiceReference T.Text deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype DocumentType     = DocumentType {unDocumentType :: T.Text}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype ServiceReference = ServiceReference {unServiceReference :: T.Text}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema DocumentType
 
 data BusinessTransactionEPC =  GDTI {
@@ -446,11 +465,6 @@ readURIBusinessTransactionEPC _ = Left InvalidFormat
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
-
-
--- |Allocated by the company to a specific location
-newtype LocationRef = LocationRef T.Text deriving (Show, Read, Eq, Generic)
-
 
 data LocationError
   = IllegalGLNFormat
@@ -535,7 +549,8 @@ instance URI BizStep where
 -}
 
 
-newtype BizTransactionID = BizTransactionID T.Text deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype BizTransactionID = BizTransactionID {unBizTransactionID :: T.Text}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema BizTransactionID
 
 data BizTransactionType
@@ -586,7 +601,8 @@ instance ToSchema BizTransaction
 -- in two or more TransformationEvents to link them together. When events share an identical
 -- TransformationID, the meaning is that the inputs to any of those events may have contributed in
 -- some way to each of the outputs in any of those same events.
-newtype TransformationID = TransformationID UUID deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype TransformationID = TransformationID {unTransformationID :: UUID}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema TransformationID
 
 data Action = Add
@@ -670,7 +686,8 @@ instance URI Disposition where
    an ISO-8601 compliant representation SHOULD be used.
 -}
 -- |The TimeZone will be saved independently
-newtype EPCISTime = EPCISTime UTCTime deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema EPCISTime
 
 -- copied from https://github.com/data61/bom-solar-webservice/blob/master/app/Main.hs

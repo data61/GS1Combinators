@@ -13,7 +13,9 @@ testParseTime =
   describe "parse string to time" $ do
     it "parses the string to time with default format" $ do
       let zt = parseStr2Time "2005-04-03T20:33:31.116-06:00"
-      show zt `shouldBe` "Right (EPCISTime 2005-04-04 02:33:31.116 UTC)"
+      show zt
+        `shouldBe`
+          "Right (EPCISTime {unEPCISTime = 2005-04-04 02:33:31.116 UTC})"
 
     it "parses the string to time with default format" $ do
       let z = parseStr2TimeZone "-06:00"
