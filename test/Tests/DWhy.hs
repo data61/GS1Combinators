@@ -1,18 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhy where
 
-import           Test.Hspec
-import qualified Data.Text as T
 import           Data.GS1.EPC
+import qualified Data.Text    as T
+import           Test.Hspec
 
 testDisposition :: Spec
 testDisposition =
   describe "Disposition" $ do
     describe "Print URI" $ do
       it "One word" $
-        printURI Active `shouldBe` "urn:epcglobal:cbv:disp:active"
+        renderURL Active `shouldBe` "urn:epcglobal:cbv:disp:active"
       it "Multiple words" $
-        printURI ContainerClosed `shouldBe` "urn:epcglobal:cbv:disp:container_closed"
+        renderURL ContainerClosed `shouldBe` "urn:epcglobal:cbv:disp:container_closed"
 
     describe "parse Disposition where invalid" $ do
       it "parse the valid uri to disposition" $

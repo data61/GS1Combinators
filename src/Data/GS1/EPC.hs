@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# OPTIONS_GHC -fno-warn-orphans  #-}
 
 -- | module containing error types, URI class, epc types
 -- the types in this file cover all dimensions
@@ -10,17 +10,18 @@
 module Data.GS1.EPC where
 
 import           Control.Lens
-import           GHC.Generics
-import qualified Data.Text as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
+import qualified Data.Text       as T
+import           GHC.Generics
 import           Web.HttpApiData
 
-import           Data.Time
+import           Data.Bifunctor  (first)
 import           Data.GS1.Utils
-import           Data.UUID (UUID)
-import           Data.Bifunctor (first)
+import           Data.Semigroup
+import           Data.Time
+import           Data.UUID       (UUID)
 
 -- add more type values to this if need be
 data ParseFailure = InvalidLength
@@ -40,10 +41,7 @@ data ParseFailure = InvalidLength
                   -- when a mandatory tag is not found
                   | InvalidDispBizCombination
                   -- when the disposition does not go with the bizstep
-                  | ChildFailure 
-                    { 
-                      _childFailuresList :: [ParseFailure]
-                    }
+                  | ChildFailure [ParseFailure]
                   -- when there is a list of Parsefailures
                   -- typically applicable to higher level structures,
                   -- like DWhat, DWhere, etc
@@ -51,8 +49,19 @@ data ParseFailure = InvalidLength
 
 -- |Anything that could be converted into URI
 class URI a where
-  printURI      :: a -> T.Text
-  readURI       :: URI a => T.Text -> Either ParseFailure a
+  {-# MINIMAL uriPrefix, uriSuffix, readURI #-}
+  uriPrefix      :: a -> T.Text
+  uriSuffix      :: a -> Either T.Text [T.Text]
+  readURI        :: T.Text -> Either ParseFailure a
+
+  -- | Should not be directly implemented unless the format for URIs differs
+  -- substantially from other URIs
+  renderURL :: a -> T.Text
+  renderURL a = uriPrefix a <> either id dots (uriSuffix a)
+
+dots :: [T.Text] -> T.Text
+dots = T.intercalate "."
+
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 type GS1CompanyPrefix = T.Text
@@ -129,8 +138,13 @@ data ClassLabelEPC =  LGTIN
                      deriving (Show, Read, Eq, Generic)
 
 instance URI ClassLabelEPC where
-    printURI = printURIClassLabelEPC
-    readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
+  uriPrefix LGTIN{}  = "urn:epc:class:lgtin:"
+  uriPrefix CSGTIN{} = "urn:epc:idpat:sgtin:"
+
+  uriSuffix (LGTIN gs1CompanyPrefix itemReference lot) = Right [gs1CompanyPrefix, itemReference, lot]
+  uriSuffix (CSGTIN gs1CompanyPrefix _ itemReference)  = Right [gs1CompanyPrefix, itemReference]
+
+  readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
 
 -- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
@@ -143,20 +157,12 @@ readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
     where (gs1CompanyPrefix:itemReference:_) = getSuffixTokens rest
 readURIClassLabelEPC _ = Left InvalidFormat
 
-printURIClassLabelEPC :: ClassLabelEPC -> T.Text
-printURIClassLabelEPC (LGTIN gs1CompanyPrefix itemReference lot) =
-  T.append "urn:epc:class:lgtin:"
-      (T.intercalate "." [gs1CompanyPrefix, itemReference, lot])
-
-printURIClassLabelEPC (CSGTIN gs1CompanyPrefix _ itemReference) =
-  T.append "urn:epc:idpat:sgtin:"
-      (T.intercalate "." [gs1CompanyPrefix, itemReference])
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
 instance ToSchema ClassLabelEPC
 
 
-data InstanceLabelEPC = GIAI 
+data InstanceLabelEPC = GIAI
                         {
                           _giaiCompanyPrefix :: GS1CompanyPrefix
                         , _giaiSerialNum     :: SerialNumber
@@ -187,8 +193,18 @@ data InstanceLabelEPC = GIAI
                       deriving (Show, Read, Eq, Generic)
 
 instance URI InstanceLabelEPC where
-    printURI = printURIInstanceLabelEPC
-    readURI epcStr = readURIInstanceLabelEPC $ T.splitOn ":" epcStr
+  uriPrefix GIAI{}  = "urn:epc:id:giai:"
+  uriPrefix SSCC{}  = "urn:epc:id:sscc:"
+  uriPrefix SGTIN{} = "urn:epc:id:sgtin:"
+  uriPrefix GRAI{}  = "urn:epc:id:grai:"
+
+  uriSuffix (GIAI gs1CompanyPrefix individualAssetReference)      = Right [gs1CompanyPrefix, individualAssetReference]
+  uriSuffix (SSCC gs1CompanyPrefix serialNumber)                  = Right [gs1CompanyPrefix, serialNumber]
+  -- TODO: Should the second argument be used?
+  uriSuffix (SGTIN gs1CompanyPrefix _ itemReference serialNumber) = Right [gs1CompanyPrefix, itemReference, serialNumber]
+  uriSuffix (GRAI gs1CompanyPrefix assetType serialNumber)        = Right [gs1CompanyPrefix, assetType, serialNumber]
+
+  readURI epcStr = readURIInstanceLabelEPC $ T.splitOn ":" epcStr
 
 -- GS1_EPC_TDS_i1_11.pdf Page 28
 sgtinPadLen :: Int
@@ -229,20 +245,6 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
 readURIInstanceLabelEPC _ = Left InvalidFormat
 
 
-printURIInstanceLabelEPC :: InstanceLabelEPC -> T.Text
-printURIInstanceLabelEPC (GIAI gs1CompanyPrefix individualAssetReference) =
-  T.append "urn:epc:id:giai:"
-    (T.intercalate "." [gs1CompanyPrefix, individualAssetReference])
-printURIInstanceLabelEPC (SSCC gs1CompanyPrefix serialNumber) =
-  T.append "urn:epc:id:sscc:"
-    (T.intercalate "." [gs1CompanyPrefix, serialNumber])
-printURIInstanceLabelEPC (SGTIN gs1CompanyPrefix _ itemReference serialNumber) =
-  T.append "urn:epc:id:sgtin:"
-    (T.intercalate "." [gs1CompanyPrefix, itemReference, serialNumber])
-printURIInstanceLabelEPC (GRAI gs1CompanyPrefix assetType serialNumber) =
-  T.append "urn:epc:id:grai:"
-    (T.intercalate "." [gs1CompanyPrefix, assetType, serialNumber])
-
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
 
@@ -273,12 +275,9 @@ $(deriveJSON defaultOptions ''LocationEPC)
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
-  printURI (SGLN companyPrefix (LocationReference str) (Just ext)) =
-    T.append "urn:epc:id:sgln:"
-      (T.intercalate "." [companyPrefix, str, ext])
-  printURI (SGLN companyPrefix (LocationReference str) Nothing) =
-    T.append "urn:epc:id:sgln:"
-      (T.intercalate "." [companyPrefix, str])
+  uriPrefix SGLN{} = "urn:epc:id:sgln:"
+  uriSuffix (SGLN companyPrefix (LocationReference str) (Just ext)) = Right [companyPrefix, str, ext]
+  uriSuffix (SGLN companyPrefix (LocationReference str) Nothing)    = Right [companyPrefix, str]
 
   readURI epcStr
    | isLocationEPC (T.splitOn ":" epcStr) =
@@ -327,22 +326,18 @@ $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
-  printURI = printSrcDestURI
+  uriPrefix _ = "urn:epcglobal:cbv:sdt:"
+  uriSuffix SDOwningParty     = Left "owning_party"
+  uriSuffix SDPossessingParty = Left "possessing_party"
+  uriSuffix SDLocation        = Left "location"
   readURI epc = readSrcDestURI $ last $ T.splitOn ":" epc
 
-srcDestPrefixStr :: T.Text
-srcDestPrefixStr = "urn:epcglobal:cbv:sdt:"
-
-printSrcDestURI :: SourceDestType -> T.Text
-printSrcDestURI SDOwningParty = T.append srcDestPrefixStr "owning_party"
-printSrcDestURI SDPossessingParty = T.append srcDestPrefixStr "possessing_party"
-printSrcDestURI SDLocation = T.append srcDestPrefixStr "location"
 
 readSrcDestURI :: T.Text -> Either ParseFailure SourceDestType
-readSrcDestURI "owning_party" = Right SDOwningParty
+readSrcDestURI "owning_party"     = Right SDOwningParty
 readSrcDestURI "possessing_party" = Right SDPossessingParty
-readSrcDestURI "location" = Right SDLocation
-readSrcDestURI _ = Left InvalidFormat
+readSrcDestURI "location"         = Right SDLocation
+readSrcDestURI _                  = Left InvalidFormat
 
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 type DocumentType = T.Text
@@ -360,18 +355,17 @@ data BusinessTransactionEPC =  GDTI {
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
-  printURI = printURIBizTransactionEPC
+  uriPrefix GDTI{} = "urn:epc:id:gsrn:"
+  uriPrefix GSRN{} = "urn:epc:id:gsrn:"
+
+  uriSuffix (GDTI gs1CompanyPrefix documentType serialNumber) = Right [gs1CompanyPrefix, documentType, serialNumber]
+  uriSuffix (GSRN gs1CompanyPrefix serialReference)           = Right [gs1CompanyPrefix, serialReference]
+
   readURI epcStr = readURIBusinessTransactionEPC $
                       getSuffixTokens [last $ T.splitOn ":" epcStr]
 --                    Getting the uri body out of the string
 
-printURIBizTransactionEPC :: BusinessTransactionEPC -> T.Text
-printURIBizTransactionEPC (GDTI gs1CompanyPrefix documentType serialNumber) =
-  T.append "urn:epc:id:gsrn:"
-    (T.intercalate "." [gs1CompanyPrefix, documentType, serialNumber])
-printURIBizTransactionEPC (GSRN gs1CompanyPrefix serialReference) =
-  T.append "urn:epc:id:gsrn:"
-    (T.intercalate "." [gs1CompanyPrefix, serialReference])
+
 
 -- the length of the arguments should equal to the following,
 -- according to the spec
@@ -470,12 +464,13 @@ bizstepPrefixStr :: T.Text
 bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
 
 readURIBizStep :: Maybe BizStep -> Either ParseFailure BizStep
-readURIBizStep Nothing = Left InvalidFormat
+readURIBizStep Nothing        = Left InvalidFormat
 readURIBizStep (Just bizstep) = Right bizstep
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 16
 instance URI BizStep where
-  printURI epc = T.append bizstepPrefixStr (ppBizStep epc)
+  uriPrefix _ = "urn:epcglobal:cbv:bizstep:"
+  uriSuffix = Left . ppBizStep
   readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
                    in readURIBizStep pURI
 
@@ -511,12 +506,13 @@ ppBizTransactionType = revertCamelCase . T.pack . show
 
 readURIBizTransactionType :: Maybe BizTransactionType ->
                               Either ParseFailure BizTransactionType
-readURIBizTransactionType Nothing = Left InvalidFormat
+readURIBizTransactionType Nothing    = Left InvalidFormat
 readURIBizTransactionType (Just btt) = Right btt
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 28
 instance URI BizTransactionType where
-  printURI btt  = T.append "urn:epcglobal:cbv:btt:" (ppBizTransactionType btt)
+  uriPrefix _ = "urn:epcglobal:cbv:btt:"
+  uriSuffix = Left . ppBizTransactionType
   readURI s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
                       in readURIBizTransactionType pURI
 
@@ -602,11 +598,12 @@ ppDisposition = revertCamelCase . T.pack . show
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 24
 readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
-readURIDisposition Nothing = Left InvalidFormat
+readURIDisposition Nothing     = Left InvalidFormat
 readURIDisposition (Just disp) = Right disp
 
 instance URI Disposition where
-  printURI disp = T.append "urn:epcglobal:cbv:disp:" (ppDisposition disp)
+  uriPrefix _ = "urn:epcglobal:cbv:disp:"
+  uriSuffix = Left . ppDisposition
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
                     in readURIDisposition pURI
 
