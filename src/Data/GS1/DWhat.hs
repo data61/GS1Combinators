@@ -31,13 +31,16 @@ data LabelEPC
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
-newtype ParentLabel  = ParentLabel InstanceLabelEPC deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
-newtype InputEPC     = InputEPC LabelEPC            deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-newtype OutputEPC    = OutputEPC LabelEPC           deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype OutputEPC    = OutputEPC {unOutputEPC :: LabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+
 instance ToSchema ParentLabel
 instance ToSchema InputEPC
 instance ToSchema OutputEPC
-
 
 
 -- | Parses an EPC URN into a LabelEPC.
@@ -125,14 +128,3 @@ data DWhat =
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
 
-
--- TODO: Consider using a proper pretty printer
-ppDWhat :: DWhat -> String
-ppDWhat (ObjWhat (ObjectDWhat a epcs)) =
-  "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (AggWhat (AggregationDWhat a pid epcs) ) =
-  "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (TransactWhat (TransactionDWhat a s bizT epcs)) =
-  "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (TransformWhat (TransformationDWhat tid inputEpcs outputEpcs)) =
-  "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show inputEpcs ++ "\n" ++ show outputEpcs ++ "\n"
