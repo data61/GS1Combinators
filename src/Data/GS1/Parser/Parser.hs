@@ -2,7 +2,7 @@
 
 -- | module providing parser helper functions
 
-{- 
+{-
   Unless otherwise stated, all `parse` functions take in a top level cursor
   Here, top level cursor means an event level cursor. following is an example,
   <TransformationEvent>
@@ -12,20 +12,17 @@
 -}
 
 module Data.GS1.Parser.Parser where
-import           Data.List
+import           Control.Applicative
+import           Control.Arrow       hiding (first, second)
+import           Data.Bifunctor      (second)
 import           Data.Either
+import           Data.List
 import qualified Data.Text           as T
-import           Data.Time.LocalTime
--- import           Data.UUID           hiding (null)
-import           Data.XML.Types      hiding (Event)
 import           Data.Time
-import           Data.UUID (fromString)
+import           Data.UUID           (fromString)
+import           Data.XML.Types      hiding (Event)
 import           Text.XML.Cursor
 
-import           Control.Applicative
-import           Control.Arrow
-
-import           Data.GS1.Utils
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
@@ -33,6 +30,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventID
+import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor
 getCursorsByName :: Name -> Cursor -> [Cursor]
@@ -54,7 +52,7 @@ parseTimeZoneXML = parseSingleElem parseStr2TimeZone
 parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
-      Just t -> pure t
+      Just t  -> pure t
       Nothing -> Left TimeZoneError
       where
         parsedStr =
@@ -74,8 +72,8 @@ isoFormats = [
 
 
 getFirstJust :: [Maybe a] -> Either ParseFailure a
-getFirstJust [] = Left TimeZoneError
-getFirstJust (Just x : _) = Right x
+getFirstJust []             = Left TimeZoneError
+getFirstJust (Just x : _)   = Right x
 getFirstJust (Nothing : xs) = getFirstJust xs
 
 -- example format: 2005-04-03T20:33:31.116-06:00
@@ -159,7 +157,7 @@ do
 -}
 
 -- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-{- 
+{-
 c --> Can be a top level / event-level cursor
 list --> The Name of the cursor under which the list of epcs lie
          e.g -> sourceList, destinationList
@@ -204,10 +202,10 @@ parseQuantity c = do
   let uom = c $/ element "uom" &/ content
 
   case [qt, uom] of
-    [[], _] -> Nothing
-    [[q], []] -> Just $ ItemCount (read (T.unpack q) :: Integer)
+    [[], _]    -> Nothing
+    [[q], []]  -> Just $ ItemCount (read (T.unpack q) :: Integer)
     [[q], [u]] -> Just $ MeasuredQuantity (read (T.unpack q) :: Amount) u
-    _       -> Nothing
+    _          -> Nothing
 
 {-
 The cursor level should be:
@@ -263,11 +261,11 @@ parseLabelEPCs insName clName c = do
 -- returns all the errors that occur in Action and [[ParseFailure]],
 returnLeftErrors :: (Either ParseFailure Action, [[ParseFailure]])
                     -> ParseFailure
-returnLeftErrors (Left act, errs)  = ChildFailure (act : concat errs)
-returnLeftErrors (Right _, errs) = ChildFailure $ concat errs
+returnLeftErrors (Left act, errs) = ChildFailure (act : concat errs)
+returnLeftErrors (Right _, errs)  = ChildFailure $ concat errs
 
 -- |parse and construct ObjectDWhat dimension
-parseObjectDWhat :: Cursor -> Either ParseFailure DWhat
+parseObjectDWhat :: Cursor -> Either ParseFailure ObjectDWhat
 parseObjectDWhat c = do
   let act = parseAction c
   let (errs, epcs) = partitionEithers $
@@ -277,7 +275,7 @@ parseObjectDWhat c = do
     _             -> Left $ returnLeftErrors (act, [errs])
 
 -- |parse and construct AggregationDWhat dimension
-parseAggregationDWhat :: Cursor -> Either ParseFailure DWhat
+parseAggregationDWhat :: Cursor -> Either ParseFailure AggregationDWhat
 parseAggregationDWhat c = do
   let pid = parseParentLabel c
   let (errs, epcs) = partitionEithers $
@@ -288,7 +286,7 @@ parseAggregationDWhat c = do
     (Right a, []) -> Right $ AggregationDWhat a pid epcs
     _             -> Left $ returnLeftErrors (act, [errs])
 
-parseTransactionDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransactionDWhat :: Cursor -> Either ParseFailure TransactionDWhat
 parseTransactionDWhat c = do
   let (bizTErrs, bizT) = partitionEithers $ parseBizTransaction c
   let pid = parseParentLabel c
@@ -308,7 +306,7 @@ parseTransformationID c = do
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
-parseTransformationDWhat :: Cursor -> Either ParseFailure DWhat
+parseTransformationDWhat :: Cursor -> Either ParseFailure TransformationDWhat
 parseTransformationDWhat c = do
   -- get transformaiton id
   let tId = parseTransformationID c
@@ -365,10 +363,14 @@ parseEventID c = do
                             Just u  -> Right $ EventID u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
-parseDWhat ObjectEventT eCursors = parseObjectDWhat <$> eCursors
-parseDWhat AggregationEventT eCursors = parseAggregationDWhat <$> eCursors
-parseDWhat TransactionEventT eCursors = parseTransactionDWhat <$> eCursors
-parseDWhat TransformationEventT eCursors = parseTransformationDWhat <$> eCursors
+parseDWhat ObjectEventT eCursors =
+    (second ObjWhat) . parseObjectDWhat <$> eCursors
+parseDWhat AggregationEventT eCursors =
+    (second AggWhat) . parseAggregationDWhat <$> eCursors
+parseDWhat TransactionEventT eCursors =
+    (second TransactWhat) . parseTransactionDWhat <$> eCursors
+parseDWhat TransformationEventT eCursors =
+    (second TransformWhat) . parseTransformationDWhat <$> eCursors
 
 -- this function takes in the top-most cursor
 -- | Find all events (that match the specified EventType)

@@ -2,22 +2,21 @@
 
 module Tests.Parser where
 
-import Test.Hspec
-import Text.XML
-import Text.XML.Cursor
-import Data.Time.LocalTime
-import Data.Either.Combinators
-import Data.GS1.DWhat
-import Data.GS1.DWhen
-import Data.GS1.DWhere
-import Data.GS1.DWhy
-import Data.GS1.EPC
-import Data.GS1.Event
-import Data.GS1.Parser.Parser
-import Data.GS1.EventID
-import Data.UUID as UUID
-import Data.Maybe
-import Data.Time
+import           Data.Either.Combinators
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EPC
+import           Data.GS1.Event
+import           Data.GS1.EventID
+import           Data.GS1.Parser.Parser
+import           Data.Maybe
+import           Data.Time
+import           Data.UUID               as UUID
+import           Test.Hspec
+import           Text.XML
+import           Text.XML.Cursor
 
 testParser :: Spec
 testParser = do
@@ -48,9 +47,9 @@ testParser = do
     it "create DWhen from AggregationEvent" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
-      let oeCursors = getCursorsByName "AggregationEvent" cursor  
+      let oeCursors = getCursorsByName "AggregationEvent" cursor
       parseDWhen <$> oeCursors `shouldBe`
-        [Right 
+        [Right
           (
             DWhen
               (read "2013-06-08 12:58:56.591" :: UTCTime)
@@ -64,7 +63,7 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       parseAction cursor `shouldBe` Right Observe
-  
+
   describe "parse XML to obtain EPC List" $ do
     it "finds all epcs" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -123,7 +122,7 @@ testParser = do
       let teCursors = cursor $// element "TransformationEvent"
       parseDWhy <$> teCursors `shouldBe`
         [Right $ DWhy (Just Commissioning) (Just InProgress)]
-    
+
     it "Empty" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/Empty_DWhy.xml"
       let cursor = fromDocument doc2
@@ -178,7 +177,7 @@ testParser = do
             _srcType = [],
             _destType = []
           }]
-    
+
   describe "parse QuantityElement" $
     it "parses quantity elements" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -241,7 +240,7 @@ testParser = do
         let oeCursors = getCursorsByName "ObjectEvent" cursor
         parseObjectDWhat <$> oeCursors `shouldBe`
           [ Right $ ObjectDWhat Observe [] ]
-      
+
       it "ObjectEventNoEventTime.xml" $ do
         doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
         let cursor = fromDocument doc
@@ -312,7 +311,7 @@ testParser = do
         let cursor = fromDocument doc
         let tCursors = getCursorsByName "TransformationEvent" cursor
         parseTransformationDWhat <$> tCursors `shouldBe`
-          [ 
+          [
             Right $ TransformationDWhat Nothing
               [
                 IL (SGTIN "4012345" Nothing "011122" "25"),
@@ -321,7 +320,7 @@ testParser = do
                     (Just (MeasuredQuantity 10.0 "KGM")),
                 CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
                 CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
-              ] 
+              ]
               [
                 IL (SGTIN "4012345" Nothing "077889" "25"),
                 IL (SGTIN "4012345" Nothing "077889" "26"),
@@ -346,7 +345,7 @@ testParser = do
             -- eid
             -- a dwhat element
             (
-              ObjectDWhat Observe
+              ObjWhat $ ObjectDWhat Observe
               [
                 IL $ SGTIN "0614141" Nothing "107346" "2017",
                 IL $ SGTIN "0614141" Nothing "107346" "2018",
@@ -405,7 +404,7 @@ testParser = do
                   fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
-                ObjectDWhat Observe
+                ObjWhat $ ObjectDWhat Observe
                 [
                   IL $ SGTIN "0614141" Nothing "107346" "2017",
                   IL $ SGTIN "0614141" Nothing "107346" "2018"
@@ -436,7 +435,7 @@ testParser = do
                   fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
-                ObjectDWhat Observe
+                ObjWhat $ ObjectDWhat Observe
                   [IL $ SGTIN "0614141" Nothing "107346" "2018"]
               )
               -- a dwhen element
@@ -471,7 +470,7 @@ testParser = do
           Nothing -- eid
           -- a dwhat element
           (
-            TransformationDWhat Nothing
+            TransformWhat $ TransformationDWhat Nothing
               [
                 IL (SGTIN "4012345" Nothing "011122" "25"),
                 IL (SGTIN "4000001" Nothing "065432" "99886655"),
@@ -479,7 +478,7 @@ testParser = do
                     (Just (MeasuredQuantity 10.0 "KGM")),
                 CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
                 CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
-              ] 
+              ]
               [
                 IL (SGTIN "4012345" Nothing "077889" "25"),
                 IL (SGTIN "4012345" Nothing "077889" "26"),
@@ -521,7 +520,7 @@ testParser = do
           -- eid
           -- a dwhat element
           (
-            TransactionDWhat Observe
+            TransactWhat $ TransactionDWhat Observe
             Nothing
             [
               BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po}
@@ -558,7 +557,7 @@ testParser = do
           -- eid
           -- a dwhat element
           (
-            TransactionDWhat Observe
+            TransactWhat $ TransactionDWhat Observe
             Nothing
             [
               BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po},
@@ -586,7 +585,7 @@ testParser = do
             [] -- destType
           )
         ]
-    
+
     it "parses a valid aggregation event" $ do
       doc <- Text.XML.readFile def "test/test-xml/AggregationEvent.xml"
       let cursor = fromDocument doc
@@ -599,7 +598,7 @@ testParser = do
               fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5"))) -- eid
           -- a dwhat element
           (
-            AggregationDWhat Observe
+            AggWhat $ AggregationDWhat Observe
             (Just (SSCC "0614141" "1234567890")) -- Maybe ParentLabel
             [
               IL $ SGTIN "0614141" Nothing "107346" "2017",
@@ -644,7 +643,7 @@ testParser = do
         ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]
           `shouldBe` Left TimeZoneError
     it "parseTimeXML valid" $
-      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Right 
+      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Right
          (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
 
     it "parseTimeZoneXML invalid" $
