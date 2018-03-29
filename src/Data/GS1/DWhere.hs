@@ -13,17 +13,20 @@ import           Data.GS1.EPC
 import           Data.Swagger
 
 -- |Location synonym
-newtype ReadPointLocation = ReadPointLocation LocationEPC deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+newtype ReadPointLocation = ReadPointLocation {unReadPointLocation :: LocationEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
 instance ToSchema ReadPointLocation
 
 
 -- |Location synonym
-newtype BizLocation = BizLocation LocationEPC deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+newtype BizLocation = BizLocation {unBizLocation :: LocationEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
 instance ToSchema BizLocation
 
-newtype SrcDestLocation = SrcDestLocation (SourceDestType, LocationEPC) deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype SrcDestLocation =
+  SrcDestLocation {unSrcDestLocation :: (SourceDestType, LocationEPC)}
+    deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema SrcDestLocation
-
 
 data DWhere = DWhere
   {
