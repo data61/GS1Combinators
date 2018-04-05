@@ -266,12 +266,6 @@ data LocationEPC = SGLN {
   deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''LocationEPC)
 
--- |non-normative representation - simplest form of RFC5870
--- deprecated, kept momentarily for reference
--- ppLocationReference :: LocationReference -> String
--- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
--- ppLocationReference (LocationReference str) = str
-
 instance ToSchema LocationReference
 
 instance URI LocationEPC where
