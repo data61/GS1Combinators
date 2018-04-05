@@ -139,8 +139,7 @@ instance ToSchema SGTINFilterValue
 
 newtype Uom       = Uom {unUom :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
- -- TODO: Float is almost never the right type
-newtype Amount    = Amount {unAmount :: Float}
+newtype Amount    = Amount {unAmount :: Double}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 newtype AssetType = AssetType {unAssetType :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
