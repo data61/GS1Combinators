@@ -686,7 +686,7 @@ instance URI Disposition where
 -}
 -- |The TimeZone will be saved independently
 newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic, Ord, ToJSON, FromJSON)
 instance ToSchema EPCISTime
 
 -- copied from https://github.com/data61/bom-solar-webservice/blob/master/app/Main.hs
