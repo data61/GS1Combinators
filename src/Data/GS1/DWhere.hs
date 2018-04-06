@@ -1,6 +1,7 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Data.GS1.DWhere where
 
@@ -12,12 +13,20 @@ import           Data.GS1.EPC
 import           Data.Swagger
 
 -- |Location synonym
-type ReadPointLocation = LocationEPC
+newtype ReadPointLocation = ReadPointLocation {unReadPointLocation :: LocationEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+instance ToSchema ReadPointLocation
+
 
 -- |Location synonym
-type BizLocation = LocationEPC
+newtype BizLocation = BizLocation {unBizLocation :: LocationEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+instance ToSchema BizLocation
 
-type SrcDestLocation = (SourceDestType, LocationEPC)
+newtype SrcDestLocation =
+  SrcDestLocation {unSrcDestLocation :: (SourceDestType, LocationEPC)}
+    deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+instance ToSchema SrcDestLocation
 
 data DWhere = DWhere
   {

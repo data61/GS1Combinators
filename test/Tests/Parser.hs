@@ -52,7 +52,7 @@ testParser = do
         [Right
           (
             DWhen
-              (read "2013-06-08 12:58:56.591" :: UTCTime)
+              (EPCISTime $ read "2013-06-08 12:58:56.591")
               Nothing
               (read "+02:00" :: TimeZone)
           )
@@ -71,10 +71,10 @@ testParser = do
       parseLabelEPCs "epcList" "quantityList" cursor
         `shouldBe`
           [
-            Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-            Right $ IL $ SGTIN "0614141" Nothing "107346" "2018",
-            Right $ CL (LGTIN "4012345" "012345" "998877")
-                (Just $ MeasuredQuantity 200 "KGM")
+            Right $ IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+            Right $ IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+            Right $ CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                (Just $ MeasuredQuantity (Amount 200) (Uom "KGM"))
           ]
 
     it "finds all child epcs" $ do
@@ -83,12 +83,12 @@ testParser = do
       parseLabelEPCs "childEPCs" "childQuantityList" cursor
         `shouldBe`
           [
-            Right $ IL $ SGTIN "0614141" Nothing "107346" "2017",
-            Right $ IL $ SGTIN "0614141" Nothing "107346" "2018",
-            Right $ CL (CSGTIN "4012345" Nothing "098765")
+            Right $ IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+            Right $ IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+            Right $ CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "098765"))
                 (Just $ ItemCount 10),
-            Right $ CL (LGTIN "4012345" "012345" "998877")
-                (Just $ MeasuredQuantity 200.5 "KGM")
+            Right $ CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                (Just $ MeasuredQuantity (Amount 200.5) (Uom "KGM"))
           ]
 
   describe "parse XML to get BizStep" $ do
@@ -147,15 +147,15 @@ testParser = do
       parseDWhere <$> oeCursors `shouldBe`
         [Right DWhere {
           _readPoint =
-              [SGLN "0614141" (LocationReference "07346") (Just "1234")]
+              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just $ SGLNExtension "1234")]
           , _bizLocation = []
           , _srcType = []
           , _destType = []
         }, Right DWhere {
           _readPoint =
-              [SGLN "0012345" (LocationReference "11111") (Just "400")]
+              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just $ SGLNExtension "400")]
           , _bizLocation =
-              [SGLN "0012345" (LocationReference "11111") Nothing]
+              [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
           , _srcType = []
           , _destType = []
         }]
@@ -171,9 +171,9 @@ testParser = do
         [Right
           DWhere {
             _readPoint =
-                [SGLN "0614141" (LocationReference "00777") Nothing],
+                [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing],
             _bizLocation =
-                [SGLN "0614141" (LocationReference "00888") Nothing],
+                [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing],
             _srcType = [],
             _destType = []
           }]
@@ -183,7 +183,7 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "quantityElement" cursor
-      parseQuantity <$> oeCursors `shouldBe` [Just $ MeasuredQuantity 200 "KGM"]
+      parseQuantity <$> oeCursors `shouldBe` [Just $ MeasuredQuantity (Amount 200) (Uom "KGM")]
 
   describe "parse BizTransaction" $ do
     it "parse BizTransaction element" $ do
@@ -194,16 +194,16 @@ testParser = do
         [
           [
             Right BizTransaction {
-              _btid = "http://transaction.acme.com/po/12345678",
+              _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
               _bt = Po
               }
           ],
           [
             Right BizTransaction {
-              _btid = "http://transaction.acme.com/po/12345678",
+              _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
               _bt = Po},
             Right BizTransaction {
-              _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
+              _btid = BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152",
               _bt = Desadv
             }
           ]
@@ -227,10 +227,10 @@ testParser = do
           [
             Right $ ObjectDWhat Observe
               [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018",
-                CL (LGTIN "4012345" "012345" "998877")
-                    (Just $ MeasuredQuantity 200 "KGM")
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+                CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                    (Just $ MeasuredQuantity (Amount 200) (Uom "KGM"))
               ]
           ]
 
@@ -249,8 +249,8 @@ testParser = do
           [
             Right $ ObjectDWhat Observe
               [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018"
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")
               ]
           ]
 
@@ -262,11 +262,11 @@ testParser = do
           [
             Right $ ObjectDWhat Observe
               [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018"
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")
               ],
             Right $ ObjectDWhat Observe
-              [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+              [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]
           ]
 
     it "parses a valid AggregationDWhat" $ do
@@ -275,13 +275,13 @@ testParser = do
       let aeCursors = getCursorsByName "AggregationEvent" cursor
       parseAggregationDWhat <$> aeCursors `shouldBe`
         [
-          Right $ AggregationDWhat Observe (Just $ SSCC "0614141" "1234567890")
+          Right $ AggregationDWhat Observe (Just . ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890"))
             [
-              IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018",
-              CL (CSGTIN "4012345" Nothing "098765") (Just $ ItemCount 10),
-              CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200.5 "KGM")
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+              CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "098765")) (Just $ ItemCount 10),
+              CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                  (Just $ MeasuredQuantity (Amount 200.5) (Uom "KGM"))
             ]
         ]
 
@@ -292,18 +292,18 @@ testParser = do
       parseTransactionDWhat <$> teCursors `shouldBe`
         [Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = "http://transaction.acme.com/po/12345678",
+            _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
             _bt = Po}]
-          [IL $ SGTIN "0614141" Nothing "107346" "2017",
-          IL $ SGTIN "0614141" Nothing "107346" "2018"]),
+          [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+          IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]),
         Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = "http://transaction.acme.com/po/12345678",
+            _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
             _bt = Po},
           BizTransaction {
-            _btid = "urn:epcglobal:cbv:bt:0614141073467:1152",
+            _btid = BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152",
             _bt = Desadv}]
-          [IL $ SGTIN "0614141" Nothing "107346" "2018"])]
+          [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")])]
 
     describe "run parseTransformationDWhat" $
       it "parses valid DWhat" $ do
@@ -313,20 +313,20 @@ testParser = do
         parseTransformationDWhat <$> tCursors `shouldBe`
           [
             Right $ TransformationDWhat Nothing
+              (InputEPC <$>
+              [ IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "011122") (SerialNumber "25"))
+              , IL (SGTIN (GS1CompanyPrefix "4000001") Nothing (ItemReference "065432") (SerialNumber "99886655"))
+              , CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "011111") (Lot "4444")) (Just (MeasuredQuantity (Amount 10.0) (Uom "KGM")))
+              , CL (LGTIN (GS1CompanyPrefix "0614141") (ItemReference "077777") (Lot "987")) (Just (ItemCount 30))
+              , CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "066666")) (Just (ItemCount 220))
+              ])
+              (OutputEPC <$>
               [
-                IL (SGTIN "4012345" Nothing "011122" "25"),
-                IL (SGTIN "4000001" Nothing "065432" "99886655"),
-                CL (LGTIN "4012345" "011111" "4444")
-                    (Just (MeasuredQuantity 10.0 "KGM")),
-                CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
-                CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
-              ]
-              [
-                IL (SGTIN "4012345" Nothing "077889" "25"),
-                IL (SGTIN "4012345" Nothing "077889" "26"),
-                IL (SGTIN "4012345" Nothing "077889" "27"),
-                IL (SGTIN "4012345" Nothing "077889" "28")
-              ]
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "25")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "26")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "27")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "28"))
+              ])
           ]
 
 
@@ -347,16 +347,16 @@ testParser = do
             (
               ObjWhat $ ObjectDWhat Observe
               [
-                IL $ SGTIN "0614141" Nothing "107346" "2017",
-                IL $ SGTIN "0614141" Nothing "107346" "2018",
-                CL (LGTIN "4012345" "012345" "998877")
-                    (Just $ MeasuredQuantity 200 "KGM")
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+                IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+                CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                    (Just $ MeasuredQuantity (Amount 200) (Uom "KGM"))
               ]
             )
             -- a dwhen element
             (
               DWhen
-                (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+                (EPCISTime $ read "2005-04-03 20:33:31.116-06:00")
                 Nothing
                 (read "-06:00" :: TimeZone)
             )
@@ -365,25 +365,25 @@ testParser = do
             -- a dwhere element
             (
               DWhere
-              [SGLN "0614141" (LocationReference "00777") Nothing]
+              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing]
               -- [ReadPointLocation]
-              [SGLN "0614141" (LocationReference "00888") Nothing]
+              [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing]
               -- [BizLocation]
               [
-                (
+                SrcDestLocation (
                   SDPossessingParty, -- SourceDestType
-                  SGLN "4012345" (LocationReference "00001") Nothing
+                  SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing
                   -- LocationEPC
                 )
               ] -- srcType
               [
-                (
+                SrcDestLocation (
                   SDOwningParty,
-                  SGLN "0614141" (LocationReference "00001") Nothing
+                  SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing
                 ),
-                (
+                SrcDestLocation (
                   SDLocation,
-                  SGLN "0614141" (LocationReference "00777") Nothing
+                  SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing
                 )
               ] -- destType
             )
@@ -406,15 +406,15 @@ testParser = do
               (
                 ObjWhat $ ObjectDWhat Observe
                 [
-                  IL $ SGTIN "0614141" Nothing "107346" "2017",
-                  IL $ SGTIN "0614141" Nothing "107346" "2018"
+                  IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+                  IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")
                 ]
               )
               -- a dwhen element
               (
                 DWhen
-                  (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-                  (Just (read "2005-04-03 20:33:31.116-06:00" :: UTCTime))
+                  (EPCISTime $ read "2005-04-03 20:33:31.116-06:00")
+                  (Just (EPCISTime $ read "2005-04-03 20:33:31.116-06:00"))
                   (read "-06:00" :: TimeZone)
               )
               -- a dwhy element
@@ -423,7 +423,7 @@ testParser = do
               -- <id>urn:epc:id:sgln:0614141.07346.1234</id>
               (
                 DWhere
-                  [SGLN "0614141" (LocationReference "07346") (Just "1234")]
+                  [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just (SGLNExtension "1234"))]
                   [] [] []
               ),
 
@@ -436,12 +436,12 @@ testParser = do
               -- a dwhat element
               (
                 ObjWhat $ ObjectDWhat Observe
-                  [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+                  [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]
               )
               -- a dwhen element
               (
                 DWhen
-                  (read "2005-04-04 20:33:31.116-06:00" :: UTCTime)
+                  (EPCISTime $ read "2005-04-04 20:33:31.116-06:00")
                   Nothing
                   (read "-06:00" :: TimeZone)
               )
@@ -450,9 +450,9 @@ testParser = do
               -- a dwhere element
               (
                 DWhere
-                [SGLN "0012345" (LocationReference "11111") (Just "400")]
+                [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just (SGLNExtension "400"))]
                 -- [ReadPointLocation]
-                [SGLN "0012345" (LocationReference "11111") Nothing]
+                [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
                 -- [BizLocation]
                 [] []
               )
@@ -471,25 +471,25 @@ testParser = do
           -- a dwhat element
           (
             TransformWhat $ TransformationDWhat Nothing
-              [
-                IL (SGTIN "4012345" Nothing "011122" "25"),
-                IL (SGTIN "4000001" Nothing "065432" "99886655"),
-                CL (LGTIN "4012345" "011111" "4444")
-                    (Just (MeasuredQuantity 10.0 "KGM")),
-                CL (LGTIN "0614141" "077777" "987") (Just (ItemCount 30)),
-                CL (CSGTIN "4012345" Nothing "066666") (Just (ItemCount 220))
-              ]
-              [
-                IL (SGTIN "4012345" Nothing "077889" "25"),
-                IL (SGTIN "4012345" Nothing "077889" "26"),
-                IL (SGTIN "4012345" Nothing "077889" "27"),
-                IL (SGTIN "4012345" Nothing "077889" "28")
-              ]
+              (InputEPC <$> [
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "011122") (SerialNumber "25")),
+                IL (SGTIN (GS1CompanyPrefix "4000001") Nothing (ItemReference "065432") (SerialNumber "99886655")),
+                CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "011111") (Lot "4444"))
+                    (Just (MeasuredQuantity (Amount 10.0) (Uom "KGM"))),
+                CL (LGTIN (GS1CompanyPrefix "0614141") (ItemReference "077777") (Lot "987")) (Just (ItemCount 30)),
+                CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "066666")) (Just (ItemCount 220))
+              ])
+              (OutputEPC <$> [
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "25")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "26")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "27")),
+                IL (SGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "077889") (SerialNumber "28"))
+              ])
           )
           -- a dwhen element
           (
             DWhen
-              (read "2013-10-31 14:58:56.591Z" :: UTCTime) -- eventTime
+              (EPCISTime $ read "2013-10-31 14:58:56.591Z") -- eventTime
               Nothing -- recordTime
               (read "+02:00" :: TimeZone) -- timeZone
           )
@@ -498,7 +498,7 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [SGLN "4012345" (LocationReference "00001") Nothing]
+            [ReadPointLocation $ SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing]
             -- [ReadPointLocation]
             [] -- [BizLocation]
             [] -- srcType
@@ -523,18 +523,18 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po}
+              BizTransaction{_btid= BizTransactionID "http://transaction.acme.com/po/12345678", _bt=Po}
             ]
             [
-              IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018"
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")
             ]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
-              (Just (read "2005-04-03 20:33:31.116-06:00" :: UTCTime))
+              (EPCISTime $ read "2005-04-03 20:33:31.116-06:00")
+              (Just (EPCISTime $ read "2005-04-03 20:33:31.116-06:00"))
               (read "-06:00" :: TimeZone)
           )
           -- a dwhy element
@@ -542,7 +542,7 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [SGLN "0614141" (LocationReference "07346") (Just "1234")]
+            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346")  (Just (SGLNExtension "1234"))]
             -- [ReadPointLocation]
             []-- [BizLocation]
             [] -- srcType
@@ -560,15 +560,15 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid="http://transaction.acme.com/po/12345678", _bt=Po},
-              BizTransaction{_btid="urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
+              BizTransaction{_btid= BizTransactionID "http://transaction.acme.com/po/12345678", _bt=Po},
+              BizTransaction{_btid= BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
             ]
-            [IL $ SGTIN "0614141" Nothing "107346" "2018"]
+            [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2005-04-04 20:33:31.116-06:00" :: UTCTime)
+              (EPCISTime $ read "2005-04-04 20:33:31.116-06:00")
               Nothing
               (read "-06:00" :: TimeZone)
           )
@@ -577,9 +577,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [SGLN "0012345" (LocationReference "11111") (Just "400")]
+            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111")  (Just (SGLNExtension "400"))]
             -- [ReadPointLocation]
-            [SGLN "0012345" (LocationReference "11111") Nothing]
+            [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
             -- [BizLocation]
             [] -- srcType
             [] -- destType
@@ -599,19 +599,19 @@ testParser = do
           -- a dwhat element
           (
             AggWhat $ AggregationDWhat Observe
-            (Just (SSCC "0614141" "1234567890")) -- Maybe ParentLabel
+            (Just (ParentLabel $ SSCC (GS1CompanyPrefix "0614141") (SerialNumber "1234567890"))) -- Maybe ParentLabel
             [
-              IL $ SGTIN "0614141" Nothing "107346" "2017",
-              IL $ SGTIN "0614141" Nothing "107346" "2018",
-              CL (CSGTIN "4012345" Nothing "098765") (Just $ ItemCount 10),
-              CL (LGTIN "4012345" "012345" "998877")
-                  (Just $ MeasuredQuantity 200.5 "KGM")
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
+              IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"),
+              CL (CSGTIN (GS1CompanyPrefix "4012345") Nothing (ItemReference "098765")) (Just $ ItemCount 10),
+              CL (LGTIN (GS1CompanyPrefix "4012345") (ItemReference "012345") (Lot "998877"))
+                  (Just $ MeasuredQuantity (Amount 200.5) (Uom "KGM"))
             ] -- [LabelEPC]
           )
           -- a dwhen element
           (
             DWhen
-              (read "2013-06-08 14:58:56.591+02:00" :: UTCTime)
+              (EPCISTime $ read "2013-06-08 14:58:56.591+02:00")
               Nothing
               (read "+02:00" :: TimeZone)
           )
@@ -620,9 +620,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [SGLN "0614141" (LocationReference "00777") Nothing]
+            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing]
             -- [ReadPointLocation]
-            [SGLN "0614141" (LocationReference "00888") Nothing]
+            [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing]
             -- [BizLocation]
             [] -- srcType
             [] -- destType
@@ -644,7 +644,7 @@ testParser = do
           `shouldBe` Left TimeZoneError
     it "parseTimeXML valid" $
       parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Right
-         (read "2005-04-03 20:33:31.116-06:00" :: UTCTime)
+         (EPCISTime $ read "2005-04-03 20:33:31.116-06:00")
 
     it "parseTimeZoneXML invalid" $
       parseTimeZoneXML [] `shouldBe` Left TagNotFound
