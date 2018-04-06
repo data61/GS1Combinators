@@ -1,6 +1,8 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+
 
 module Data.GS1.DWhat where
 
@@ -16,27 +18,36 @@ import qualified Data.Text      as T
 
 import           Data.GS1.EPC
 
-data LabelEPC = CL
-                {
-                  _clClassLabelEpc :: ClassLabelEPC
-                , _clQuantity      :: Maybe Quantity
-                }
-              | IL
-                {
-                  _ilInstanceLabelEpc :: InstanceLabelEPC
-                }
-              deriving (Show, Read, Eq, Generic)
+data LabelEPC
+  = CL
+    { _clClassLabelEpc :: ClassLabelEPC
+    , _clQuantity      :: Maybe Quantity
+    }
+  | IL
+    { _ilInstanceLabelEpc :: InstanceLabelEPC
+    }
+  deriving (Show, Read, Eq, Generic)
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
 
-type ParentLabel  = InstanceLabelEPC
-type InputEPC  = LabelEPC
-type OutputEPC = LabelEPC
+newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+newtype OutputEPC    = OutputEPC {unOutputEPC :: LabelEPC}
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+
+instance ToSchema ParentLabel
+instance ToSchema InputEPC
+instance ToSchema OutputEPC
+
 
 -- | Parses an EPC URN into a LabelEPC.
 -- As no quantity information is provided in a URN,
 -- Maybe Quantity is provided so ClassLabel EPCs can be instantiated with it.
+
+-- TODO: This feels wrong, and should probably use Alternative's <|>
 readLabelEPC :: Maybe Quantity -> T.Text -> Either ParseFailure LabelEPC
 readLabelEPC mQt epcStr =
   fmap (`CL` mQt) (readURIClassLabelEPC epcTokens)
@@ -117,12 +128,3 @@ data DWhat =
 $(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
 
-ppDWhat :: DWhat -> String
-ppDWhat (ObjWhat (ObjectDWhat a epcs)) =
-  "OBJECT WHAT\n" ++ show a ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (AggWhat (AggregationDWhat a pid epcs) ) =
-  "AGGREGATION WHAT\n" ++ show a ++ "\n" ++ show pid ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (TransactWhat (TransactionDWhat a s bizT epcs)) =
-  "TRANSACTION WHAT\n" ++ show a ++ "\n" ++ show s ++ "\n" ++ show bizT ++ "\n" ++ show epcs ++ "\n"
-ppDWhat (TransformWhat (TransformationDWhat tid inputEpcs outputEpcs)) =
-  "TRANSFORMATION WHAT\n" ++ show tid ++ "\n" ++ show inputEpcs ++ "\n" ++ show outputEpcs ++ "\n"
