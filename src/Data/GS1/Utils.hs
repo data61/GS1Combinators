@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | module containing various utility functions
@@ -14,8 +15,12 @@ module Data.GS1.Utils (
 ) where
 
 import           Data.Char
-import qualified Data.Text       as T
+import           Data.Monoid ((<>))
+import qualified Data.Text   as T
 import           Text.Read
+
+-- TODO: Write some tests for this code and make sure it's safe. A lot could be
+-- written more clearly
 
 -- a helper function
 -- if it's a capital char, inserts an '_' before
@@ -25,7 +30,7 @@ import           Text.Read
 -- 'C' returns '_c'
 putUsOrReturnChar :: Char -> T.Text
 putUsOrReturnChar c
-  | isUpper c = T.append "_" (T.singleton $ toLower c)
+  | isUpper c = "_" <> [toLower c]
   | otherwise = T.singleton c
 
 insertUs :: T.Text -> T.Text
@@ -38,17 +43,20 @@ revertCamelCase t
   | otherwise = let r = insertUs t in
                     case T.head r of
                       '_' -> T.tail r
-                      _     -> r
+                      _   -> r
 
 {-
 XXX - this is a good exercise, the camelCase function can be rewritten using
-the _head prism and the modify function (called (%~)) 
+the _head prism and the modify function (called (%~))
 another question, do revertCamelCase and camelCase functions form an Iso?
+
+Great question
 -}
 
 camelCase :: T.Text -> T.Text
 camelCase = T.toTitle
 
+-- Does this need to be a function? it's just fmap camelCase
 mkCamelCaseWord :: [T.Text] -> [T.Text]
 mkCamelCaseWord sl = camelCase <$> sl
 
@@ -67,7 +75,7 @@ parseURI s uri = let(_, s') = T.breakOn uri s in
 -- returns (Just Right) or Nothing
 either2Maybe :: Either a b -> Maybe b
 either2Maybe (Right x) = Just x
-either2Maybe (Left _) = Nothing
+either2Maybe (Left _)  = Nothing
 
 getTotalLength :: [T.Text] -> Int
 getTotalLength ts = sum $ T.length <$> ts

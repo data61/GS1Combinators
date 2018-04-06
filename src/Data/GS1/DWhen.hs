@@ -4,12 +4,12 @@
 
 module Data.GS1.DWhen where
 
-import Data.Time
-import GHC.Generics
-import Data.Aeson
-import Data.Aeson.TH
-import Data.Swagger
-import Data.GS1.EPC
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.GS1.EPC
+import           Data.Swagger
+import           Data.Time
+import           GHC.Generics
 
 data DWhen = DWhen
   {

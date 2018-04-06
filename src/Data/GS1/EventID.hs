@@ -1,18 +1,17 @@
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Data.GS1.EventID where
 
 import           Control.Lens
-import           Control.Monad (liftM)
-import           Data.UUID as UUID
 import           Data.Aeson
 import           Data.Aeson.TH
-import           GHC.Generics
 import           Data.Swagger
+import           Data.UUID       as UUID
+import           GHC.Generics
 import           Web.HttpApiData
 
 
@@ -23,7 +22,7 @@ newtype EventID = EventID {getEventId :: UUID}
 makeWrapped ''EventID
 
 instance FromHttpApiData EventID where
-  parseQueryParam httpData = liftM EventID $ parseQueryParam httpData
+  parseQueryParam httpData = EventID <$> parseQueryParam httpData
 
 $(deriveJSON defaultOptions ''EventID)
 instance ToSchema EventID
