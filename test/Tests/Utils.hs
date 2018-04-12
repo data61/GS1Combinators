@@ -7,22 +7,14 @@ import qualified Data.Text      as T
 import           GHC.Generics
 import           Test.Hspec
 
-data TestDataType = Foo
-                  | Bar
-                  | Jaja
-                  deriving (Show, Eq, Generic, Read)
-
--- $(deriveJSON defaultOptions ''TestDataType)
+data TestDataType
+  = Foo
+  | Bar
+  | Jaja
+  deriving (Show, Eq, Generic, Read)
 
 testDataTypeURI :: T.Text
 testDataTypeURI = "blah:foo:bar"
-
-{-
-instance URI TestDataType where
-  printURI t = testDataTypeURI ++ (revertCamelCase . show t)
-  readURI s = let uri = testDataTypeURI in
-              parseURI s uri :: Maybe TestDataType
--}
 
 testRevertCamelCase :: Spec
 testRevertCamelCase =
