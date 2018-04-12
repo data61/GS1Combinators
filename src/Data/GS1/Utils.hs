@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
 
 -- | module containing various utility functions
 -- none of these functions are specific to GS1
