@@ -1,13 +1,11 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
+{-# LANGUAGE DeriveGeneric #-}
 
 module Tests.Utils where
 
 import           Data.GS1.Utils
-import           Test.Hspec
+import qualified Data.Text      as T
 import           GHC.Generics
-import qualified Data.Text as T
+import           Test.Hspec
 
 data TestDataType = Foo
                   | Bar
