@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhere where
 
 import           Data.GS1.EPC

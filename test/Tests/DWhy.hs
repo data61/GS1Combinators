@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Tests.DWhy where
 
 import           Data.GS1.EPC

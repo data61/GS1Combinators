@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Tests.Parser where
 
 import           Data.Either.Combinators
