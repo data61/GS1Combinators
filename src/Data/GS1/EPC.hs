@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -326,12 +325,6 @@ data LocationEPC = SGLN {
   }
   deriving (Show, Read, Eq, Generic)
 $(deriveJSON defaultOptions ''LocationEPC)
-
--- |non-normative representation - simplest form of RFC5870
--- deprecated, kept momentarily for reference
--- ppLocationReference :: LocationReference -> String
--- ppLocationReference (LocationCoord lat lng) = printf "%f,%f" lat lng -- new standard
--- ppLocationReference (LocationReference str) = str
 
 instance ToSchema LocationReference
 
