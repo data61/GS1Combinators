@@ -112,7 +112,7 @@ instance ToSchema SerialNumber
 instance ToSchema SGLNExtension
 
 data SGTINFilterValue
-  =  AllOthers
+  = AllOthers
   | POSTradeItem
   | FullCaseForTransport
   | Reserved1
