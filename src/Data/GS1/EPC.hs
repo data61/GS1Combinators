@@ -464,11 +464,7 @@ data LocationError
   deriving (Show, Eq, Generic)
 
 
----------------------------
--- WHAT -------------------
----------------------------
-
--- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
+-- | CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep
   = Accepting
   | Arriving
@@ -585,7 +581,6 @@ $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
 
-
 -- | TransformationID
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
 -- Some transformation business processes take place over a long period of time, and so it is more
@@ -597,10 +592,11 @@ newtype TransformationID = TransformationID {unTransformationID :: UUID}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema TransformationID
 
-data Action = Add
-            | Observe
-            | Delete
-            deriving (Show, Eq, Generic, Read)
+data Action =
+    Add
+  | Observe
+  | Delete
+  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 instance ToParamSchema Action where
