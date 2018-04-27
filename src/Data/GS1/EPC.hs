@@ -29,9 +29,8 @@ import           Data.Semigroup
 data ParseFailure
   = InvalidLength
   -- ^ Length is not correct
-  -- CHECK in Disposition, InvalidFormat can also indicate wrong payload... FIXME?
   | InvalidFormat
-  -- ^ Components Missing, incorrectly structured
+  -- ^ Components Missing, incorrectly structured, wrong payload
   | InvalidAction
   -- ^ When parsing an action failed
   | InvalidBizTransaction
@@ -39,13 +38,13 @@ data ParseFailure
   | InvalidEvent
   -- ^ When parsing an event failed
   | TimeZoneError
-  -- ^ error in parsing timezone
+  -- ^ Error in parsing timezone
   | TagNotFound
-  -- ^ when a mandatory tag is not found
+  -- ^ When a mandatory tag is not found
   | InvalidDispBizCombination
-  -- ^ when the disposition does not go with the bizstep
+  -- ^ When the disposition does not go with the bizstep
   | ChildFailure [ParseFailure]
-  -- ^ when there is a list of Parsefailures
+  -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
   deriving (Show, Eq)
@@ -113,7 +112,7 @@ instance ToSchema SerialNumber
 instance ToSchema SGLNExtension
 
 data SGTINFilterValue
-  =  AllOthers
+  = AllOthers
   | POSTradeItem
   | FullCaseForTransport
   | Reserved1
@@ -291,13 +290,12 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
       Right $ SGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference ir) (SerialNumber sn)
-                                  -- Nothing, for the moment
+                                         -- Nothing, for the moment
   | otherwise = Left InvalidLength
       where
         [pfix, ir, sn] = getSuffixTokens rest
         isCorrectLen =
             getTotalLength [pfix, ir] == sgtinPadLen
-            -- TODO: BUG? no sn in check?
 
 readURIInstanceLabelEPC _ = Left InvalidFormat
 
@@ -373,10 +371,11 @@ readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
 instance ToSchema LocationEPC
 
-data SourceDestType = SDOwningParty
-                    | SDPossessingParty
-                    | SDLocation
-                    deriving (Show, Eq, Generic, Read)
+data SourceDestType
+  = SDOwningParty
+  | SDPossessingParty
+  | SDLocation
+  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
@@ -401,16 +400,15 @@ newtype ServiceReference = ServiceReference {unServiceReference :: T.Text}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema DocumentType
 
-data BusinessTransactionEPC =  GDTI {
-                                 _gdtiCompanyPrefix :: GS1CompanyPrefix
-                               , _gdtiDocType       :: DocumentType
-                               , _gdtiSerialNum     :: SerialNumber
-                               }
-                             | GSRN {
-                                 _gsrnCompanyPrefix :: GS1CompanyPrefix
-                               , _gsrnSerialRef     :: SerialReference
-                               }
-                              deriving (Show, Read, Eq, Generic)
+data BusinessTransactionEPC
+  = GDTI {
+    _gdtiCompanyPrefix :: GS1CompanyPrefix
+  , _gdtiDocType       :: DocumentType
+  , _gdtiSerialNum     :: SerialNumber }
+  | GSRN {
+    _gsrnCompanyPrefix :: GS1CompanyPrefix
+  , _gsrnSerialRef     :: SerialReference }
+  deriving (Show, Read, Eq, Generic)
 
 -- urn:epc:id:gdti:CompanyPrefix.DocumentType.SerialNumber
 instance URI BusinessTransactionEPC where
@@ -463,12 +461,7 @@ data LocationError
   | InvalidChecksum
   deriving (Show, Eq, Generic)
 
-
----------------------------
--- WHAT -------------------
----------------------------
-
--- CBV-Standard-1-2-r-2016-09-29.pdf Page 17
+-- | CBV-Standard-1-2-r-2016-09-29.pdf Page 17
 data BizStep
   = Accepting
   | Arriving
@@ -585,7 +578,6 @@ $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
 
-
 -- | TransformationID
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
 -- Some transformation business processes take place over a long period of time, and so it is more
@@ -597,10 +589,11 @@ newtype TransformationID = TransformationID {unTransformationID :: UUID}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema TransformationID
 
-data Action = Add
-            | Observe
-            | Delete
-            deriving (Show, Eq, Generic, Read)
+data Action
+  = Add
+  | Observe
+  | Delete
+  deriving (Show, Eq, Generic, Read)
 $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 instance ToParamSchema Action where
@@ -682,20 +675,6 @@ newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
   deriving (Show, Read, Eq, Generic, Ord, ToJSON, FromJSON)
 instance ToSchema EPCISTime
 
--- copied from https://github.com/data61/bom-solar-webservice/blob/master/app/Main.hs
--- | A datatype representing a UTCTime shown and read using the ISO 8601 format with HH:MM:SS and timezone
---
-{-
-newtype ISO8601 = ISO8601 UTCTime deriving (Eq, Generic, ToJSON, FromJSON)
-iso8601Format = iso8601DateFormat $ Just "%H:%M:%S%z"
-instance Show            ISO8601 where show (ISO8601 t) = formatTime defaultTimeLocale iso8601Format t
-instance Read            ISO8601 where readsPrec p = (coerce :: ReadS UTCTime -> ReadS ISO8601) $ readSTime True defaultTimeLocale iso8601Format
-instance ToParamSchema   ISO8601 where
-  toParamSchema _ = mempty
-    & type_ .~ SwaggerString
-    & format .~ Just (pack iso8601Format)
--}
-
 data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
 $(deriveJSON defaultOptions ''EPCISTimeError)
 instance ToSchema EPCISTimeError
@@ -724,75 +703,3 @@ timeSchema fmt = mempty
 -- XXX I have literally no idea what is happening here! Please check!
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
-
--- DELETED ErrorReasonID since incorrect since it
--- -- |EPCIS 1.2 section 7.5
--- -- FIXME example should be found to verify the implementation is correct
--- data ErrorReasonID = DidNotOccur
---                    | IncorrectData
---                    deriving (Show, Eq, Generic)
-
--- ppErrorReasonID :: ErrorReasonID -> String
--- ppErrorReasonID = revertCamelCase . show
-
--- data ErrorDeclaration = ErrorDeclaration
---   {
---     _declarationTime    :: EPCISTime
---   , _reason             :: Maybe ErrorReasonID
---   , _correctiveEventIDs :: Maybe [EventID]
---   }
---   deriving (Show, Eq, Generic)
-
-
--- ppErrorDecleration  (ErrorDeclaration _ r _) = case r of
---                                           Just a  -> ppErrorReasonID a
---                                           Nothing -> ""
-
--- instance URI ErrorDeclaration where
---   printURI er  = "urn:epcglobal:cbv:er:" ++ ppErrorDecleration er
---   readURI _    = undefined --FIXME
-
-{-
--- |calculate the check digit from gs1company prefix and location reference
---  https://data61.slack.com/files/zzhu/F35T5N1L0/check_digit_calculator.pdf
-calcCheckDigit :: GS1CompanyPrefix -> LocationRef -> Int
-calcCheckDigit pref ref = getDigit (map digitToInt (pref ++ ref)) where
-  getDigit arr = 10 - (sumDigit arr `mod` 10)
-    where sumDigit arr2 = case arr2 of
-                          (a:b:xs) -> a + b * 3 + sumDigit xs
-                          _        -> 0
-
--- | Check the length and isDigit for all chars
-wellFormatGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
-wellFormatGLN pref ref cd = _concat pref ref == 12 && length cd == 1 && _isNum pref ref cd
-  where _concat a b = length (a ++ b)
-        _isNum a b c =
-          let mint = readMaybe (concat [a, b, c]) :: Maybe Integer in
-          case mint of
-            Just _  -> True
-            Nothing -> False
-
--- |validateGLN
-validateGLN :: GS1CompanyPrefix -> LocationRef -> CheckDigit -> Bool
-validateGLN pref ref cd = calcCheckDigit pref ref == (read cd::Int)
-
-commented out because EPCs are now a class, not a type.
--- |Creates a valid GLN
-gln ::(AsLocationError e, MonadError e m)
-     => GS1CompanyPrefix -> LocationRef -> CheckDigit -> m EPC
-gln pref ref cd
-  | not (wellFormatGLN pref ref cd) = throwing _IllegalGLNFormat ()
-  | not (validateGLN pref ref cd)   = throwing _InvalidChecksum ()
-  | otherwise                       = pure (GLN pref ref cd)
-
--- |type -> payload -> Maybe EPC
--- TODO: add more types
-mkEPC :: String -> String -> Maybe EPC
-mkEPC t p = case t of
-              "EPC" -> Just $ EPC p
-              "GLN" -> case splitOn "." p of
-                         [a, b, c] -> let x = gln a b c :: Either LocationError EPC in
-                                          if isRight x then Just (fromRight' x) else Nothing
-                         _         -> Nothing
-              _     -> Nothing
--}
