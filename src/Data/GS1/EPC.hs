@@ -146,6 +146,8 @@ instance ToSchema Amount
 instance ToSchema Uom
 instance ToSchema AssetType
 
+-- | A quantity can be either the amount and the unit of measurement,
+-- or the item count.
 data Quantity
   = MeasuredQuantity
     {
@@ -168,11 +170,14 @@ getSuffixTokens suffix = T.splitOn "." $ T.concat suffix
 
 --GS1_EPC_TDS_i1_10.pdf (page 27)
 data ClassLabelEPC
+  -- | LGTIN = GTIN + Batch/Lot scheme is used to denote a class of objects
+  -- belonging to a given batch or lot of a given GTIN
   = LGTIN
     { _lgtinCompanyPrefix :: GS1CompanyPrefix
     , _lgtinItemReference :: ItemReference
     , _lgtinLot           :: Lot
     }
+    -- | Class SGTIN.
     -- e.g. olives in a vat, harvested in April 2017
   | CSGTIN
     { _csgtinCompanyPrefix    :: GS1CompanyPrefix
@@ -195,7 +200,6 @@ instance URI ClassLabelEPC where
   readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
 
 
--- move GRAI to InstanceLabel
 -- implement reader for :idpat:sgtin:
 readURIClassLabelEPC :: [T.Text] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
@@ -213,19 +217,19 @@ instance ToSchema ClassLabelEPC
 
 data InstanceLabelEPC
   -- | Global Individual Asset Identifier,
-  -- e.g. bucket for olives
+  --  e.g. bucket for olives
   = GIAI
     {
       _giaiCompanyPrefix :: GS1CompanyPrefix
     , _giaiSerialNum     :: SerialNumber
     }
-  -- | serial shipping container code
+  -- | Serial Shipping Container Code
   | SSCC
     {
       _ssccCompanyPrefix :: GS1CompanyPrefix
     , _ssccSerialNum     :: SerialNumber
     }
-  -- | serialsed global trade item number
+  -- | Serialsed Global Trade Item Number
   | SGTIN
     {
       _sgtinCompanyPrefix    :: GS1CompanyPrefix
@@ -233,7 +237,7 @@ data InstanceLabelEPC
     , _sgtinItemReference    :: ItemReference
     , _sgtinSerialNum        :: SerialNumber
     }
-  -- | Global returnable asset identifier
+  -- | Global Returnable Asset Identifier
   | GRAI
     {
       _graiCompanyPrefix :: GS1CompanyPrefix
@@ -258,11 +262,11 @@ instance URI InstanceLabelEPC where
 
   readURI epcStr = readURIInstanceLabelEPC $ T.splitOn ":" epcStr
 
--- GS1_EPC_TDS_i1_11.pdf Page 28
+-- | GS1_EPC_TDS_i1_11.pdf Page 28
 sgtinPadLen :: Int
 sgtinPadLen = 13
 
--- GS1_EPC_TDS_i1_11.pdf Page 29
+-- | GS1_EPC_TDS_i1_11.pdf Page 29
 ssccPadLen :: Int
 ssccPadLen = 17
 
@@ -315,7 +319,13 @@ newtype LocationReference
   deriving (Read, Eq, Generic, Show)
 $(deriveJSON defaultOptions ''LocationReference)
 
-
+-- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 35 4.7.2
+-- In EPCIS, the GLN+extension is represented as a Uniform Resource Identifier
+-- (URI) according to the EPC Tag Data Standard. The specific type of URI is
+-- called an SGLN, which is capable of representing either a
+-- GLN+extension or a GLN without extension. The SGLN for
+-- GLN 0614141111114 and extension 987 looks like this:
+-- urn:epc:id:sgln:0614141.11111.978
 data LocationEPC = SGLN {
     _sglnCompanyPrefix :: GS1CompanyPrefix
   , _locationRef       :: LocationReference
@@ -341,7 +351,7 @@ isLocationEPC :: [T.Text] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
 isLocationEPC _                                   = False
 
--- GS1_EPC_TDS_i1_11.pdf Page 29
+-- | GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPadLen :: Int
 sglnPadLen = 12
 
@@ -370,7 +380,14 @@ readURILocationEPC [pfix, loc, extNum]
 readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
 
 instance ToSchema LocationEPC
-
+-- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 19
+-- Source List and Destination List: is used to provide additional business context
+-- when an EPCIS event is part of a business transfer of ownership, responsibility
+-- or custody. As with business transactions, a source or destination is identified by
+-- a pair of identifiers: the type of the source or destination and an identifier
+-- of the source or destination of that type. The GS1 CBV (section 7.4.2)
+-- distinguishes three standard source/destination types: “owning_party”,
+-- “possessing_party”, “location”.
 data SourceDestType
   = SDOwningParty
   | SDPossessingParty
@@ -400,6 +417,12 @@ newtype ServiceReference = ServiceReference {unServiceReference :: T.Text}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 instance ToSchema DocumentType
 
+
+--TODO: Implement URI instances for GCN and CPID
+
+-- |  Other GS1 object identifiers include GDTI for documents,
+-- GIAI for individual assets, GRAI for returnable assets,
+-- GSRN for services, GCN for coupons, and CPID for components or parts.
 data BusinessTransactionEPC
   = GDTI {
     _gdtiCompanyPrefix :: GS1CompanyPrefix
