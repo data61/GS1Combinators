@@ -17,24 +17,31 @@ testReadSGLN =
       it "Invalid URI" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC)
           "this:is:invalid"
-            `shouldBe` Left InvalidFormat
+            `shouldBe` (Left $ InvalidFormat (XMLSnippet "this:is:invalid"))
       it "Some other valid uri" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC)
           "urn:epc:class:lgtin:4012345.012345.998877"
-            `shouldBe` Left InvalidFormat
+            `shouldBe`
+              (Left $ InvalidFormat (XMLSnippet "urn:epc:class:lgtin:4012345.012345.998877"))
       it "Empty string" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC) ""
-          `shouldBe` Left InvalidFormat
+          `shouldBe` (Left $ InvalidFormat (XMLSnippet ""))
       it "Some components missing" $
         (readURI :: T.Text -> Either ParseFailure LocationEPC)
-          "urn:epc:sgln:0614141.12345.400" `shouldBe` Left InvalidFormat
+          "urn:epc:sgln:0614141.12345.400"
+            `shouldBe`
+              (Left $ InvalidFormat (XMLSnippet "urn:epc:sgln:0614141.12345.400"))
       describe "Invalid length" $ do
         it "Shorter length" $
           (readURI :: T.Text -> Either ParseFailure LocationEPC)
-            "urn:epc:id:sgln:06.12.4" `shouldBe` Left InvalidLength
+            "urn:epc:id:sgln:06.12.4"
+              `shouldBe`
+                (Left $ InvalidLength (XMLSnippet "06.12.4"))
         it "Longer length" $
           (readURI :: T.Text -> Either ParseFailure LocationEPC)
-            "urn:epc:id:sgln:06534590.123234322.4" `shouldBe` Left InvalidLength
+            "urn:epc:id:sgln:06534590.123234322.4"
+              `shouldBe`
+                (Left $ InvalidLength (XMLSnippet "06534590.123234322.4"))
 
 testPrintSGLN :: Spec
 testPrintSGLN =

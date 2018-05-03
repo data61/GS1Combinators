@@ -22,8 +22,8 @@ testParseTime =
 
     it "parses slightly invalid string and returns ParseFailure" $ do
       let zt = fromLeft' (parseStr2Time "2005-04-3T20:33:31.116-06:00")
-      zt `shouldBe` TimeZoneError
+      zt `shouldBe` TimeZoneError (XMLSnippet "2005-04-3T20:33:31.116-06:00")
 
     it "parses empty string and returns ParseFailure" $ do
       let zt = fromLeft' (parseStr2Time "")
-      zt `shouldBe` TimeZoneError
+      zt `shouldBe` TimeZoneError (XMLSnippet "")
