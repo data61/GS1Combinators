@@ -34,24 +34,25 @@ import           Data.GS1.Utils
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
--- parseSingleElem returns an Either
-parseSingleElem :: (T.Text -> Either ParseFailure a) -> [T.Text]
-                      -> Either ParseFailure a
-parseSingleElem f (x:_) = f x
-parseSingleElem _ []    = Left TagNotFound
+parseSingleElem :: T.Text
+                -> (T.Text -> Either ParseFailure a)
+                -> [T.Text]
+                -> Either ParseFailure a
+parseSingleElem _tag f (x:_) = f x
+parseSingleElem tag _ []     = Left $ TagNotFound (MissingTag tag)
 
-parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
-parseTimeXML = parseSingleElem parseStr2Time
+parseTimeXML :: T.Text -> [T.Text] -> Either ParseFailure EPCISTime
+parseTimeXML tag = parseSingleElem tag parseStr2Time
 
-parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
-parseTimeZoneXML = parseSingleElem parseStr2TimeZone
+parseTimeZoneXML :: T.Text -> [T.Text] -> Either ParseFailure TimeZone
+parseTimeZoneXML tag = parseSingleElem tag parseStr2TimeZone
 
 -- |parse the T.Text and obtain TimeZone,
 parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
       Just t  -> pure t
-      Nothing -> Left TimeZoneError
+      Nothing -> Left $ TimeZoneError (XMLSnippet s)
       where
         parsedStr =
           parseTimeM True defaultTimeLocale "%z" (T.unpack s) :: Maybe TimeZone
@@ -69,53 +70,63 @@ isoFormats = [
   ]
 
 
-getFirstJust :: [Maybe a] -> Either ParseFailure a
-getFirstJust []             = Left TimeZoneError
-getFirstJust (Just x : _)   = Right x
-getFirstJust (Nothing : xs) = getFirstJust xs
+getFirstJustTz :: T.Text -> [Maybe a] -> Either ParseFailure a
+getFirstJustTz xSnippet []             = Left $ TimeZoneError (XMLSnippet xSnippet)
+getFirstJustTz _xmlSnippet (Just x : _)   = Right x
+getFirstJustTz xmlSnippet (Nothing : xs) = getFirstJustTz xmlSnippet xs
 
 -- example format: 2005-04-03T20:33:31.116-06:00
 -- |parse the string to UTC time,
 -- the time zone information will be merged into the time
 -- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: T.Text -> Either ParseFailure EPCISTime
-parseStr2Time s = getFirstJust $
+parseStr2Time s = getFirstJustTz s $
     fmap (\i -> EPCISTime <$> parseTimeM True defaultTimeLocale i (T.unpack s) :: Maybe EPCISTime)
       isoFormats
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
-parseBizStep c = parseSingleElem readURI (c $// element "bizStep" &/ content)
+parseBizStep c = parseSingleElem tag readURI (c $// element tagName &/ content)
+  where
+    tag = "bizStep"
+    tagName = "bizStep"
 
 -- |Parse Disposition by Name
 parseDisposition :: Cursor -> Either ParseFailure Disposition
-parseDisposition c = parseSingleElem readURI
-                      (c $// element "disposition" &/ content)
+parseDisposition c = parseSingleElem tag readURI
+                      (c $// element tagName &/ content)
+  where
+    tag = "disposition"
+    tagName = "disposition"
 
 -- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElem mkAction (c $// element "action" &/ content)
+parseAction c = parseSingleElem tag mkAction (c $// element tagName &/ content)
+  where
+    tag = "action"
+    tagName = "action"
 
 -- |Requires Event Level cursor
 parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
+  let et = parseTimeXML "eventTime" etn
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
-  let et = parseTimeXML etn
-  let tz = parseTimeZoneXML tzn
-  let rt = either2Maybe $ parseTimeXML (c $/ element "recordTime" &/ content)
+  let tz = parseTimeZoneXML "eventTimeZoneOffset" tzn
+  let rt = either2Maybe $ parseTimeXML "recordTime" (c $/ element "recordTime" &/ content)
 
   case (et, tz) of
     (Right et', Right tz') -> Right $ DWhen et' rt tz'
-    _                      -> Left TimeZoneError
+    _                      -> Left $ TimeZoneError (XMLSnippet "")
 
 -- checks if the bistep is valid for the disposition
 -- true if no disposition is found
 checkValidBizDisp :: Either ParseFailure BizStep
-                      -> Either ParseFailure Disposition -> Bool
+                  -> Either ParseFailure Disposition
+                  -> Bool
 checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
-checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
-checkValidBizDisp _ (Left TagNotFound) = True
+checkValidBizDisp (Left (TagNotFound _)) (Left (TagNotFound _)) = True
+checkValidBizDisp _ (Left (TagNotFound _)) = True
 checkValidBizDisp (Left _) (Right _) = False
 checkValidBizDisp _        _         = False
 
@@ -226,11 +237,12 @@ This function expects a cursor that resembles something like:
 </quantityElement>
 -}
 parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
-parseClassLabel c = readLabelEPC mQt labelStr
+parseClassLabel c =
+  case c $/ element "epcClass" &/ content of
+    (labelStr:_) -> readLabelEPC mQt labelStr
+    []           -> Left $ TagNotFound (MissingTag "epcClass")
   where
     mQt = parseQuantity c
-    labelStr = head (c $/ element "epcClass" &/ content) -- BUG: Head is unsafe
-
 
 -- |parse group of text to obtain ParentID
 -- takes in one event cursor, looks for a cursor that resembles
@@ -355,10 +367,10 @@ parseEventList t = fmap asEvent
 parseEventID :: Cursor -> Either ParseFailure EventID
 parseEventID c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem parseEventID' eid
+  parseSingleElem "eventID" parseEventID' eid
     where
       parseEventID' eid' = case fromString (T.unpack eid') of
-                            Nothing -> Left InvalidEvent
+                            Nothing -> Left $ InvalidEventId (EventIdStr eid')
                             Just u  -> Right $ EventID u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
