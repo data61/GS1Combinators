@@ -54,18 +54,17 @@ testBizStep = do
     it "parse valid uri but invalid step to Nothing" $
       (readURI :: T.Text -> Either ParseFailure BizStep)
         "urn:epcglobal:cbv:bizstep:s"
-          `shouldBe` Left InvalidFormat
-
+          `shouldBe` (Left $ InvalidFormat (XMLSnippet "urn:epcglobal:cbv:bizstep:s"))
     it "parse invalid uri to Nothing" $
       (readURI :: T.Text -> Either ParseFailure BizStep)
         "urn:invalidns:cbv:bizstep:void_shipping"
-          `shouldBe` Left InvalidFormat
+          `shouldBe` (Left $ InvalidFormat (XMLSnippet "urn:invalidns:cbv:bizstep:void_shipping"))
     it "A component of the urn missing" $
       (readURI :: T.Text -> Either ParseFailure BizStep) "urn:epc:cbv:bizstep"
-        `shouldBe` Left InvalidFormat
+        `shouldBe` (Left $ InvalidFormat (XMLSnippet "urn:epc:cbv:bizstep"))
     it "empty" $
       (readURI :: T.Text -> Either ParseFailure BizStep) ""
-        `shouldBe` Left InvalidFormat
+        `shouldBe` (Left $ InvalidFormat (XMLSnippet ""))
 
 testBizTransaction :: Spec
 testBizTransaction = do
@@ -74,20 +73,20 @@ testBizTransaction = do
       readURI "urn:epcglobal:cbv:btt:po" `shouldBe` Right Po
 
   describe "Invalid urns" $ do
-    it "parse the invalid uri to Nothing" $
+    it "parse the invalid uri" $
       (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "urn:epcglobal:cbv:btt:somethingelse"
-          `shouldBe` Left InvalidFormat
-    it "parse the empty uri to Nothing" $
+          `shouldBe` (Left $ InvalidFormat (XMLSnippet "urn:epcglobal:cbv:btt:somethingelse"))
+    it "empty uri" $
       (readURI :: T.Text -> Either ParseFailure BizTransactionType)
-        "" `shouldBe` Left InvalidFormat
-    it "parse a uri missing component with to Nothing" $
+        "" `shouldBe` (Left $ InvalidFormat (XMLSnippet ""))
+    it "parse a uri missing component" $
       (readURI :: T.Text -> Either ParseFailure BizTransactionType)
         "urn:epcglobal:cbv:po"
-          `shouldBe` Left InvalidFormat
-    it "parse a rubbish uri with no : to Nothing" $
+          `shouldBe` (Left $ InvalidFormat (XMLSnippet "urn:epcglobal:cbv:po"))
+    it "parse a rubbish uri with no" $
       (readURI :: T.Text -> Either ParseFailure BizTransactionType)
-        "fooblahjaja" `shouldBe` Left InvalidFormat
+        "fooblahjaja" `shouldBe` (Left $ InvalidFormat (XMLSnippet "fooblahjaja"))
 
   describe "print BizTransaction" $ do
     it "print BizTransaction 1" $

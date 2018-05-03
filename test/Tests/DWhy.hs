@@ -19,11 +19,15 @@ testDisposition =
       it "parses the invalid uri to Nothing" $
         (readURI :: T.Text -> Either ParseFailure Disposition)
           "urn:epcglobal:cbv:disp:active2"
-            `shouldBe` Left InvalidFormat
+            `shouldBe`
+              (Left $ InvalidFormat (XMLSnippet "urn:epcglobal:cbv:disp:active2"))
       it "parse invalid string to Nothing" $
         (readURI :: T.Text -> Either ParseFailure Disposition)
           "somerandomstring"
-            `shouldBe` Left InvalidFormat
+            `shouldBe`
+              (Left $ InvalidFormat (XMLSnippet "somerandomstring"))
       it "parse empty string to Nothing" $
-        (readURI :: T.Text -> Either ParseFailure Disposition) ""
-          `shouldBe` Left InvalidFormat
+        (readURI :: T.Text -> Either ParseFailure Disposition)
+          ""
+            `shouldBe`
+              (Left $ InvalidFormat (XMLSnippet ""))
