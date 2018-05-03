@@ -286,7 +286,7 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
 
 readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sscc" : rest)
   | isCorrectLen = Right $ SSCC (GS1CompanyPrefix pfix) (SerialNumber sn)
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
       where
         [pfix, sn] = getSuffixTokens rest
         isCorrectLen =
@@ -300,7 +300,7 @@ readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
       Right $ SGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference ir) (SerialNumber sn)
                                          -- Nothing, for the moment
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
       where
         [pfix, ir, sn] = getSuffixTokens rest
         isCorrectLen =
@@ -369,7 +369,7 @@ readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 readURILocationEPC xSnippet@[pfix, loc]
   | isCorrectLen =
       Right $ SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing
-  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
@@ -378,7 +378,7 @@ readURILocationEPC xSnippet@([pfix, loc, extNum])
   | isCorrectLen =
       Right $
         SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (getExt extNum)
-  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
@@ -469,13 +469,13 @@ readURIBusinessTransactionEPC :: [T.Text] ->
                                   Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC xSnippet@([pfix, sref])
   | isCorrectLen = Right $ GSRN (GS1CompanyPrefix pfix) (SerialReference sref)
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
   where
     isCorrectLen =
         getTotalLength [pfix, sref] == gsrnPadLen
 readURIBusinessTransactionEPC xSnippet@([pfix, docType, sn])
   | isCorrectLen = Right $ GDTI (GS1CompanyPrefix pfix) (DocumentType docType) (SerialNumber sn) -- BUG!
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.concat xSnippet)
+  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
   where
     isCorrectLen =
         getTotalLength [pfix, docType, sn] ==
