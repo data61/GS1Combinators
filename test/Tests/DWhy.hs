@@ -1,7 +1,8 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Tests.DWhy where
 
 import           Data.GS1.EPC
-import qualified Data.Text    as T
 import           Test.Hspec
 
 testDisposition :: Spec
@@ -17,17 +18,17 @@ testDisposition =
       it "parse the valid uri to disposition" $
         readURI "urn:epcglobal:cbv:disp:active" `shouldBe` Right Active
       it "parses the invalid uri to Nothing" $
-        (readURI :: T.Text -> Either ParseFailure Disposition)
+        readURI @Disposition
           "urn:epcglobal:cbv:disp:active2"
             `shouldBe`
               (Left $ InvalidFormat (XMLSnippet "urn:epcglobal:cbv:disp:active2"))
       it "parse invalid string to Nothing" $
-        (readURI :: T.Text -> Either ParseFailure Disposition)
+        readURI @Disposition
           "somerandomstring"
             `shouldBe`
               (Left $ InvalidFormat (XMLSnippet "somerandomstring"))
       it "parse empty string to Nothing" $
-        (readURI :: T.Text -> Either ParseFailure Disposition)
+        readURI @Disposition
           ""
             `shouldBe`
               (Left $ InvalidFormat (XMLSnippet ""))
