@@ -7,7 +7,7 @@ import           Data.GS1.DWhere
 import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
-import           Data.GS1.EventID
+import           Data.GS1.EventId
 import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Data.Time
@@ -192,16 +192,16 @@ testParser = do
         [
           [
             Right BizTransaction {
-              _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
+              _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
               _bt = Po
               }
           ],
           [
             Right BizTransaction {
-              _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
+              _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
               _bt = Po},
             Right BizTransaction {
-              _btid = BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152",
+              _btid = BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
               _bt = Desadv
             }
           ]
@@ -290,16 +290,16 @@ testParser = do
       parseTransactionDWhat <$> teCursors `shouldBe`
         [Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
+            _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
             _bt = Po}]
           [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
           IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]),
         Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = BizTransactionID "http://transaction.acme.com/po/12345678",
+            _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
             _bt = Po},
           BizTransaction {
-            _btid = BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152",
+            _btid = BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
             _bt = Desadv}]
           [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")])]
 
@@ -338,7 +338,7 @@ testParser = do
           -- a huge dwhat element
           [Right $ Event
             ObjectEventT -- type
-            (Just (EventID (fromJust $
+            (Just (EventId (fromJust $
                 fromString "b1080b06-e9cc-11e6-bf0e-fe55135034f3")))
             -- eid
             -- a dwhat element
@@ -398,7 +398,7 @@ testParser = do
             Right $ Event
               ObjectEventT -- type
               -- eid
-              (Just (EventID (fromJust $
+              (Just (EventId (fromJust $
                   fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
@@ -429,7 +429,7 @@ testParser = do
             Right $ Event
               ObjectEventT -- type
               -- eid
-              (Just (EventID (fromJust $
+              (Just (EventId (fromJust $
                   fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
               -- a dwhat element
               (
@@ -513,7 +513,7 @@ testParser = do
             -- a huge dwhat element
         [Right $ Event
           TransactionEventT -- type
-          (Just (EventID (fromJust $
+          (Just (EventId (fromJust $
               fromString "b1080840-e9cc-11e6-bf0e-fe55135034f3")))
           -- eid
           -- a dwhat element
@@ -521,7 +521,7 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid= BizTransactionID "http://transaction.acme.com/po/12345678", _bt=Po}
+              BizTransaction{_btid= BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po}
             ]
             [
               IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
@@ -550,7 +550,7 @@ testParser = do
           -- second element
           Right $ Event
           TransactionEventT -- type
-          (Just (EventID (fromJust $
+          (Just (EventId (fromJust $
               fromString "b108094e-e9cc-11e6-bf0e-fe55135034f3")))
           -- eid
           -- a dwhat element
@@ -558,8 +558,8 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid= BizTransactionID "http://transaction.acme.com/po/12345678", _bt=Po},
-              BizTransaction{_btid= BizTransactionID "urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
+              BizTransaction{_btid= BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po},
+              BizTransaction{_btid= BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
             ]
             [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]
           )
@@ -592,7 +592,7 @@ testParser = do
             -- a huge dwhat element
         [Right $ Event
           AggregationEventT -- type
-          (Just (EventID (fromJust $
+          (Just (EventId (fromJust $
               fromString "b1080840-e9cc-11e6-bf0e-fe55240134d5"))) -- eid
           -- a dwhat element
           (

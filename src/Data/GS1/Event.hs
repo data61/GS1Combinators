@@ -11,7 +11,7 @@ import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere
 import           Data.GS1.DWhy
-import           Data.GS1.EventID
+import           Data.GS1.EventId
 import           Data.GS1.Utils
 import           Data.String      (IsString)
 import           Data.Swagger
@@ -55,7 +55,7 @@ allEventTypes = [ObjectEventT ..]
 data Event = Event
   {
     _etype :: EventType
-  , _eid   :: Maybe EventID -- foreign event id, comes from the XML
+  , _eid   :: Maybe EventId -- foreign event id, comes from the XML
   , _what  :: DWhat
   , _when  :: DWhen
   , _why   :: DWhy

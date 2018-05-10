@@ -90,11 +90,11 @@ data TransactionDWhat =
   , _transactionEpcList            :: [LabelEPC]
   } deriving (Show, Eq, Generic)
 
--- TransformationDWhat transformationID inputEPCList outputEPCList
+-- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
   TransformationDWhat
   {
-    _transformationId            :: Maybe TransformationID
+    _transformationId            :: Maybe TransformationId
   , _transformationInputEpcList  :: [InputEPC]
   , _transformationOutputEpcList :: [OutputEPC]
   } deriving (Show, Eq, Generic)
