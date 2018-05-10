@@ -4,7 +4,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Data.GS1.EventID where
+module Data.GS1.EventId where
 
 import           Control.Lens
 import           Data.Aeson
@@ -15,18 +15,18 @@ import           GHC.Generics
 import           Web.HttpApiData
 
 
-newtype EventID = EventID {getEventId :: UUID}
+newtype EventId = EventId {unEventId :: UUID}
   deriving (Show, Eq, Generic, Read)
 
 
-makeWrapped ''EventID
+makeWrapped ''EventId
 
-instance FromHttpApiData EventID where
-  parseQueryParam httpData = EventID <$> parseQueryParam httpData
+instance FromHttpApiData EventId where
+  parseQueryParam httpData = EventId <$> parseQueryParam httpData
 
-$(deriveJSON defaultOptions ''EventID)
-instance ToSchema EventID
+$(deriveJSON defaultOptions ''EventId)
+instance ToSchema EventId
 
-instance ToParamSchema EventID where
+instance ToParamSchema EventId where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
