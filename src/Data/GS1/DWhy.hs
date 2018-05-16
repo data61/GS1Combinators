@@ -2,14 +2,17 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Data.GS1.DWhy where
+module Data.GS1.DWhy
+  (DWhy(..)
+  , mkDWhy
+  , dispositionValidFor
+  )
+  where
 
-import           Data.Aeson
--- import           Data.Aeson.Text
-import           Data.Aeson.TH
+import           Data.Aeson.TH (defaultOptions, deriveJSON)
 import           Data.GS1.EPC
-import           Data.Swagger
-import           GHC.Generics
+import           Data.Swagger  (ToSchema)
+import           GHC.Generics  (Generic)
 
 data DWhy = DWhy
             {
