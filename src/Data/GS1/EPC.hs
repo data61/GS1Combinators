@@ -82,6 +82,10 @@ class URI a where
 dots :: [T.Text] -> T.Text
 dots = T.intercalate "."
 
+-- makeInvalidLength :: [T.Text] -> Either ParseFailure a
+makeErrorType :: (XMLSnippet -> ParseFailure) -> [T.Text] -> Either ParseFailure b
+makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
+
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 newtype GS1CompanyPrefix  = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
@@ -213,7 +217,7 @@ readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
 readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
   Right $ CSGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference itemReference)
     where (pfix:itemReference:_) = getSuffixTokens rest
-readURIClassLabelEPC xSnippet = Left $ InvalidFormat (XMLSnippet $ T.concat xSnippet)
+readURIClassLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
@@ -286,7 +290,7 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
 
 readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sscc" : rest)
   | isCorrectLen = Right $ SSCC (GS1CompanyPrefix pfix) (SerialNumber sn)
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise = makeErrorType InvalidLength xSnippet
       where
         [pfix, sn] = getSuffixTokens rest
         isCorrectLen =
@@ -300,13 +304,13 @@ readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
       Right $ SGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference ir) (SerialNumber sn)
                                          -- Nothing, for the moment
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise = makeErrorType InvalidLength xSnippet
       where
         [pfix, ir, sn] = getSuffixTokens rest
         isCorrectLen =
             getTotalLength [pfix, ir] == sgtinPadLen
 
-readURIInstanceLabelEPC xSnippet = Left $ InvalidFormat (XMLSnippet $ T.concat xSnippet)
+readURIInstanceLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
@@ -369,7 +373,7 @@ readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 readURILocationEPC xSnippet@[pfix, loc]
   | isCorrectLen =
       Right $ SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing
-  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise    = makeErrorType InvalidLength xSnippet
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
@@ -378,11 +382,11 @@ readURILocationEPC xSnippet@([pfix, loc, extNum])
   | isCorrectLen =
       Right $
         SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (getExt extNum)
-  | otherwise    = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise    = makeErrorType InvalidLength xSnippet
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
-readURILocationEPC xSnippet =  Left $ InvalidFormat (XMLSnippet $ T.concat xSnippet)
+readURILocationEPC xSnippet =  makeErrorType InvalidFormat xSnippet
 -- error condition / invalid input
 
 instance ToSchema LocationEPC
@@ -469,18 +473,16 @@ readURIBusinessTransactionEPC :: [T.Text] ->
                                   Either ParseFailure BusinessTransactionEPC
 readURIBusinessTransactionEPC xSnippet@([pfix, sref])
   | isCorrectLen = Right $ GSRN (GS1CompanyPrefix pfix) (SerialReference sref)
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise = makeErrorType InvalidLength xSnippet
   where
     isCorrectLen =
         getTotalLength [pfix, sref] == gsrnPadLen
 readURIBusinessTransactionEPC xSnippet@([pfix, docType, sn])
   | isCorrectLen = Right $ GDTI (GS1CompanyPrefix pfix) (DocumentType docType) (SerialNumber sn) -- BUG!
-  | otherwise = Left $ InvalidLength (XMLSnippet $ T.intercalate "." xSnippet)
+  | otherwise = makeErrorType InvalidLength xSnippet
   where
-    isCorrectLen =
-        getTotalLength [pfix, docType, sn] ==
-          gdtiPadLen
-readURIBusinessTransactionEPC xSnippet = Left $ InvalidFormat (XMLSnippet $ T.concat xSnippet)
+    isCorrectLen = getTotalLength [pfix, docType, sn] == gdtiPadLen
+readURIBusinessTransactionEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
