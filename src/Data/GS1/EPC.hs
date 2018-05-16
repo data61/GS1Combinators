@@ -563,9 +563,9 @@ instance URI BizStep where
 -}
 
 
-newtype BizTransactionID = BizTransactionID {unBizTransactionID :: T.Text}
+newtype BizTransactionId = BizTransactionId {unBizTransactionId :: T.Text}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-instance ToSchema BizTransactionID
+instance ToSchema BizTransactionId
 
 data BizTransactionType
   = Bol       -- Bill of Lading
@@ -600,7 +600,7 @@ instance URI BizTransactionType where
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
   {
-    _btid :: BizTransactionID
+    _btid :: BizTransactionId
   , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
@@ -608,16 +608,16 @@ $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
 
--- | TransformationID
+-- | TransformationId
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
 -- Some transformation business processes take place over a long period of time, and so it is more
--- appropriate to represent them as a series of EPCIS events. A TransfomationID may be included
+-- appropriate to represent them as a series of EPCIS events. A TransfomationId may be included
 -- in two or more TransformationEvents to link them together. When events share an identical
--- TransformationID, the meaning is that the inputs to any of those events may have contributed in
+-- TransformationId, the meaning is that the inputs to any of those events may have contributed in
 -- some way to each of the outputs in any of those same events.
-newtype TransformationID = TransformationID {unTransformationID :: UUID}
+newtype TransformationId = TransformationId {unTransformationId :: UUID}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-instance ToSchema TransformationID
+instance ToSchema TransformationId
 
 data Action
   = Add
