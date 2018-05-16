@@ -27,7 +27,7 @@ import           Data.GS1.DWhere
 import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
-import           Data.GS1.EventID
+import           Data.GS1.EventId
 import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor
@@ -244,10 +244,10 @@ parseClassLabel c =
   where
     mQt = parseQuantity c
 
--- |parse group of text to obtain ParentID
+-- |parse group of text to obtain ParentId
 -- takes in one event cursor, looks for a cursor that resembles
 {-
-<parentID>urn:epc:id:sscc:0614141.1234567890</parentID>
+<parentId>urn:epc:id:sscc:0614141.1234567890</parentId>
 -}
 -- and returns the equivalent instanceLabel data-type
 parseParentLabel :: Cursor -> Maybe ParentLabel
@@ -309,18 +309,18 @@ parseTransactionDWhat c = do
     (Right a, [], []) -> Right $ TransactionDWhat a pid bizT epcs
     _                 -> Left  $ returnLeftErrors (act, [bizTErrs, epcErrs])
 
-parseTransformationID :: Cursor -> Maybe TransformationID
-parseTransformationID c = do
+parseTransformationId :: Cursor -> Maybe TransformationId
+parseTransformationId c = do
   let tId = c $/ element "transformationID" &/ content
   case tId of
-    [t] -> fmap TransformationID . fromString . T.unpack $ t
+    [t] -> fmap TransformationId . fromString . T.unpack $ t
     _   -> Nothing
 
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 102
 parseTransformationDWhat :: Cursor -> Either ParseFailure TransformationDWhat
 parseTransformationDWhat c = do
   -- get transformaiton id
-  let tId = parseTransformationID c
+  let tId = parseTransformationId c
   let (inputErrs, inputEpcs) = fmap (fmap InputEPC) . partitionEithers $
         parseLabelEPCs "inputEPCList" "inputQuantityList" c
   let (outputErrs, outputEpcs) = fmap (fmap OutputEPC ) . partitionEithers $
@@ -332,7 +332,7 @@ parseTransformationDWhat c = do
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
 parseBizTransactionHelp (a, b) = do
-  let tId   = BizTransactionID $ T.strip a
+  let tId   = BizTransactionId $ T.strip a
   let tType = readURI $ T.strip b
   case tType of
     Right t -> Right $ BizTransaction tId t
@@ -349,7 +349,7 @@ parseBizTransaction c = do
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
-              -> [(Maybe EventID
+              -> [(Maybe EventId
                   , Either ParseFailure DWhat
                   , Either ParseFailure DWhen
                   , Either ParseFailure DWhy
@@ -357,21 +357,21 @@ parseEventList :: EventType
               -> [Either ParseFailure Event]
 parseEventList t = fmap asEvent
   where
-    asEvent :: (Maybe EventID
+    asEvent :: (Maybe EventId
               , Either ParseFailure DWhat
               , Either ParseFailure DWhen
               , Either ParseFailure DWhy
               , Either ParseFailure DWhere) -> Either ParseFailure Event
     asEvent (i, w1, w2, w3, w4) = Event t i <$> w1 <*> w2 <*> w3 <*> w4
 
-parseEventID :: Cursor -> Either ParseFailure EventID
-parseEventID c = do
+parseEventId :: Cursor -> Either ParseFailure EventId
+parseEventId c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem "eventID" parseEventID' eid
+  parseSingleElem "eventID" parseEventId' eid
     where
-      parseEventID' eid' = case fromString (T.unpack eid') of
+      parseEventId' eid' = case fromString (T.unpack eid') of
                             Nothing -> Left $ InvalidEventId (EventIdStr eid')
-                            Just u  -> Right $ EventID u
+                            Just u  -> Right $ EventId u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]
 parseDWhat ObjectEventT eCursors =
@@ -390,7 +390,7 @@ parseEventByType :: Cursor -> EventType -> [Either ParseFailure Event]
 parseEventByType c et =
   let tagS = stringify et
       eCursors = getCursorsByName tagS c
-      eid = either2Maybe . parseEventID <$> eCursors
+      eid = either2Maybe . parseEventId <$> eCursors
       dwhat = parseDWhat et eCursors
       dwhen = parseDWhen <$> eCursors
       dwhy = parseDWhy <$> eCursors
