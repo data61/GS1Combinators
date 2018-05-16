@@ -3,7 +3,20 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 
-module Data.GS1.DWhat where
+module Data.GS1.DWhat
+  (LabelEPC(..)
+  , ParentLabel(..)
+  , InputEPC(..)
+  , OutputEPC (..)
+  , ObjectDWhat(..)
+  , AggregationDWhat(..)
+  , TransactionDWhat(..)
+  , TransformationDWhat(..)
+  , DWhat(..)
+  , readLabelEPC
+  , urn2LabelEPC
+  )
+  where
 
 import           GHC.Generics
 
