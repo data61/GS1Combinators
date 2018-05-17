@@ -3,7 +3,15 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Data.GS1.Event where
+module Data.GS1.Event
+  (EventType(..)
+  , Event(..)
+  , allEventTypes
+  , getEventType
+  , mkEventType
+  , stringify
+  )
+  where
 
 import           Data.Aeson
 import           Data.Aeson.TH
