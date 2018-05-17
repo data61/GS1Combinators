@@ -7,7 +7,52 @@
 -- | module containing error types, URI class, epc types
 -- the types in this file cover all dimensions
 
-module Data.GS1.EPC where
+module Data.GS1.EPC
+  (URI
+  , ParseFailure(..)
+  , XMLSnippet(..)
+  , MissingTag(..)
+  , EventIdStr(..)
+  , GS1CompanyPrefix(..)
+  , ItemReference(..)
+  , ExtensionDigit(..)
+  , SerialReference(..)
+  , CheckDigit(..)
+  , Lot(..)
+  , IndividualAssetReference(..)
+  , SerialNumber(..)
+  , SGLNExtension(..)
+  , Uom(..)
+  , Amount(..)
+  , AssetType(..)
+  , Lng(..)
+  , Lat(..)
+  , LocationReference(..)
+  , DocumentType(..)
+  , ServiceReference(..)
+  , BizTransactionId(..)
+  , TransformationId(..)
+  , EPCISTime(..)
+  , SGTINFilterValue(..)
+  , Quantity(..)
+  , InstanceLabelEPC(..)
+  , ClassLabelEPC(..)
+  , LocationEPC(..)
+  , SourceDestType(..)
+  , BusinessTransactionEPC(..)
+  , LocationError(..)
+  , BizStep(..)
+  , BizTransactionType(..)
+  , BizTransaction(..)
+  , Action(..)
+  , Disposition(..)
+  , readURI
+  , renderURL
+  , readURIClassLabelEPC
+  , readURIInstanceLabelEPC
+  , mkAction
+  )
+  where
 
 import           Control.Lens
 import           Data.Aeson
@@ -539,9 +584,6 @@ instance ToSchema BizStep
 ppBizStep :: BizStep -> T.Text
 ppBizStep = revertCamelCase . T.pack . show
 
-bizstepPrefixStr :: T.Text
-bizstepPrefixStr = "urn:epcglobal:cbv:bizstep:"
-
 readURIBizStep :: Maybe BizStep -> T.Text -> Either ParseFailure BizStep
 readURIBizStep Nothing        s = Left $ InvalidFormat (XMLSnippet s)
 readURIBizStep (Just bizstep) _ = Right bizstep
@@ -643,14 +685,6 @@ mkAction t =
 ---------------------------
 -- WHY  -------------------
 ---------------------------
-
-data DispositionError
-  = InvalidDisposition
-  | OtherDispositionError
-  deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''DispositionError)
-instance ToSchema DispositionError
-
 
 data Disposition
   = Active

@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Data.GS1.DWhen where
+module Data.GS1.DWhen (DWhen(..)) where
 
 import           Data.Aeson
 import           Data.Aeson.TH

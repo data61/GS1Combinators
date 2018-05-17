@@ -3,7 +3,13 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
-module Data.GS1.DWhere where
+module Data.GS1.DWhere
+  (ReadPointLocation(..)
+  , BizLocation(..)
+  , SrcDestLocation(..)
+  , DWhere(..)
+  )
+  where
 
 import           GHC.Generics
 
