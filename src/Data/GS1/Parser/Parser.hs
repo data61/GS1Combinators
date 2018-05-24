@@ -142,7 +142,7 @@ parseDWhy c = do
   let biz = parseBizStep c
   let disp = parseDisposition c
   mkDWhy biz disp
-  -- comment the following lines in if disp-bizstep combo matters
+  -- -- comment the following lines in if disp-bizstep combo matters
   -- if checkValidBizDisp biz disp
   --   then
   --     mkDWhy biz disp
