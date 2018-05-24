@@ -34,6 +34,9 @@ import           Data.GS1.Utils
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
+getTagContent :: Cursor -> Name -> [T.Text]
+getTagContent c tagName = c $// element tagName &/ content
+
 parseSingleElem :: T.Text
                 -> (T.Text -> Either ParseFailure a)
                 -> [T.Text]
@@ -88,7 +91,7 @@ parseStr2Time s = getFirstJustTz s $
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
-parseBizStep c = parseSingleElem tag readURI (c $// element tagName &/ content)
+parseBizStep c = parseSingleElem tag readURI (getTagContent c tagName)
   where
     tag = "bizStep"
     tagName = "bizStep"
@@ -96,14 +99,14 @@ parseBizStep c = parseSingleElem tag readURI (c $// element tagName &/ content)
 -- |Parse Disposition by Name
 parseDisposition :: Cursor -> Either ParseFailure Disposition
 parseDisposition c = parseSingleElem tag readURI
-                      (c $// element tagName &/ content)
+                      (getTagContent c tagName)
   where
     tag = "disposition"
     tagName = "disposition"
 
 -- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElem tag mkAction (c $// element tagName &/ content)
+parseAction c = parseSingleElem tag mkAction (getTagContent c tagName)
   where
     tag = "action"
     tagName = "action"
