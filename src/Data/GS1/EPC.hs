@@ -91,6 +91,8 @@ data ParseFailure
   -- ^ Error in parsing timezone
   | TagNotFound MissingTag
   -- ^ When a mandatory tag is not found
+  | MultipleTags T.Text
+  -- ^ When more than the specified number of tags are present
   | InvalidDispBizCombination XMLSnippet
   -- ^ When the disposition does not go with the bizstep
   | ChildFailure [ParseFailure]

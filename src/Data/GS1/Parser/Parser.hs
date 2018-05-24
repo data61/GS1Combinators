@@ -38,8 +38,9 @@ parseSingleElem :: T.Text
                 -> (T.Text -> Either ParseFailure a)
                 -> [T.Text]
                 -> Either ParseFailure a
-parseSingleElem _tag f (x:_) = f x
-parseSingleElem tag _ []     = Left $ TagNotFound (MissingTag tag)
+parseSingleElem _tag f [x] = f x
+parseSingleElem tag _ []   = Left $ TagNotFound (MissingTag tag)
+parseSingleElem tag _ _    = Left $ MultipleTags tag
 
 parseTimeXML :: T.Text -> [T.Text] -> Either ParseFailure EPCISTime
 parseTimeXML tag = parseSingleElem tag parseStr2Time
@@ -56,6 +57,7 @@ parseStr2TimeZone s =
       where
         parsedStr =
           parseTimeM True defaultTimeLocale "%z" (T.unpack s) :: Maybe TimeZone
+
 {-
 All three should have tests
 "%FT%X%Q%z" -> 2017-12-20T04:11:43+00:00
