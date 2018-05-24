@@ -154,33 +154,15 @@ parseDWhy c = do
 -- the sgln could be irregular
 -- |TODO: there must be some more modification on it
 
--- SIDE NOTE:
--- it might be helpful to write a function like,
--- f :: [Either x y] -> Either [x] [y]
 
-{-
-(>>=) :: m a -> (a -> m b) -> m b
-
-do
-  x <- y
-  f x
-
-  is equivalent to
-  y >>= \x -> f x
-
--}
-
--- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-{-
-c --> Can be a top level / event-level cursor
-list --> The Name of the cursor under which the list of epcs lie
-         e.g -> sourceList, destinationList
-el --> The Name of cursor which has the epc string as its content
-         e.g -> source, destination
-         The content of this forms the LocationEPC
-attr --> The name of the attribute to look into for epc content, e.g, "type"
-         The content found with this form the SourceDestTypes
- -}
+-- | c --> Can be a top level / event-level cursor
+-- list --> The Name of the cursor under which the list of epcs lie
+--          e.g -> sourceList, destinationList
+-- el --> The Name of cursor which has the epc string as its content
+--          e.g -> source, destination
+--          The content of this forms the LocationEPC
+-- attr --> The name of the attribute to look into for epc content, e.g, "type"
+--          The content found with this form the SourceDestTypes
 parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
                             [Either ParseFailure SrcDestLocation]
 parseSourceDestLocation c listTag el attr = do
@@ -222,25 +204,25 @@ parseQuantity c = do
     [[q], [u]] -> Just $ MeasuredQuantity (Amount $ read (T.unpack q) :: Amount) (Uom u)
     _       -> Nothing
 
-{-
-The cursor level should be:
-<inputEPCList>
-  <epc>urn:epc:id:sgtin:4012345.011122.25</epc>
-  <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
-</inputEPCList>
--}
+
+-- The cursor level should be:
+-- <inputEPCList>
+--   <epc>urn:epc:id:sgtin:4012345.011122.25</epc>
+--   <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
+-- </inputEPCList>
+
 parseInstanceLabel :: Cursor -> [Either ParseFailure LabelEPC]
 parseInstanceLabel c =
   readLabelEPC Nothing <$> (c $/ element "epc" &/ content)
 
-{-
-This function expects a cursor that resembles something like:
-<quantityElement>
-  <epcClass>urn:epc:class:lgtin:4012345.011111.4444</epcClass>
-  <quantity>10</quantity>
-  <uom>KGM</uom>
-</quantityElement>
--}
+
+-- This function expects a cursor that resembles something like:
+-- <quantityElement>
+--   <epcClass>urn:epc:class:lgtin:4012345.011111.4444</epcClass>
+--   <quantity>10</quantity>
+--   <uom>KGM</uom>
+-- </quantityElement>
+
 parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
 parseClassLabel c =
   case c $/ element "epcClass" &/ content of
@@ -251,9 +233,9 @@ parseClassLabel c =
 
 -- |parse group of text to obtain ParentId
 -- takes in one event cursor, looks for a cursor that resembles
-{-
-<parentId>urn:epc:id:sscc:0614141.1234567890</parentId>
--}
+
+-- <parentId>urn:epc:id:sscc:0614141.1234567890</parentId>
+
 -- and returns the equivalent instanceLabel data-type
 parseParentLabel :: Cursor -> Maybe ParentLabel
 parseParentLabel c =
