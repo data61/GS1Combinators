@@ -47,6 +47,7 @@ library
                      , xml-types
                      , swagger2
                      , sqlite-simple
+                     , hedgehog
                      , http-api-data
                      , tuple
                      , validation

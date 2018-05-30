@@ -64,8 +64,11 @@ import           Data.GS1.Utils
 import           Data.Time
 import           Data.UUID       (UUID)
 
--- import           Data.Monoid     hiding ((<>))
 import           Data.Semigroup
+
+import           Hedgehog        (Gen)
+import qualified Hedgehog.Gen    as Gen
+import qualified Hedgehog.Range  as Range
 
 -- add more type values to this if need be
 data ParseFailure
@@ -121,8 +124,15 @@ dots = T.intercalate "."
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
-newtype GS1CompanyPrefix  = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
+newtype GS1CompanyPrefix = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+
+validPfix :: Gen GS1CompanyPrefix
+validPfix = error "not implem"
+
+-- invalidPfix :: Gen GS1CompanyPrefix
+-- invalidPfix = error "not implemented yet"
+
 newtype ItemReference     = ItemReference {unItemReference :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 newtype ExtensionDigit    = ExtensionDigit {unExtensionDigit :: Int}
@@ -165,6 +175,9 @@ data SGTINFilterValue
   deriving (Eq, Generic, Read, Enum, Show)
 $(deriveJSON defaultOptions ''SGTINFilterValue)
 instance ToSchema SGTINFilterValue
+
+genFilterValue :: Gen SGTINFilterValue
+genFilterValue = Gen.element [AllOthers ..]
 
 {-
 ■ The GS1 Company Prefix, assigned by GS1 to a managing entity.
