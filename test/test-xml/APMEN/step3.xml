@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<epcis:EPCISDocument 
+xmlns:eztrack="http://epcis.eztrack.org/ns/event" 
+xmlns:epcis="urn:epcglobal:epcis:xsd:1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+schemaVersion="1.1" 
+xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCIS\EPCIS.xsd" 
+xmlns:tlspilot="http://epcis.gs1au.org/ns/extensions">
+    <EPCISBody>
+        <!-- Load Container to Vessel at the export Port -->
+        <EventList>
+            <AggregationEvent>
+                <eventTime>2018-01-01T13:39:00.000+10:00</eventTime>
+                <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+                <!-- the urn for container (BIC code, vessel (IMO code), location (LOCODE) needs to be confirmed. This example shows "tlspilot" as dummy namespace for the pilot, this has not yet been finalised for the pilot -->
+                <parentID>urn:tlspilot:epcis:id:obj:IMO9394894</parentID>
+                <childEPCs>
+                    <epc>urn:tlspilot:epcis:id:obj:ABCD1234567</epc> 
+                </childEPCs>
+                <action>ADD</action>
+                <bizStep>urn:epcglobal:cbv:bizstep:loading</bizStep> 
+                <disposition>urn:epcglobal:cbv:disp:in_progress</disposition> 
+                <readPoint>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </readPoint>
+                <bizLocation>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </bizLocation>
+                <bizTransactionList>
+                    <bizTransaction type="urn:epcglobal:cbv:btt:bol">urn:epcis:bt:HLCUSYD180314922</bizTransaction>
+                </bizTransactionList>
+                <tlspilot:plannedArrival>2018-01-01T15:39:00.000+08:00</tlspilot:plannedArrival>
+                <tlspilot:transportMeansID>Maersk_Bratan</tlspilot:transportMeansID>
+                <tlspilot:routeIdentifier>voyage_number</tlspilot:routeIdentifier>
+                <eztrack:vschain>SC_Ports</eztrack:vschain>
+                <eztrack:vsstep>SC_Ports-Export03</eztrack:vsstep>
+            </AggregationEvent>
+        </EventList>
+    </EPCISBody>
+</epcis:EPCISDocument>   
