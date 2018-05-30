@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<epcis:EPCISDocument 
+xmlns:eztrack="http://epcis.eztrack.org/ns/event" 
+xmlns:epcis="urn:epcglobal:epcis:xsd:1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+creationDate="2018-01-01T10:06:16.000+08:00" 
+schemaVersion="1.1" xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCIS\EPCIS.xsd" 
+xmlns:tlspilot="http://epcis.gs1au.org/ns/extensions">
+    <EPCISBody>
+        <!-- Export_Customs_Clearance -->
+        <EventList>
+            <ObjectEvent>
+                <eventTime>2018-01-01T12:39:00.000+08:00</eventTime>
+                <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+                <epcList>
+                    <!-- the urn for container (BIC code, vessel (IMO code), location (LOCODE) needs to be confirmed. This example shows "tlspilot" as dummy namespace for the pilot, this has not yet been finalised for the pilot -->
+                    <epc>urn:tlspilot:epcis:id:obj:ABCD1234567</epc>
+                </epcList>
+                <action>OBSERVE</action>
+                <bizStep>urn:epcglobal:cbv:bizstep:inspecting</bizStep>
+                <bizLocation>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </bizLocation>
+                <bizTransactionList>
+                    <bizTransaction type="urn:epcglobal:cbv:btt:bol">urn:tlspilot:epcis:bt:HLCUSYD180314922</bizTransaction>
+                </bizTransactionList>
+                <tlspilot:Export_Customs_Status>Export_ReleasedorExport_Not_Released</tlspilot:Export_Customs_Status>
+                <eztrack:vschain>SC_Ports</eztrack:vschain>
+                <eztrack:vsstep>SC_Ports-Export02</eztrack:vsstep>
+            </ObjectEvent>
+        </EventList>
+    </EPCISBody>
+</epcis:EPCISDocument>
