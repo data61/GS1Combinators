@@ -1,5 +1,6 @@
 module Tests.Parser where
 
+import           Data.Either             (lefts)
 import           Data.Either.Combinators
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
@@ -12,6 +13,8 @@ import           Data.GS1.Parser.Parser
 import           Data.Maybe
 import           Data.Time
 import           Data.UUID               as UUID
+import           System.Directory
+import           System.FilePath.Posix
 import           Test.Hspec
 import           Text.XML
 import           Text.XML.Cursor
@@ -653,3 +656,11 @@ testParser = do
         ["-06:00", "the quick brown fox jumped over the lazy dog"]
           `shouldBe`
             Right (read "-06:00" :: TimeZone)
+
+
+parseAllXMLInDir :: FilePath -> IO [ParseFailure]
+parseAllXMLInDir dir = do
+  allFiles <- getDirectoryContents dir
+  let xmlFiles = filter ((".xml" ==) . takeExtension) allFiles
+  allParsedEvents <- mapM parseFile xmlFiles
+  return $ lefts $ (concatMap id) allParsedEvents

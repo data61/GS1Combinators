@@ -76,6 +76,7 @@ test-suite GS1Combinators-test
   build-depends:       base
                      , GS1Combinators
                      , bytestring
+                     , directory
                      , hspec
                      , time
                      , aeson
@@ -85,6 +86,7 @@ test-suite GS1Combinators-test
                      , hweblib
                      , attoparsec
                      , split
+                     , filepath
                      , text
                      , either
                      , xml-types
