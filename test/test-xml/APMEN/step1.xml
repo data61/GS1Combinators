@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<epcis:EPCISDocument
+xmlns:eztrack="http://epcis.eztrack.org/ns/event" 
+xmlns:epcis="urn:epcglobal:epcis:xsd:1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+creationDate="2018-01-01T10:06:16.000+08:00" 
+schemaVersion="1.1" xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCIS\EPCIS.xsd" 
+xmlns:tlspilot="http://epcis.gs1au.org/ns/extensions">  <!-- is this needed for tlspilot?  Note that the "ports group" would need to register a urn namespace for sharing "ports only " urn's -->
+    <EPCISBody>
+        <!-- Container arrives from landside at the export Port -->
+        <!-- These eight example XML's, Export01 to Import08,are for an export journey from Port Botany to Port of Shanghai using dummy data for demonstration purpose only -->
+        <EventList>
+            <ObjectEvent>
+                <eventTime>2018-01-01T11:39:00.000+10:00</eventTime>
+                <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+                <epcList>
+                    <!-- the urn for container (BIC code, vessel (IMO code), location (LOCODE) needs to be confirmed. This example shows "tlspilot" as dummy namespace for the pilot, this has not yet been finalised for the pilot -->
+                    <epc>urn:tlspilot:epcis:id:obj:ABCD1234567</epc> 
+                </epcList>
+                <action>OBSERVE</action>
+                <bizStep>urn:epcglobal:cbv:bizstep:arriving</bizStep>
+                <disposition>urn:epcglobal:cbv:disp:in_progress</disposition>
+                <readPoint>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </readPoint>
+                <bizLocation>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </bizLocation>
+                <bizTransactionList>
+                    <bizTransaction type="urn:epcglobal:cbv:btt:bol">urn:tlspilot:epcis:bt:HLCUSYD180314922</bizTransaction>
+                </bizTransactionList>
+                <eztrack:vschain>SC_Ports</eztrack:vschain>
+                <eztrack:vsstep>SC_Ports-Export01</eztrack:vsstep>
+            </ObjectEvent>
+        </EventList>
+    </EPCISBody>
+</epcis:EPCISDocument>   
+

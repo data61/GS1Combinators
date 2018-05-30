@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<epcis:EPCISDocument
+xmlns:eztrack="http://epcis.eztrack.org/ns/event" 
+xmlns:epcis="urn:epcglobal:epcis:xsd:1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+creationDate="2018-01-01T10:06:16.000+08:00" 
+schemaVersion="1.1" 
+xsi:schemaLocation="urn:epcglobal:epcis:xsd:1 EPCIS\EPCIS.xsd" 
+xmlns:tlspilot="http://epcis.gs1au.org/ns/extensions">
+    <EPCISBody>
+        <!-- Vessel departs the export Port -->
+        <EventList>
+            <ObjectEvent>
+                <eventTime>2018-01-01T14:39:00.000+08:00</eventTime>
+                <eventTimeZoneOffset>+10:00</eventTimeZoneOffset>
+                <epcList>
+                    <!-- the urn for container (BIC code, vessel (IMO code), location (LOCODE) needs to be confirmed. This example shows "tlspilot" as dummy namespace for the pilot, this has not yet been finalised for the pilot -->
+                    <epc>urn:tlspilot:epcis:id:obj:IMO9394894</epc>
+                </epcList>
+                <action>OBSERVE</action>
+                <bizStep>urn:epcglobal:cbv:bizstep:departing</bizStep>
+                <disposition>urn:epcglobal:cbv:disp:in_progress</disposition>
+                <readPoint>
+                    <id>urn:tlspilot:epcis:id:loc:AUBTB</id>
+                </readPoint>
+                <tlspilot:transportMeansID>Maersk_Bratan</tlspilot:transportMeansID>
+                <tlspilot:routeIdentifier>voyage_number</tlspilot:routeIdentifier>
+                <eztrack:vschain>SC_Ports</eztrack:vschain>
+                <eztrack:vsstep>SC_Ports-Export04</eztrack:vsstep>
+            </ObjectEvent>
+        </EventList>
+    </EPCISBody>
+</epcis:EPCISDocument>   
+
