@@ -19,6 +19,7 @@ import qualified Data.Text           as T
 import           Data.Time
 import           Data.UUID           (fromString)
 import           Data.XML.Types      hiding (Event)
+import           Text.XML
 import           Text.XML.Cursor
 
 import           Data.GS1.DWhat
@@ -386,3 +387,13 @@ parseEventByType c et =
       zipd = zip5 eid dwhat dwhen dwhy dwhere
   in
       parseEventList et zipd
+
+parseFile :: FilePath -> IO [Either ParseFailure Event]
+parseFile xmlFile = do
+  doc <- Text.XML.readFile def xmlFile
+  let mainCursor = fromDocument doc
+  -- scope for optimization: only call parseEventByType on existent EventTypes
+      allParsedEvents =
+        filter (not . null) $ concat $
+        parseEventByType mainCursor <$> allEventTypes
+  return allParsedEvents
