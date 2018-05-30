@@ -82,5 +82,5 @@ mkDWhy (Left (TagNotFound _)) (Left (TagNotFound _)) = Right $ DWhy Nothing Noth
 mkDWhy (Left (TagNotFound _)) (Right disp)           = Right $ DWhy Nothing (Just disp)
 mkDWhy (Right step)       (Left (TagNotFound _))     = Right $ DWhy (Just step) Nothing
 mkDWhy (Left eBiz)        (Left eDisp)               = Left $ ChildFailure [eBiz, eDisp]
-mkDWhy (Left eBiz)        (Right _)                  = Left $ ChildFailure [eBiz]
-mkDWhy (Right _)          (Left eDisp)               = Left $ ChildFailure [eDisp]
+mkDWhy (Left eBiz)        (Right _)                  = Left eBiz
+mkDWhy (Right _)          (Left eDisp)               = Left eDisp
