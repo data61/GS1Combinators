@@ -1,15 +1,26 @@
 module RunApp.Main (run) where
 
 import           Data.Aeson.Encode.Pretty
-import           Data.Either
-import           Data.GS1.Parser.Parser   (parseFile)
+import           Data.Either              (rights)
+import           Data.GS1.Parser.Parser   (parseAllXMLInDir, parseFile)
 import qualified Data.Text.Lazy.Encoding  as TLE
 import qualified Data.Text.Lazy.IO        as TL
-import           System.Environment
+import           System.Environment       (getArgs)
 
 -- @todo cmd args parsing
-run :: IO ()
-run = do
+getSuccesses :: IO ()
+getSuccesses = do
   xmlFiles <- getArgs
   allParsedEvents <- mapM parseFile xmlFiles
+  print allParsedEvents
   mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (rights $ (concatMap id) allParsedEvents)
+
+getFailures :: IO ()
+getFailures = do
+  args <- getArgs
+  let xmlDir = head args
+  allFailures <- parseAllXMLInDir xmlDir
+  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) allFailures
+
+run :: IO ()
+run = getFailures
