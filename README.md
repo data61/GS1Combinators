@@ -1,6 +1,6 @@
 # GS1Combinators
 
-### A library to parse the GS1 Events into Haskell data types.
+## A library to parse the GS1 Events into Haskell data types.
 
 You must always remember to build before testing, since the automatic building before the test building has been removed.
 
@@ -20,11 +20,13 @@ To test, run `stack test`
 
 To parse an XML file, run `stack exec Parser-exe -- /path/to/XML/file`
 
+More than one file can be parsed at a time. Just append to the arguments.
+
 To check the validity/expected output of the parsing of an XML file in terms of GS1 vocabulary,
 use this [tool](http://www.vizworkbench.com/ui/dataset/).
 You  may be asked to create an account.
 
-# Info about GS1Combinators
+## Info about GS1Combinators
 
 The documents specifying the implemented standard can be found in the directory `doc`.
 
@@ -33,7 +35,7 @@ GS1Combinators contains types representing all the business events.
 The files in `test/test-xml/EPCIS xml files` contain additional examples
 sent to us by the GS1 team, not present in the documentation.
 
-# Dimensions
+## Dimensions
 
 There are `What`, `When`, `Where` and `Why` dimensions for suppy chain events,
 representing all information about the event.
