@@ -1,6 +1,5 @@
 module Tests.Parser where
 
-import           Data.Either             (lefts)
 import           Data.Either.Combinators
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
