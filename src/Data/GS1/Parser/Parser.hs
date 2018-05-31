@@ -391,19 +391,22 @@ parseEventByType c et =
   in
       parseEventList et zipd
 
+-- | Takes in a file name and parses that to some GS1 events
 parseFile :: FilePath -> IO [Either ParseFailure Event]
 parseFile xmlFile = do
   doc <- Text.XML.readFile def xmlFile
   let mainCursor = fromDocument doc
   -- scope for optimization: only call parseEventByType on existent EventTypes
-      allParsedEvents =
-        filter (not . null) $ concat $
-        parseEventByType mainCursor <$> allEventTypes
+      allParsedEvents = concat $ parseEventByType mainCursor <$> allEventTypes
+  print xmlFile
+  print allParsedEvents
   return allParsedEvents
 
-parseAllXMLInDir :: FilePath -> IO [ParseFailure]
+-- | Takes in a directory name and parses all XML in it.
+-- TODO: Error handling
+parseAllXMLInDir :: FilePath -> IO [Either ParseFailure Event]
 parseAllXMLInDir dir = do
   allFiles <- getDirectoryContents dir
   let xmlFiles = filter ((".xml" ==) . takeExtension) allFiles
   allParsedEvents <- mapM parseFile xmlFiles
-  return $ lefts $ (concatMap id) allParsedEvents
+  return $ concat allParsedEvents

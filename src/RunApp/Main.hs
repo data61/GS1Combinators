@@ -1,7 +1,7 @@
 module RunApp.Main (run) where
 
 import           Data.Aeson.Encode.Pretty
-import           Data.Either              (rights)
+import           Data.Either              (lefts, rights)
 import           Data.GS1.Parser.Parser   (parseAllXMLInDir, parseFile)
 import qualified Data.Text.Lazy.Encoding  as TLE
 import qualified Data.Text.Lazy.IO        as TL
@@ -20,7 +20,7 @@ getFailures = do
   args <- getArgs
   let xmlDir = head args
   allFailures <- parseAllXMLInDir xmlDir
-  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) allFailures
+  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (lefts allFailures)
 
 run :: IO ()
 run = getFailures
