@@ -397,8 +397,6 @@ parseFile xmlFile = do
   let mainCursor = fromDocument doc
   -- scope for optimization: only call parseEventByType on existent EventTypes
       allParsedEvents = concat $ parseEventByType mainCursor <$> allEventTypes
-  print xmlFile
-  print allParsedEvents
   return allParsedEvents
 
 -- | Takes in a directory name and parses all XML in it.

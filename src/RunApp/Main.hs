@@ -1,26 +1,32 @@
 module RunApp.Main (run) where
 
+import           Data.Aeson               (ToJSON)
 import           Data.Aeson.Encode.Pretty
 import           Data.Either              (lefts, rights)
+import           Data.GS1.EPC             (ParseFailure)
+import           Data.GS1.Event           (Event)
 import           Data.GS1.Parser.Parser   (parseAllXMLInDir, parseFile)
 import qualified Data.Text.Lazy.Encoding  as TLE
 import qualified Data.Text.Lazy.IO        as TL
 import           System.Environment       (getArgs)
+import           System.Exit              (die)
 
--- @todo cmd args parsing
-getSuccesses :: IO ()
-getSuccesses = do
+getFailuresInDir :: IO ()
+getFailuresInDir = do
+  args <- getArgs
+  case args of
+    [] -> die "Please provide a directory name as an argument"
+    (xmlDir:_) -> do
+      allFailures <- parseAllXMLInDir xmlDir
+      mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (lefts allFailures)
+
+getResultsFromEither :: (Foldable t, ToJSON a) => ([Either ParseFailure Event] -> t a) -> IO ()
+getResultsFromEither fromEither = do
   xmlFiles <- getArgs
   allParsedEvents <- mapM parseFile xmlFiles
-  print allParsedEvents
-  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (rights $ (concatMap id) allParsedEvents)
+  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (fromEither $ (concatMap id) allParsedEvents)
 
-getFailures :: IO ()
-getFailures = do
-  args <- getArgs
-  let xmlDir = head args
-  allFailures <- parseAllXMLInDir xmlDir
-  mapM_ (TL.putStrLn . TLE.decodeUtf8 . encodePretty) (lefts allFailures)
-
+-- TODO: cmd args parsing
+-- based on args, decide if it should be ``getSuccesses`` or ``getFailures``
 run :: IO ()
-run = getFailures
+run = getResultsFromEither lefts

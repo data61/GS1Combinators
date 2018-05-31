@@ -51,6 +51,7 @@ module Data.GS1.EPC
   , readURIClassLabelEPC
   , readURIInstanceLabelEPC
   , mkAction
+  , genFilterValue
   )
   where
 
@@ -142,8 +143,8 @@ makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
 newtype GS1CompanyPrefix = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
-validPfix :: Gen GS1CompanyPrefix
-validPfix = error "not implem"
+-- validPfix :: Gen GS1CompanyPrefix
+-- validPfix = error "not implemented yet"
 
 -- invalidPfix :: Gen GS1CompanyPrefix
 -- invalidPfix = error "not implemented yet"
