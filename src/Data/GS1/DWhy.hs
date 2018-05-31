@@ -77,10 +77,10 @@ dispositionValidFor bs disp = bs `elem` dispositionValidList disp
 mkDWhy :: Either ParseFailure BizStep
        -> Either ParseFailure Disposition
        -> Either ParseFailure DWhy
-mkDWhy (Right step)       (Right disp)       = Right $ DWhy (Just step) (Just disp)
-mkDWhy (Left TagNotFound) (Left TagNotFound) = Right $ DWhy Nothing Nothing
-mkDWhy (Left TagNotFound) (Right disp)       = Right $ DWhy Nothing (Just disp)
-mkDWhy (Right step)       (Left TagNotFound) = Right $ DWhy (Just step) Nothing
-mkDWhy (Left eBiz)        (Left eDisp)       = Left $ ChildFailure [eBiz, eDisp]
-mkDWhy (Left eBiz)        (Right _)          = Left $ ChildFailure [eBiz]
-mkDWhy (Right _)          (Left eDisp)       = Left $ ChildFailure [eDisp]
+mkDWhy (Right step)       (Right disp)               = Right $ DWhy (Just step) (Just disp)
+mkDWhy (Left (TagNotFound _)) (Left (TagNotFound _)) = Right $ DWhy Nothing Nothing
+mkDWhy (Left (TagNotFound _)) (Right disp)           = Right $ DWhy Nothing (Just disp)
+mkDWhy (Right step)       (Left (TagNotFound _))     = Right $ DWhy (Just step) Nothing
+mkDWhy (Left eBiz)        (Left eDisp)               = Left $ ChildFailure [eBiz, eDisp]
+mkDWhy (Left eBiz)        (Right _)                  = Left eBiz
+mkDWhy (Right _)          (Left eDisp)               = Left eDisp

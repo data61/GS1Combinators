@@ -34,27 +34,33 @@ import           Data.GS1.Utils
 getCursorsByName :: Name -> Cursor -> [Cursor]
 getCursorsByName n c = c $// element n
 
--- parseSingleElem returns an Either
-parseSingleElem :: (T.Text -> Either ParseFailure a) -> [T.Text]
-                      -> Either ParseFailure a
-parseSingleElem f (x:_) = f x
-parseSingleElem _ []    = Left TagNotFound
+getTagContent :: Cursor -> Name -> [T.Text]
+getTagContent c tagName = c $// element tagName &/ content
 
-parseTimeXML :: [T.Text] -> Either ParseFailure EPCISTime
-parseTimeXML = parseSingleElem parseStr2Time
+parseSingleElem :: T.Text
+                -> (T.Text -> Either ParseFailure a)
+                -> [T.Text]
+                -> Either ParseFailure a
+parseSingleElem _tag f [x] = f x
+parseSingleElem tag _ []   = Left $ TagNotFound (MissingTag tag)
+parseSingleElem tag _ _    = Left $ MultipleTags tag
 
-parseTimeZoneXML :: [T.Text] -> Either ParseFailure TimeZone
-parseTimeZoneXML = parseSingleElem parseStr2TimeZone
+parseTimeXML :: T.Text -> [T.Text] -> Either ParseFailure EPCISTime
+parseTimeXML tag = parseSingleElem tag parseStr2Time
+
+parseTimeZoneXML :: T.Text -> [T.Text] -> Either ParseFailure TimeZone
+parseTimeZoneXML tag = parseSingleElem tag parseStr2TimeZone
 
 -- |parse the T.Text and obtain TimeZone,
 parseStr2TimeZone :: T.Text -> Either ParseFailure TimeZone
 parseStr2TimeZone s =
     case parsedStr of
       Just t  -> pure t
-      Nothing -> Left TimeZoneError
+      Nothing -> Left $ TimeZoneError (XMLSnippet s)
       where
         parsedStr =
           parseTimeM True defaultTimeLocale "%z" (T.unpack s) :: Maybe TimeZone
+
 {-
 All three should have tests
 "%FT%X%Q%z" -> 2017-12-20T04:11:43+00:00
@@ -69,53 +75,63 @@ isoFormats = [
   ]
 
 
-getFirstJust :: [Maybe a] -> Either ParseFailure a
-getFirstJust []             = Left TimeZoneError
-getFirstJust (Just x : _)   = Right x
-getFirstJust (Nothing : xs) = getFirstJust xs
+getFirstJustTz :: T.Text -> [Maybe a] -> Either ParseFailure a
+getFirstJustTz xSnippet []             = Left $ TimeZoneError (XMLSnippet xSnippet)
+getFirstJustTz _xmlSnippet (Just x : _)   = Right x
+getFirstJustTz xmlSnippet (Nothing : xs) = getFirstJustTz xmlSnippet xs
 
 -- example format: 2005-04-03T20:33:31.116-06:00
 -- |parse the string to UTC time,
 -- the time zone information will be merged into the time
 -- tries the different ISO8601 formats and gets the first one that parses
 parseStr2Time :: T.Text -> Either ParseFailure EPCISTime
-parseStr2Time s = getFirstJust $
+parseStr2Time s = getFirstJustTz s $
     fmap (\i -> EPCISTime <$> parseTimeM True defaultTimeLocale i (T.unpack s) :: Maybe EPCISTime)
       isoFormats
 
 -- |Parse BizStep by Name
 parseBizStep :: Cursor -> Either ParseFailure BizStep
-parseBizStep c = parseSingleElem readURI (c $// element "bizStep" &/ content)
+parseBizStep c = parseSingleElem tag readURI (getTagContent c tagName)
+  where
+    tag = "bizStep"
+    tagName = "bizStep"
 
 -- |Parse Disposition by Name
 parseDisposition :: Cursor -> Either ParseFailure Disposition
-parseDisposition c = parseSingleElem readURI
-                      (c $// element "disposition" &/ content)
+parseDisposition c = parseSingleElem tag readURI
+                      (getTagContent c tagName)
+  where
+    tag = "disposition"
+    tagName = "disposition"
 
 -- |Parse Action by Name
 parseAction :: Cursor -> Either ParseFailure Action
-parseAction c = parseSingleElem mkAction (c $// element "action" &/ content)
+parseAction c = parseSingleElem tag mkAction (getTagContent c tagName)
+  where
+    tag = "action"
+    tagName = "action"
 
 -- |Requires Event Level cursor
 parseDWhen :: Cursor -> Either ParseFailure DWhen
 parseDWhen c = do
   let etn = c $/ element "eventTime" &/ content
+  let et = parseTimeXML "eventTime" etn
   let tzn = c $/ element "eventTimeZoneOffset" &/ content
-  let et = parseTimeXML etn
-  let tz = parseTimeZoneXML tzn
-  let rt = either2Maybe $ parseTimeXML (c $/ element "recordTime" &/ content)
+  let tz = parseTimeZoneXML "eventTimeZoneOffset" tzn
+  let rt = either2Maybe $ parseTimeXML "recordTime" (c $/ element "recordTime" &/ content)
 
   case (et, tz) of
     (Right et', Right tz') -> Right $ DWhen et' rt tz'
-    _                      -> Left TimeZoneError
+    _                      -> Left $ TimeZoneError (XMLSnippet "")
 
 -- checks if the bistep is valid for the disposition
 -- true if no disposition is found
 checkValidBizDisp :: Either ParseFailure BizStep
-                      -> Either ParseFailure Disposition -> Bool
+                  -> Either ParseFailure Disposition
+                  -> Bool
 checkValidBizDisp (Right b) (Right d) = dispositionValidFor b d
-checkValidBizDisp (Left TagNotFound) (Left TagNotFound) = True
-checkValidBizDisp _ (Left TagNotFound) = True
+checkValidBizDisp (Left (TagNotFound _)) (Left (TagNotFound _)) = True
+checkValidBizDisp _ (Left (TagNotFound _)) = True
 checkValidBizDisp (Left _) (Right _) = False
 checkValidBizDisp _        _         = False
 
@@ -126,7 +142,7 @@ parseDWhy c = do
   let biz = parseBizStep c
   let disp = parseDisposition c
   mkDWhy biz disp
-  -- comment the following lines in if disp-bizstep combo matters
+  -- -- comment the following lines in if disp-bizstep combo matters
   -- if checkValidBizDisp biz disp
   --   then
   --     mkDWhy biz disp
@@ -138,33 +154,15 @@ parseDWhy c = do
 -- the sgln could be irregular
 -- |TODO: there must be some more modification on it
 
--- SIDE NOTE:
--- it might be helpful to write a function like,
--- f :: [Either x y] -> Either [x] [y]
 
-{-
-(>>=) :: m a -> (a -> m b) -> m b
-
-do
-  x <- y
-  f x
-
-  is equivalent to
-  y >>= \x -> f x
-
--}
-
--- test/test-xml/ObjectEvent2.xml can be used to test the parser function
-{-
-c --> Can be a top level / event-level cursor
-list --> The Name of the cursor under which the list of epcs lie
-         e.g -> sourceList, destinationList
-el --> The Name of cursor which has the epc string as its content
-         e.g -> source, destination
-         The content of this forms the LocationEPC
-attr --> The name of the attribute to look into for epc content, e.g, "type"
-         The content found with this form the SourceDestTypes
- -}
+-- | c --> Can be a top level / event-level cursor
+-- list --> The Name of the cursor under which the list of epcs lie
+--          e.g -> sourceList, destinationList
+-- el --> The Name of cursor which has the epc string as its content
+--          e.g -> source, destination
+--          The content of this forms the LocationEPC
+-- attr --> The name of the attribute to look into for epc content, e.g, "type"
+--          The content found with this form the SourceDestTypes
 parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
                             [Either ParseFailure SrcDestLocation]
 parseSourceDestLocation c listTag el attr = do
@@ -206,37 +204,38 @@ parseQuantity c = do
     [[q], [u]] -> Just $ MeasuredQuantity (Amount $ read (T.unpack q) :: Amount) (Uom u)
     _       -> Nothing
 
-{-
-The cursor level should be:
-<inputEPCList>
-  <epc>urn:epc:id:sgtin:4012345.011122.25</epc>
-  <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
-</inputEPCList>
--}
+
+-- The cursor level should be:
+-- <inputEPCList>
+--   <epc>urn:epc:id:sgtin:4012345.011122.25</epc>
+--   <epc>urn:epc:id:sgtin:4000001.065432.99886655</epc>
+-- </inputEPCList>
+
 parseInstanceLabel :: Cursor -> [Either ParseFailure LabelEPC]
 parseInstanceLabel c =
   readLabelEPC Nothing <$> (c $/ element "epc" &/ content)
 
-{-
-This function expects a cursor that resembles something like:
-<quantityElement>
-  <epcClass>urn:epc:class:lgtin:4012345.011111.4444</epcClass>
-  <quantity>10</quantity>
-  <uom>KGM</uom>
-</quantityElement>
--}
+
+-- This function expects a cursor that resembles something like:
+-- <quantityElement>
+--   <epcClass>urn:epc:class:lgtin:4012345.011111.4444</epcClass>
+--   <quantity>10</quantity>
+--   <uom>KGM</uom>
+-- </quantityElement>
+
 parseClassLabel :: Cursor -> Either ParseFailure LabelEPC
-parseClassLabel c = readLabelEPC mQt labelStr
+parseClassLabel c =
+  case c $/ element "epcClass" &/ content of
+    (labelStr:_) -> readLabelEPC mQt labelStr
+    []           -> Left $ TagNotFound (MissingTag "epcClass")
   where
     mQt = parseQuantity c
-    labelStr = head (c $/ element "epcClass" &/ content) -- BUG: Head is unsafe
-
 
 -- |parse group of text to obtain ParentId
 -- takes in one event cursor, looks for a cursor that resembles
-{-
-<parentId>urn:epc:id:sscc:0614141.1234567890</parentId>
--}
+
+-- <parentId>urn:epc:id:sscc:0614141.1234567890</parentId>
+
 -- and returns the equivalent instanceLabel data-type
 parseParentLabel :: Cursor -> Maybe ParentLabel
 parseParentLabel c =
@@ -355,10 +354,10 @@ parseEventList t = fmap asEvent
 parseEventId :: Cursor -> Either ParseFailure EventId
 parseEventId c = do
   let eid = c $/ element "eventID" &/ content
-  parseSingleElem parseEventId' eid
+  parseSingleElem "eventID" parseEventId' eid
     where
       parseEventId' eid' = case fromString (T.unpack eid') of
-                            Nothing -> Left InvalidEvent
+                            Nothing -> Left $ InvalidEventId (EventIdStr eid')
                             Just u  -> Right $ EventId u
 
 parseDWhat :: EventType -> [Cursor] -> [Either ParseFailure DWhat]

@@ -10,6 +10,9 @@
 module Data.GS1.EPC
   (URI
   , ParseFailure(..)
+  , XMLSnippet(..)
+  , MissingTag(..)
+  , EventIdStr(..)
   , GS1CompanyPrefix(..)
   , ItemReference(..)
   , ExtensionDigit(..)
@@ -56,7 +59,8 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Swagger
 import qualified Data.Text       as T
-import           GHC.Generics
+import           GHC.Generics    (Generic)
+-- import           GHC.Generics
 import           Web.HttpApiData
 
 import           Data.Bifunctor  (first)
@@ -67,29 +71,35 @@ import           Data.UUID       (UUID)
 -- import           Data.Monoid     hiding ((<>))
 import           Data.Semigroup
 
+newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic)
+newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic)
+newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic)
+
 -- add more type values to this if need be
 data ParseFailure
-  = InvalidLength
+  = InvalidLength XMLSnippet
   -- ^ Length is not correct
-  | InvalidFormat
+  | InvalidFormat XMLSnippet
   -- ^ Components Missing, incorrectly structured, wrong payload
-  | InvalidAction
+  | InvalidAction XMLSnippet
   -- ^ When parsing an action failed
-  | InvalidBizTransaction
+  | InvalidBizTransaction XMLSnippet
   -- ^ When parsing a bizTransaction failed
-  | InvalidEvent
-  -- ^ When parsing an event failed
-  | TimeZoneError
+  | InvalidEventId EventIdStr
+  -- ^ When the ``eventId`` in the XML is not a valid UUID
+  | TimeZoneError XMLSnippet
   -- ^ Error in parsing timezone
-  | TagNotFound
+  | TagNotFound MissingTag
   -- ^ When a mandatory tag is not found
-  | InvalidDispBizCombination
+  | MultipleTags T.Text
+  -- ^ When more than the specified number of tags are present
+  | InvalidDispBizCombination XMLSnippet
   -- ^ When the disposition does not go with the bizstep
   | ChildFailure [ParseFailure]
   -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-  deriving (Show, Eq)
+  deriving (Show, Eq, Read, Generic)
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
@@ -118,6 +128,10 @@ class URI a where
 
 dots :: [T.Text] -> T.Text
 dots = T.intercalate "."
+
+-- makeInvalidLength :: [T.Text] -> Either ParseFailure a
+makeErrorType :: (XMLSnippet -> ParseFailure) -> [T.Text] -> Either ParseFailure b
+makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
@@ -250,7 +264,7 @@ readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
 readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
   Right $ CSGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference itemReference)
     where (pfix:itemReference:_) = getSuffixTokens rest
-readURIClassLabelEPC _ = Left InvalidFormat
+readURIClassLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 
 $(deriveJSON defaultOptions ''ClassLabelEPC)
@@ -321,9 +335,9 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Right $ GIAI (GS1CompanyPrefix pfix) (SerialNumber sn)
     where [pfix, sn] = getSuffixTokens rest
 
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sscc" : rest)
+readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sscc" : rest)
   | isCorrectLen = Right $ SSCC (GS1CompanyPrefix pfix) (SerialNumber sn)
-  | otherwise = Left InvalidLength
+  | otherwise = makeErrorType InvalidLength xSnippet
       where
         [pfix, sn] = getSuffixTokens rest
         isCorrectLen =
@@ -333,17 +347,17 @@ readURIInstanceLabelEPC ("urn" : "epc" : "id" : "grai" : rest) =
   Right $ GRAI (GS1CompanyPrefix pfix) (AssetType assetType) (SerialNumber sn)
     where [pfix, assetType, sn] = getSuffixTokens rest
 
-readURIInstanceLabelEPC ("urn" : "epc" : "id" : "sgtin" : rest)
+readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sgtin" : rest)
   | isCorrectLen =
       Right $ SGTIN (GS1CompanyPrefix pfix) Nothing (ItemReference ir) (SerialNumber sn)
                                          -- Nothing, for the moment
-  | otherwise = Left InvalidLength
+  | otherwise = makeErrorType InvalidLength xSnippet
       where
         [pfix, ir, sn] = getSuffixTokens rest
         isCorrectLen =
             getTotalLength [pfix, ir] == sgtinPadLen
 
-readURIInstanceLabelEPC _ = Left InvalidFormat
+readURIInstanceLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 
 $(deriveJSON defaultOptions ''InstanceLabelEPC)
@@ -387,7 +401,7 @@ instance URI LocationEPC where
   readURI epcStr
    | isLocationEPC (T.splitOn ":" epcStr) =
       readURILocationEPC $ T.splitOn "." $ last $ T.splitOn ":" epcStr -- TODO: Last is unsafe
-   | otherwise            = Left InvalidFormat
+   | otherwise            = Left $ InvalidFormat (XMLSnippet epcStr)
 
 isLocationEPC :: [T.Text] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -403,23 +417,24 @@ getExt s   = Just (SGLNExtension s)
 
 readURILocationEPC :: [T.Text] -> Either ParseFailure LocationEPC
 -- without extension
-readURILocationEPC [pfix, loc]
+readURILocationEPC xSnippet@[pfix, loc]
   | isCorrectLen =
       Right $ SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing
-  | otherwise    = Left InvalidLength
+  | otherwise    = makeErrorType InvalidLength xSnippet
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
 -- with extension
-readURILocationEPC [pfix, loc, extNum]
+readURILocationEPC xSnippet@([pfix, loc, extNum])
   | isCorrectLen =
       Right $
         SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (getExt extNum)
-  | otherwise    = Left InvalidLength
+  | otherwise    = makeErrorType InvalidLength xSnippet
     where
       isCorrectLen = getTotalLength [pfix, loc] == sglnPadLen
 
-readURILocationEPC _ = Left InvalidFormat -- error condition / invalid input
+readURILocationEPC xSnippet =  makeErrorType InvalidFormat xSnippet
+-- error condition / invalid input
 
 instance ToSchema LocationEPC
 -- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 19
@@ -450,7 +465,7 @@ readSrcDestURI :: T.Text -> Either ParseFailure SourceDestType
 readSrcDestURI "owning_party"     = Right SDOwningParty
 readSrcDestURI "possessing_party" = Right SDPossessingParty
 readSrcDestURI "location"         = Right SDLocation
-readSrcDestURI _                  = Left InvalidFormat
+readSrcDestURI errTxt             = Left $ InvalidFormat (XMLSnippet errTxt)
 
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 newtype DocumentType     = DocumentType {unDocumentType :: T.Text}
@@ -503,20 +518,18 @@ gdtiPadLen = 12
 
 readURIBusinessTransactionEPC :: [T.Text] ->
                                   Either ParseFailure BusinessTransactionEPC
-readURIBusinessTransactionEPC [pfix, sref]
+readURIBusinessTransactionEPC xSnippet@([pfix, sref])
   | isCorrectLen = Right $ GSRN (GS1CompanyPrefix pfix) (SerialReference sref)
-  | otherwise = Left InvalidLength
+  | otherwise = makeErrorType InvalidLength xSnippet
   where
     isCorrectLen =
         getTotalLength [pfix, sref] == gsrnPadLen
-readURIBusinessTransactionEPC [pfix, docType, sn]
+readURIBusinessTransactionEPC xSnippet@([pfix, docType, sn])
   | isCorrectLen = Right $ GDTI (GS1CompanyPrefix pfix) (DocumentType docType) (SerialNumber sn) -- BUG!
-  | otherwise = Left InvalidLength
+  | otherwise = makeErrorType InvalidLength xSnippet
   where
-    isCorrectLen =
-        getTotalLength [pfix, docType, sn] ==
-          gdtiPadLen
-readURIBusinessTransactionEPC _ = Left InvalidFormat
+    isCorrectLen = getTotalLength [pfix, docType, sn] == gdtiPadLen
+readURIBusinessTransactionEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
 $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
@@ -573,16 +586,16 @@ instance ToSchema BizStep
 ppBizStep :: BizStep -> T.Text
 ppBizStep = revertCamelCase . T.pack . show
 
-readURIBizStep :: Maybe BizStep -> Either ParseFailure BizStep
-readURIBizStep Nothing        = Left InvalidFormat
-readURIBizStep (Just bizstep) = Right bizstep
+readURIBizStep :: Maybe BizStep -> T.Text -> Either ParseFailure BizStep
+readURIBizStep Nothing        s = Left $ InvalidFormat (XMLSnippet s)
+readURIBizStep (Just bizstep) _ = Right bizstep
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 16
 instance URI BizStep where
   uriPrefix _ = "urn:epcglobal:cbv:bizstep:"
   uriSuffix = Left . ppBizStep
   readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
-                   in readURIBizStep pURI
+                   in readURIBizStep pURI s
 
 {-
   Example:
@@ -617,17 +630,18 @@ instance ToSchema BizTransactionType
 ppBizTransactionType :: BizTransactionType -> T.Text
 ppBizTransactionType = revertCamelCase . T.pack . show
 
-readURIBizTransactionType :: Maybe BizTransactionType ->
-                              Either ParseFailure BizTransactionType
-readURIBizTransactionType Nothing    = Left InvalidFormat
-readURIBizTransactionType (Just btt) = Right btt
+readURIBizTransactionType :: Maybe BizTransactionType
+                          -> T.Text
+                          -> Either ParseFailure BizTransactionType
+readURIBizTransactionType Nothing    s = Left $ InvalidFormat (XMLSnippet s)
+readURIBizTransactionType (Just btt) _ = Right btt
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 28
 instance URI BizTransactionType where
   uriPrefix _ = "urn:epcglobal:cbv:btt:"
   uriSuffix = Left . ppBizTransactionType
   readURI s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
-                      in readURIBizTransactionType pURI
+                      in readURIBizTransactionType pURI s
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
@@ -667,7 +681,7 @@ instance FromHttpApiData Action where
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
   case mkByName . camelCase $ T.toLower t of
-    Nothing -> Left InvalidAction
+    Nothing -> Left $ InvalidAction (XMLSnippet t)
     Just x  -> Right x
 
 ---------------------------
@@ -706,15 +720,15 @@ ppDisposition :: Disposition -> T.Text
 ppDisposition = revertCamelCase . T.pack . show
 
 -- CBV-Standard-1-2-r-2016-09-29.pdf page 24
-readURIDisposition :: Maybe Disposition -> Either ParseFailure Disposition
-readURIDisposition Nothing     = Left InvalidFormat
-readURIDisposition (Just disp) = Right disp
+readURIDisposition :: Maybe Disposition -> T.Text -> Either ParseFailure Disposition
+readURIDisposition Nothing     s = Left $ InvalidFormat (XMLSnippet s)
+readURIDisposition (Just disp) _ = Right disp
 
 instance URI Disposition where
   uriPrefix _ = "urn:epcglobal:cbv:disp:"
   uriSuffix = Left . ppDisposition
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
-                    in readURIDisposition pURI
+                    in readURIDisposition pURI s
 
 ---------------------------
 -- WHEN  -------------------

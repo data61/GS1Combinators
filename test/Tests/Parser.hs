@@ -39,7 +39,7 @@ testParser = do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEventNoEventTime.xml"
       let cursor = fromDocument doc
       let oeCursors = getCursorsByName "ObjectEvent" cursor
-      parseDWhen <$> oeCursors `shouldBe` [Left TimeZoneError]
+      parseDWhen <$> oeCursors `shouldBe` [Left $ TimeZoneError (XMLSnippet "")]
 
   describe "parse DWhen AggregationEvent" $
     it "create DWhen from AggregationEvent" $ do
@@ -93,7 +93,9 @@ testParser = do
     it "find all the BizStep in multiple events XML" $ do
       doc <- Text.XML.readFile def "test/test-xml/ObjectEvent.xml"
       let cursor = fromDocument doc
-      parseBizStep cursor `shouldBe` Right Shipping
+      parseBizStep <$> (cursor $// element "ObjectEvent")
+        `shouldBe`
+          [Right Shipping, Right Receiving]
 
     it "find the first BizStep in single Event XML" $ do
       doc2 <- Text.XML.readFile def "test/test-xml/ObjectEvent2.xml"
@@ -630,26 +632,38 @@ testParser = do
 
   describe "test some basic functions in Parser" $ do
     it "parseSingleElem invalid" $
-      parseSingleElem Right [] `shouldBe` Left TagNotFound
+      parseSingleElem "Invalid Test Tag" Right []
+        `shouldBe`
+          (Left $ TagNotFound (MissingTag "Invalid Test Tag"))
     it "parseSingleElem valid" $
-      parseSingleElem Right ["hi"] `shouldBe` Right "hi"
+      parseSingleElem "Invalid Test Tag" Right ["hi"]
+        `shouldBe` (Right "hi")
 
     it "parseTimeXML invalid" $
-      parseTimeXML [] `shouldBe` Left TagNotFound
-    it "parseTimeXML invalid 2" $
-      parseTimeXML
+      parseTimeXML "Invalid Test Tag" []
+        `shouldBe`
+          (Left $ TagNotFound (MissingTag "Invalid Test Tag"))
+    it "parseTimeXML Multiple tags" $
+      parseTimeXML "Invalid Test Tag"
         ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"]
-          `shouldBe` Left TimeZoneError
+          `shouldBe`
+            Left (MultipleTags "Invalid Test Tag")
+    it "parseTimeXML invalid 2 " $
+      parseTimeXML "Invalid Test Tag"
+        ["the quick brown fox jumped over the lazy dog"]
+          `shouldBe`
+            (Left $ TimeZoneError (XMLSnippet "the quick brown fox jumped over the lazy dog"))
     it "parseTimeXML valid" $
-      parseTimeXML ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"] `shouldBe` Right
-         (EPCISTime $ read "2005-04-03 20:33:31.116-06:00")
-
+      parseTimeXML "Invalid Test Tag" ["2005-04-03T20:33:31.116-06:00", "the quick brown fox jumped over the lazy dog"]
+        `shouldBe`
+          Left (MultipleTags "Invalid Test Tag")
     it "parseTimeZoneXML invalid" $
-      parseTimeZoneXML [] `shouldBe` Left TagNotFound
-    it "parseTimeZoneXML invalid 2" $
-      parseTimeZoneXML ["the quick brown fox jumped over the lazy dog", "2005-04-03T20:33:31.116-06:00"] `shouldBe` Left TimeZoneError
+      parseTimeZoneXML "Invalid Test Tag" []
+        `shouldBe`
+          (Left $ TagNotFound (MissingTag "Invalid Test Tag"))
     it "parseTimeZoneXML valid" $
-      parseTimeZoneXML
+      parseTimeZoneXML "Invalid Test Tag"
         ["-06:00", "the quick brown fox jumped over the lazy dog"]
           `shouldBe`
-            Right (read "-06:00" :: TimeZone)
+            Left (MultipleTags "Invalid Test Tag")
+
