@@ -61,7 +61,6 @@ import           Data.Aeson.TH
 import           Data.Swagger
 import qualified Data.Text       as T
 import           GHC.Generics    (Generic)
--- import           GHC.Generics
 import           Web.HttpApiData
 
 import           Data.Bifunctor  (first)
