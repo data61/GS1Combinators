@@ -92,7 +92,8 @@ data ParseFailure
   -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq, Generic)
+$(deriveJSON defaultOptions ''ParseFailure)
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
