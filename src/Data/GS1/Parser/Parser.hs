@@ -11,16 +11,19 @@
 
 module Data.GS1.Parser.Parser where
 import           Control.Applicative
-import           Control.Arrow       hiding (first, second)
-import           Data.Bifunctor      (second)
+import           Control.Arrow         hiding (first, second)
+import           Data.Bifunctor        (second)
 import           Data.Either
 import           Data.List
-import qualified Data.Text           as T
+import qualified Data.Text             as T
 import           Data.Time
-import           Data.UUID           (fromString)
-import           Data.XML.Types      hiding (Event)
+import           Data.UUID             (fromString)
+import           Data.XML.Types        hiding (Event)
 import           Text.XML
 import           Text.XML.Cursor
+
+import           System.Directory
+import           System.FilePath.Posix
 
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
@@ -397,3 +400,10 @@ parseFile xmlFile = do
         filter (not . null) $ concat $
         parseEventByType mainCursor <$> allEventTypes
   return allParsedEvents
+
+parseAllXMLInDir :: FilePath -> IO [ParseFailure]
+parseAllXMLInDir dir = do
+  allFiles <- getDirectoryContents dir
+  let xmlFiles = filter ((".xml" ==) . takeExtension) allFiles
+  allParsedEvents <- mapM parseFile xmlFiles
+  return $ lefts $ (concatMap id) allParsedEvents
