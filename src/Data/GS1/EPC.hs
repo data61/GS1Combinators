@@ -74,9 +74,9 @@ import           Hedgehog        (Gen)
 import qualified Hedgehog.Gen    as Gen
 import qualified Hedgehog.Range  as Range
 
-newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic)
-newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic)
-newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic)
+newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
+newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
+newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
 
 -- add more type values to this if need be
 data ParseFailure
