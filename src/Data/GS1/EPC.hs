@@ -158,6 +158,7 @@ newtype SGLNExtension            = SGLNExtension {unSGLNExtension :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
 instance ToSchema GS1CompanyPrefix
+instance ToParamSchema GS1CompanyPrefix
 instance ToSchema ItemReference
 instance ToSchema ExtensionDigit
 instance ToSchema SerialReference
