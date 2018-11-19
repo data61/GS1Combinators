@@ -60,7 +60,6 @@ import           Data.Aeson.TH
 import           Data.Swagger
 import qualified Data.Text       as T
 import           GHC.Generics    (Generic)
--- import           GHC.Generics
 import           Web.HttpApiData
 
 import           Data.Bifunctor  (first)
@@ -70,6 +69,8 @@ import           Data.UUID       (UUID)
 
 -- import           Data.Monoid     hiding ((<>))
 import           Data.Semigroup
+
+import           Data.Hashable   (Hashable (..))
 
 newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic)
 newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic)
@@ -392,6 +393,9 @@ data LocationEPC = SGLN {
 $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationReference
+
+instance Hashable LocationEPC where
+  hashWithSalt salt (SGLN pfx _ _) = hashWithSalt salt $ unGS1CompanyPrefix pfx
 
 instance URI LocationEPC where
   uriPrefix SGLN{} = "urn:epc:id:sgln:"
