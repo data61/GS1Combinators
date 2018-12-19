@@ -51,7 +51,6 @@ module Data.GS1.EPC
   , readURIClassLabelEPC
   , readURIInstanceLabelEPC
   , mkAction
-  , genFilterValue
   )
   where
 
@@ -70,9 +69,7 @@ import           Data.UUID       (UUID)
 
 import           Data.Semigroup
 
-import           Hedgehog        (Gen)
-import qualified Hedgehog.Gen    as Gen
-import qualified Hedgehog.Range  as Range
+import           Data.Hashable   (Hashable (..))
 
 newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
 newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
@@ -142,12 +139,6 @@ makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
 newtype GS1CompanyPrefix = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
--- validPfix :: Gen GS1CompanyPrefix
--- validPfix = error "not implemented yet"
-
--- invalidPfix :: Gen GS1CompanyPrefix
--- invalidPfix = error "not implemented yet"
-
 newtype ItemReference     = ItemReference {unItemReference :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 newtype ExtensionDigit    = ExtensionDigit {unExtensionDigit :: Int}
@@ -169,6 +160,7 @@ newtype SGLNExtension            = SGLNExtension {unSGLNExtension :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
 instance ToSchema GS1CompanyPrefix
+instance ToParamSchema GS1CompanyPrefix
 instance ToSchema ItemReference
 instance ToSchema ExtensionDigit
 instance ToSchema SerialReference
@@ -190,9 +182,6 @@ data SGTINFilterValue
   deriving (Eq, Generic, Read, Enum, Show)
 $(deriveJSON defaultOptions ''SGTINFilterValue)
 instance ToSchema SGTINFilterValue
-
-genFilterValue :: Gen SGTINFilterValue
-genFilterValue = Gen.element [AllOthers ..]
 
 {-
 ■ The GS1 Company Prefix, assigned by GS1 to a managing entity.
@@ -405,6 +394,9 @@ data LocationEPC = SGLN {
 $(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationReference
+
+instance Hashable LocationEPC where
+  hashWithSalt salt (SGLN pfx _ _) = hashWithSalt salt $ unGS1CompanyPrefix pfx
 
 instance URI LocationEPC where
   uriPrefix SGLN{} = "urn:epc:id:sgln:"

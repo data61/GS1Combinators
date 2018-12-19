@@ -38,6 +38,7 @@ library
                      , utf8-string
                      , uuid
                      , hweblib
+                     , hashable
                      , attoparsec
                      , xml-conduit
                      , split
