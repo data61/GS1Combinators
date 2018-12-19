@@ -29,4 +29,4 @@ getResultsFromEither fromEither = do
 -- TODO: cmd args parsing
 -- based on args, decide if it should be ``getSuccesses`` or ``getFailures``
 run :: IO ()
-run = getResultsFromEither lefts
+run = getResultsFromEither rights
