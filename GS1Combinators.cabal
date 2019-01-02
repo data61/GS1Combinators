@@ -3,10 +3,10 @@ version:             0.1.0.0
 synopsis:            Haskell combinator library of GS1 EPCIS standard 
 description:         Please see README.md
 homepage:            https://github.com/data61/GS1Combinators#readme
-license:             BSD3
+license:             Apache-2.0
 license-file:        LICENSE
-author:              Alex Mason
-maintainer:          Alex.Mason@data61.csiro.au
+author:              Paul Samways
+maintainer:          Paul.Samways@data61.csiro.au
 copyright:           Copyright (c) 2016, 2017, 2018, 2019 Commonwealth Scientific and Industrial Research Organisation (CSIRO)
 category:            Web
 build-type:          Simple
