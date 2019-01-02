@@ -2,12 +2,12 @@ name:                GS1Combinators
 version:             0.1.0.0
 synopsis:            Haskell combinator library of GS1 EPCIS standard 
 description:         Please see README.md
-homepage:            https://github.csiro.au/Blockchain/GS1Combinators#readme
+homepage:            https://github.com/data61/GS1Combinators#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Alex Mason
 maintainer:          Alex.Mason@data61.csiro.au
-copyright:           Copyright (c) 2016 Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+copyright:           Copyright (c) 2016, 2017, 2018, 2019 Commonwealth Scientific and Industrial Research Organisation (CSIRO)
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
@@ -93,4 +93,4 @@ test-suite GS1Combinators-test
 
 source-repository head
   type:     git
-  location: https://github.csiro.au/Blockchain/GS1Combinators
+  location: https://github.com/data61/GS1Combinators
