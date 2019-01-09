@@ -4,7 +4,7 @@ A library to parse the GS1 Events into Haskell data types.
 
 ## Documentation
 
-[View the Haskell API documentation here](docs/index.html)
+[View the Haskell API documentation here](https://data61.github.io/GS1Combinators)
 
 Alternatively, the documentation can be generated locally using the following command
 
