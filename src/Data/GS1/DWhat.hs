@@ -15,6 +15,7 @@ module Data.GS1.DWhat
   , DWhat(..)
   , readLabelEPC
   , urn2LabelEPC
+  , getCompanyPrefix
   )
   where
 
@@ -42,6 +43,16 @@ data LabelEPC
 
 $(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
+
+
+-- | Utlity function to extract the GS1CompanyPrefix of a Label
+getCompanyPrefix :: LabelEPC -> GS1CompanyPrefix
+getCompanyPrefix (IL (GIAI pfx _))       = pfx
+getCompanyPrefix (IL (SSCC pfx _))       = pfx
+getCompanyPrefix (IL (SGTIN pfx _ _ _))  = pfx
+getCompanyPrefix (IL (GRAI pfx _ _))     = pfx
+getCompanyPrefix (CL (LGTIN pfx _ _) _)  = pfx
+getCompanyPrefix (CL (CSGTIN pfx _ _) _) = pfx
 
 newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
