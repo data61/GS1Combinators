@@ -36,8 +36,8 @@ instance ToSchema SrcDestLocation
 
 data DWhere = DWhere
   {
-    _readPoint   :: [ReadPointLocation]
-  , _bizLocation :: [BizLocation]
+    _readPoint   :: Maybe ReadPointLocation
+  , _bizLocation :: Maybe BizLocation
   , _srcType     :: [SrcDestLocation]
   , _destType    :: [SrcDestLocation]
   }
