@@ -147,15 +147,15 @@ testParser = do
       parseDWhere <$> oeCursors `shouldBe`
         [Right DWhere {
           _readPoint =
-              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just $ SGLNExtension "1234")]
-          , _bizLocation = []
+              Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just $ SGLNExtension "1234")
+          , _bizLocation = Nothing
           , _srcType = []
           , _destType = []
         }, Right DWhere {
           _readPoint =
-              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just $ SGLNExtension "400")]
+              Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just $ SGLNExtension "400")
           , _bizLocation =
-              [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
+              Just $ BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing
           , _srcType = []
           , _destType = []
         }]
@@ -171,9 +171,9 @@ testParser = do
         [Right
           DWhere {
             _readPoint =
-                [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing],
+                Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing,
             _bizLocation =
-                [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing],
+                Just $ BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing,
             _srcType = [],
             _destType = []
           }]
@@ -365,27 +365,27 @@ testParser = do
             -- a dwhere element
             (
               DWhere
-              [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing]
-              -- [ReadPointLocation]
-              [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing]
-              -- [BizLocation]
-              [
-                SrcDestLocation (
-                  SDPossessingParty, -- SourceDestType
-                  SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing
-                  -- LocationEPC
-                )
-              ] -- srcType
-              [
-                SrcDestLocation (
-                  SDOwningParty,
-                  SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing
-                ),
-                SrcDestLocation (
-                  SDLocation,
-                  SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing
-                )
-              ] -- destType
+                (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing)
+              -- ReadPointLocation
+                (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing)
+              -- BizLocation
+                [
+                  SrcDestLocation (
+                    SDPossessingParty, -- SourceDestType
+                    SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing
+                    -- LocationEPC
+                  )
+                ] -- srcType
+                [
+                  SrcDestLocation (
+                    SDOwningParty,
+                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing
+                  ),
+                  SrcDestLocation (
+                    SDLocation,
+                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing
+                  )
+                ] -- destType
             )
           ]
 
@@ -423,8 +423,8 @@ testParser = do
               -- <id>urn:epc:id:sgln:0614141.07346.1234</id>
               (
                 DWhere
-                  [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just (SGLNExtension "1234"))]
-                  [] [] []
+                  (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just (SGLNExtension "1234")))
+                  Nothing [] []
               ),
 
             -- second element
@@ -450,9 +450,9 @@ testParser = do
               -- a dwhere element
               (
                 DWhere
-                [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just (SGLNExtension "400"))]
+                (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") (Just (SGLNExtension "400")))
                 -- [ReadPointLocation]
-                [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
+                (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing)
                 -- [BizLocation]
                 [] []
               )
@@ -498,9 +498,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [ReadPointLocation $ SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing]
+            (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing)
             -- [ReadPointLocation]
-            [] -- [BizLocation]
+            Nothing -- [BizLocation]
             [] -- srcType
             [] -- destType
           )
@@ -542,9 +542,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346")  (Just (SGLNExtension "1234"))]
+            (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346")  (Just (SGLNExtension "1234")))
             -- [ReadPointLocation]
-            []-- [BizLocation]
+            Nothing -- [BizLocation]
             [] -- srcType
             [] -- destType
           ),
@@ -577,9 +577,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111")  (Just (SGLNExtension "400"))]
+            (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111")  (Just (SGLNExtension "400")))
             -- [ReadPointLocation]
-            [BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing]
+            (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0012345") (LocationReference "11111") Nothing)
             -- [BizLocation]
             [] -- srcType
             [] -- destType
@@ -620,9 +620,9 @@ testParser = do
           -- a dwhere element
           (
             DWhere
-            [ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing]
+            (Just $ ReadPointLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing)
             -- [ReadPointLocation]
-            [BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing]
+            (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing)
             -- [BizLocation]
             [] -- srcType
             [] -- destType
