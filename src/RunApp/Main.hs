@@ -11,8 +11,8 @@ import qualified Data.Text.Lazy.IO        as TL
 import           System.Environment       (getArgs)
 import           System.Exit              (die)
 
-getFailuresInDir :: IO ()
-getFailuresInDir = do
+_getFailuresInDir :: IO ()
+_getFailuresInDir = do
   args <- getArgs
   case args of
     [] -> die "Please provide a directory name as an argument"

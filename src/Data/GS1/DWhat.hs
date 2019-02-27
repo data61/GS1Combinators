@@ -21,8 +21,6 @@ module Data.GS1.DWhat
 
 import           GHC.Generics
 
-import           Data.Semigroup
-
 import           Data.Aeson
 import           Data.Aeson.TH
 
