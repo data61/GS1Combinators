@@ -67,8 +67,6 @@ import           Data.GS1.Utils
 import           Data.Time
 import           Data.UUID       (UUID)
 
-import           Data.Semigroup
-
 import           Data.Hashable   (Hashable (..))
 
 newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)

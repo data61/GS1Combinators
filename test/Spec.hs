@@ -21,6 +21,7 @@ main = do
   hspec testPrintSGLN
 
   -- DWhat
+  hspec testLabelEPC
   hspec testBizStep
   hspec testBizTransaction
 

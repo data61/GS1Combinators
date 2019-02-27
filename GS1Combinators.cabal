@@ -28,32 +28,20 @@ library
                      , Data.GS1.EventId
   hs-source-dirs:      src
   other-modules:       Data.GS1
-                     , Data.GS1.ErrorDeclaration
   build-depends:       base >= 4.7 && < 5
+                     , aeson
+                     , aeson-pretty
                      , time >= 1.4.1
-                     , bytestring
                      , time
                      , lens
-                     , aeson
-                     , utf8-string
                      , uuid
-                     , hweblib
                      , hashable
-                     , attoparsec
                      , xml-conduit
-                     , split
                      , text
-                     , either
-                     , containers
                      , xml-types
                      , swagger2
-                     , sqlite-simple
                      , directory
-                     , hedgehog
                      , http-api-data
-                     , tuple
-                     , validation
-                     , aeson-pretty
                      , filepath
   default-language:    Haskell2010
 
@@ -78,19 +66,12 @@ test-suite GS1Combinators-test
                      , Tests.Parser
   build-depends:       base
                      , GS1Combinators
-                     , bytestring
                      , hspec
                      , time
-                     , aeson
                      , xml-conduit
-                     , utf8-string
                      , uuid
-                     , hweblib
-                     , attoparsec
-                     , split
                      , text
                      , either
-                     , xml-types
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:    Haskell2010
 
