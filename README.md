@@ -44,6 +44,8 @@ To test, run `stack test`
 
 To parse an XML file, run `stack exec Parser-exe -- /path/to/XML/file`
 
+More than one file can be parsed at a time. Just append to the arguments.
+
 To check the validity/expected output of the parsing of an XML file in terms of GS1 vocabulary,
 use this [tool](http://www.vizworkbench.com/ui/dataset/).
 You  may be asked to create an account.

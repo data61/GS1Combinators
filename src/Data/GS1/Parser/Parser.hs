@@ -11,16 +11,20 @@
 
 module Data.GS1.Parser.Parser where
 import           Control.Applicative
-import           Control.Arrow       hiding (first, second)
-import           Data.Bifunctor      (second)
+import           Control.Arrow         hiding (first, second)
+import           Data.Bifunctor        (second)
 import           Data.Either
 import           Data.Maybe          (listToMaybe)
 import           Data.List
-import qualified Data.Text           as T
+import qualified Data.Text             as T
 import           Data.Time
-import           Data.UUID           (fromString)
-import           Data.XML.Types      hiding (Event)
+import           Data.UUID             (fromString)
+import           Data.XML.Types        hiding (Event)
+import           Text.XML
 import           Text.XML.Cursor
+
+import           System.Directory
+import           System.FilePath.Posix
 
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
@@ -391,3 +395,21 @@ parseEventByType c et =
       zipd = zip5 eid dwhat dwhen dwhy dwhere
   in
       parseEventList et zipd
+
+-- | Takes in a file name and parses that to some GS1 events
+parseFile :: FilePath -> IO [Either ParseFailure Event]
+parseFile xmlFile = do
+  doc <- Text.XML.readFile def xmlFile
+  let mainCursor = fromDocument doc
+  -- scope for optimization: only call parseEventByType on existent EventTypes
+      allParsedEvents = concat $ parseEventByType mainCursor <$> allEventTypes
+  return allParsedEvents
+
+-- | Takes in a directory name and parses all XML in it.
+-- TODO: Error handling
+parseAllXMLInDir :: FilePath -> IO [Either ParseFailure Event]
+parseAllXMLInDir dir = do
+  allFiles <- getDirectoryContents dir
+  let xmlFiles = filter ((".xml" ==) . takeExtension) allFiles
+  allParsedEvents <- mapM parseFile xmlFiles
+  return $ concat allParsedEvents

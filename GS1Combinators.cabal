@@ -48,10 +48,13 @@ library
                      , xml-types
                      , swagger2
                      , sqlite-simple
+                     , directory
+                     , hedgehog
                      , http-api-data
                      , tuple
                      , validation
                      , aeson-pretty
+                     , filepath
   default-language:    Haskell2010
 
 executable Parser-exe

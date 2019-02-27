@@ -67,14 +67,13 @@ import           Data.GS1.Utils
 import           Data.Time
 import           Data.UUID       (UUID)
 
--- import           Data.Monoid     hiding ((<>))
 import           Data.Semigroup
 
 import           Data.Hashable   (Hashable (..))
 
-newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic)
-newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic)
-newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic)
+newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
+newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
+newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
 
 -- add more type values to this if need be
 data ParseFailure
@@ -100,7 +99,8 @@ data ParseFailure
   -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-  deriving (Show, Eq, Read, Generic)
+  deriving (Show, Read, Eq, Generic)
+$(deriveJSON defaultOptions ''ParseFailure)
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
@@ -136,8 +136,9 @@ makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
 
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
-newtype GS1CompanyPrefix  = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
+newtype GS1CompanyPrefix = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+
 newtype ItemReference     = ItemReference {unItemReference :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 newtype ExtensionDigit    = ExtensionDigit {unExtensionDigit :: Int}
