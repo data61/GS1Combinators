@@ -14,6 +14,7 @@ import           Control.Applicative
 import           Control.Arrow         hiding (first, second)
 import           Data.Bifunctor        (second)
 import           Data.Either
+import           Data.Maybe          (listToMaybe)
 import           Data.List
 import qualified Data.Text             as T
 import           Data.Time
@@ -193,7 +194,12 @@ parseDWhere c = do
 
   case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists
-    ([], [], [], []) -> Right $ DWhere rps bls srcTypes destTypes
+    ([], [], [], []) -> Right $
+                          DWhere
+                            (listToMaybe rps)
+                            (listToMaybe bls)
+                            srcTypes
+                            destTypes
     _                -> Left $ ChildFailure $
                           rpsErrs ++ blsErrs ++ srcTypeErrs ++ destTypeErrs
 
