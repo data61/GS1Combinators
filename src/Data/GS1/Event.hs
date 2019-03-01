@@ -8,7 +8,6 @@ module Data.GS1.Event
   , Event(..)
   , allEventTypes
   , getEventType
-  , mkEventType
   , stringify
   )
   where
@@ -53,9 +52,6 @@ getEventType ObjWhat{}       = ObjectEventT
 getEventType AggWhat{}       = AggregationEventT
 getEventType TransactWhat{}  = TransactionEventT
 getEventType TransformWhat{} = TransformationEventT
-
-mkEventType :: T.Text -> Maybe EventType
-mkEventType = mkByName
 
 allEventTypes :: [EventType]
 allEventTypes = [ObjectEventT ..]
