@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 
 library
   default-extensions: OverloadedStrings
+                    , FlexibleContexts
   exposed-modules:     RunApp.Main
                     -- exposed for tests
                      , Data.GS1.Utils
