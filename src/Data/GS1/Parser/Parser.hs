@@ -14,8 +14,8 @@ import           Control.Applicative
 import           Control.Arrow         hiding (first, second)
 import           Data.Bifunctor        (second)
 import           Data.Either
-import           Data.Maybe          (listToMaybe)
 import           Data.List
+import           Data.Maybe            (listToMaybe)
 import qualified Data.Text             as T
 import           Data.Time
 import           Data.UUID             (fromString)
