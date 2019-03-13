@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.DWhy
   (DWhy(..)
@@ -9,10 +8,9 @@ module Data.GS1.DWhy
   )
   where
 
-import           Data.Aeson.TH (defaultOptions, deriveJSON)
 import           Data.GS1.EPC
-import           Data.Swagger  (ToSchema)
-import           GHC.Generics  (Generic)
+import           Data.Swagger (ToSchema)
+import           GHC.Generics (Generic)
 
 data DWhy = DWhy
             {
@@ -20,7 +18,7 @@ data DWhy = DWhy
             , _DWhyDisposition :: Maybe Disposition
             }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''DWhy)
+-- $(deriveJSON defaultOptions ''DWhy)
 instance ToSchema DWhy
 
 -- given a disposition, returns the list of valid BizSteps

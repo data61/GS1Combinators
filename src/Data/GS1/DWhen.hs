@@ -1,11 +1,9 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Data.GS1.DWhen (DWhen(..)) where
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.GS1.EPC
 import           Data.Swagger
 import           Data.Time
@@ -19,6 +17,13 @@ data DWhen = DWhen
   }
   deriving (Show, Eq, Generic)
 
+instance FromJSON DWhen where
+  parseJSON = withObject "BizLocation" $ \v -> DWhen
+    <$> v .: "eventTime"
+    <*> v .:? "recordTime"
+    <*> v .: "eventTimeZoneOffset"
 
-$(deriveJSON defaultOptions ''DWhen)
+instance ToJSON DWhen where
+  toJSON = error "not implemented yet"
+
 instance ToSchema DWhen

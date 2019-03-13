@@ -13,7 +13,6 @@ module Data.GS1.Event
   where
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.GS1.DWhat
 import           Data.GS1.DWhen
 import           Data.GS1.DWhere

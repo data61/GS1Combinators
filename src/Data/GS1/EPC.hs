@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | module containing error types, URI class, epc types
@@ -56,7 +55,6 @@ module Data.GS1.EPC
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Swagger
 import qualified Data.Text       as T
 import           GHC.Generics    (Generic)
@@ -98,7 +96,6 @@ data ParseFailure
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
   deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''ParseFailure)
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
@@ -178,7 +175,7 @@ data SGTINFilterValue
   | UnitLoad
   | UnitInsideTradeItemOrComponentInsideAProductNotIntendedForIndividualSale
   deriving (Eq, Generic, Read, Enum, Show)
-$(deriveJSON defaultOptions ''SGTINFilterValue)
+-- $(deriveJSON defaultOptions ''SGTINFilterValue)
 instance ToSchema SGTINFilterValue
 
 {-
@@ -216,7 +213,7 @@ data Quantity
       _quantityCount :: Integer
     }
     deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''Quantity)
+-- $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
@@ -256,7 +253,6 @@ instance URI ClassLabelEPC where
 
   readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
 
-
 -- implement reader for :idpat:sgtin:
 readURIClassLabelEPC :: [T.Text] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
@@ -267,8 +263,12 @@ readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
     where (pfix:itemReference:_) = getSuffixTokens rest
 readURIClassLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
+instance FromJSON ClassLabelEPC where
+  parseJSON = withText "ClassLabelEPC" (either (fail . show) pure . readURI)
 
-$(deriveJSON defaultOptions ''ClassLabelEPC)
+instance ToJSON ClassLabelEPC where
+  toJSON = String . renderURL
+
 instance ToSchema ClassLabelEPC
 
 
@@ -331,7 +331,6 @@ ssccPadLen = 17
 -- TODO: This could be easily implemnted using proper parser combinators from attoparsec
 -- parsec, megaparsec or trifecta (parsers library)
 readURIInstanceLabelEPC :: [T.Text] -> Either ParseFailure InstanceLabelEPC
-
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Right $ GIAI (GS1CompanyPrefix pfix) (SerialNumber sn)
     where [pfix, sn] = getSuffixTokens rest
@@ -360,8 +359,13 @@ readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sgtin" : rest)
 
 readURIInstanceLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
+instance FromJSON InstanceLabelEPC where
+  parseJSON = withText "InstanceLabelEPC" (either (fail . show) pure . readURI)
 
-$(deriveJSON defaultOptions ''InstanceLabelEPC)
+instance ToJSON InstanceLabelEPC where
+  toJSON = String . renderURL
+
+-- $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
 
 newtype Lng = Lng {unLng :: Double}
@@ -374,7 +378,7 @@ newtype LocationReference
     _locationRefVal :: T.Text
   }
   deriving (Read, Eq, Generic, Show)
-$(deriveJSON defaultOptions ''LocationReference)
+-- $(deriveJSON defaultOptions ''LocationReference)
 
 -- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 35 4.7.2
 -- In EPCIS, the GLN+extension is represented as a Uniform Resource Identifier
@@ -389,7 +393,6 @@ data LocationEPC = SGLN {
   , _sglnExt           :: Maybe SGLNExtension
   }
   deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationReference
 
@@ -406,6 +409,13 @@ instance URI LocationEPC where
    | isLocationEPC (T.splitOn ":" epcStr) =
       readURILocationEPC $ T.splitOn "." $ last $ T.splitOn ":" epcStr -- TODO: Last is unsafe
    | otherwise            = Left $ InvalidFormat (XMLSnippet epcStr)
+
+
+instance FromJSON LocationEPC where
+  parseJSON = withText "LocationEPC" (either (fail . show) pure . readURI)
+
+instance ToJSON LocationEPC where
+  toJSON = String . renderURL
 
 isLocationEPC :: [T.Text] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -454,7 +464,7 @@ data SourceDestType
   | SDPossessingParty
   | SDLocation
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''SourceDestType)
+-- $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
@@ -535,7 +545,7 @@ readURIBusinessTransactionEPC xSnippet@([pfix, docType, sn])
     isCorrectLen = getTotalLength [pfix, docType, sn] == gdtiPadLen
 readURIBusinessTransactionEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
-$(deriveJSON defaultOptions ''BusinessTransactionEPC)
+-- $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
 
 data LocationError
@@ -584,7 +594,7 @@ data BizStep
   | Unloading
   | VoidShipping
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''BizStep)
+-- $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
 
 ppBizStep :: BizStep -> T.Text
@@ -628,7 +638,7 @@ data BizTransactionType
   | Recadv    -- Receiving Advice
   | Rma       -- Return Mechandise Authorisation
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''BizTransactionType)
+-- $(deriveJSON defaultOptions ''BizTransactionType)
 instance ToSchema BizTransactionType
 
 ppBizTransactionType :: BizTransactionType -> T.Text
@@ -654,7 +664,7 @@ data BizTransaction = BizTransaction
   , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''BizTransaction)
+-- $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
 
@@ -674,7 +684,7 @@ data Action
   | Observe
   | Delete
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''Action)
+-- $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 instance ToParamSchema Action where
   toParamSchema _ = mempty
@@ -716,7 +726,7 @@ data Disposition
   | Stolen
   | Unknown
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''Disposition)
+-- $(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
 
 
@@ -748,14 +758,14 @@ newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
 instance ToSchema EPCISTime
 
 data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''EPCISTimeError)
+-- $(deriveJSON defaultOptions ''EPCISTimeError)
 instance ToSchema EPCISTimeError
 
 
 instance Eq ZonedTime where
   x == y = show x == show y
 
-$(deriveJSON defaultOptions ''TimeZone)
+-- $(deriveJSON defaultOptions ''TimeZone)
 --instance ToSchema ZonedTime
 instance ToParamSchema TimeZone where
   toParamSchema _ = mempty
@@ -775,3 +785,8 @@ timeSchema fmt = mempty
 -- XXX I have literally no idea what is happening here! Please check!
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
+
+instance FromJSON TimeZone where
+  parseJSON = withText "TimeZone" $ \str -> case ((parseTimeM True defaultTimeLocale "%z" (T.unpack str)) :: Maybe TimeZone) of
+    Just t  -> pure t
+    Nothing -> fail $ "Failed to parse timezone from: " <> T.unpack str

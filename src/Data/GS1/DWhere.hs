@@ -1,10 +1,9 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TemplateHaskell            #-}
 
 module Data.GS1.DWhere
-  (ReadPointLocation(..)
+  ( ReadPointLocation(..)
   , BizLocation(..)
   , SrcDestLocation(..)
   , DWhere(..)
@@ -14,25 +13,36 @@ module Data.GS1.DWhere
 import           GHC.Generics
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.GS1.EPC
 import           Data.Swagger
 
--- |Location synonym
+-- | Location synonym
 newtype ReadPointLocation = ReadPointLocation {unReadPointLocation :: LocationEPC}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+  deriving (Show, Read, Eq, Generic, URI)
 instance ToSchema ReadPointLocation
 
+instance FromJSON ReadPointLocation where
+  parseJSON v = ReadPointLocation <$> parseJSON v
+instance ToJSON ReadPointLocation where
+  toJSON = toJSON . unReadPointLocation
 
--- |Location synonym
+-- | Location synonym
 newtype BizLocation = BizLocation {unBizLocation :: LocationEPC}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+  deriving (Show, Read, Eq, Generic, URI)
 instance ToSchema BizLocation
+
+instance FromJSON BizLocation where
+  parseJSON v = BizLocation <$> parseJSON v
+instance ToJSON BizLocation where
+  toJSON = toJSON . unBizLocation
 
 newtype SrcDestLocation =
   SrcDestLocation {unSrcDestLocation :: (SourceDestType, LocationEPC)}
-    deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+    deriving (Show, Read, Eq, Generic)
 instance ToSchema SrcDestLocation
+
+-- instance ToJSON SrcDestLocation where
+-- instance FromJSON SrcDestLocation where
 
 data DWhere = DWhere
   {
@@ -42,5 +52,5 @@ data DWhere = DWhere
   , _destType    :: [SrcDestLocation]
   }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''DWhere)
+-- $(deriveJSON defaultOptions ''DWhere)
 instance ToSchema DWhere

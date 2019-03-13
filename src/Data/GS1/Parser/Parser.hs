@@ -11,7 +11,7 @@
 
 module Data.GS1.Parser.Parser where
 import           Control.Applicative
-import           Control.Arrow         hiding (first, second)
+import           Control.Arrow         hiding (second)
 import           Data.Bifunctor        (second)
 import           Data.Either
 import           Data.List

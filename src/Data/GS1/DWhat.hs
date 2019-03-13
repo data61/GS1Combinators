@@ -22,10 +22,9 @@ module Data.GS1.DWhat
 import           GHC.Generics
 
 import           Data.Aeson
-import           Data.Aeson.TH
 
 import           Data.Swagger
-import qualified Data.Text      as T
+import qualified Data.Text    as T
 
 import           Data.GS1.EPC
 
@@ -39,8 +38,10 @@ data LabelEPC
     }
   deriving (Show, Read, Eq, Generic)
 
-$(deriveJSON defaultOptions ''LabelEPC)
 instance ToSchema LabelEPC
+
+-- instance FromJSON LabelEPC where
+--   parseJSON =
 
 
 -- | Utlity function to extract the GS1CompanyPrefix of a Label
