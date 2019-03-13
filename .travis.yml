@@ -11,23 +11,15 @@
 # Choose a build environment
 dist: xenial
 
-cache:
-  timeout: 6000
-
 # Do not choose a language; we provide our own build tools.
 language: generic
 
 # Caching so the next build will be fast too.
 cache:
+  timeout: 4000
   directories:
   - $HOME/.stack
   - .stack-work
-
-# Ensure necessary system libraries are present
-addons:
-  apt:
-    packages:
-      - libgmp-dev
 
 before_install:
 # Download and unpack the stack executable
@@ -43,3 +35,4 @@ script:
 # Build the package, its tests, and its docs and run the tests
 - stack --no-terminal build --fast
 - stack test --fast
+
