@@ -23,12 +23,6 @@ cache:
   - $HOME/.stack
   - .stack-work
 
-# Ensure necessary system libraries are present
-addons:
-  apt:
-    packages:
-      - libgmp-dev
-
 before_install:
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
@@ -43,3 +37,4 @@ script:
 # Build the package, its tests, and its docs and run the tests
 - stack --no-terminal build --fast
 - stack test --fast
+
