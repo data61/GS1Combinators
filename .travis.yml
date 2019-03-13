@@ -11,14 +11,12 @@
 # Choose a build environment
 dist: xenial
 
-cache:
-  timeout: 8000
-
 # Do not choose a language; we provide our own build tools.
 language: generic
 
 # Caching so the next build will be fast too.
 cache:
+  timeout: 4000
   directories:
   - $HOME/.stack
   - .stack-work
