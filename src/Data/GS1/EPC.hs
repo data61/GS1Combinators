@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -7,7 +8,7 @@
 -- the types in this file cover all dimensions
 
 module Data.GS1.EPC
-  (URI
+  ( URI
   , ParseFailure(..)
   , XMLSnippet(..)
   , MissingTag(..)
@@ -691,6 +692,18 @@ instance ToParamSchema Action where
     & type_ .~ SwaggerString
 instance FromHttpApiData Action where
   parseQueryParam t = first (T.pack . show) (mkAction t)
+
+instance FromJSON Action where
+  parseJSON = withText "Action" $ \case
+    "ADD" -> pure Add
+    "OBSERVE" -> pure Observe
+    "DELETE" -> pure Delete
+    t -> fail $ "Invalid value for Action: " <> T.unpack t
+
+instance ToJSON Action where
+  toJSON Add     = "ADD"
+  toJSON Observe = "OBSERVE"
+  toJSON Delete  = "DELETE"
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
