@@ -328,21 +328,19 @@ parseTransformationDWhat c = do
 
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
-parseBizTransactionHelp (a, b) = do
-  let tId   = BizTransactionId $ T.strip a
-  let tType = readURI $ T.strip b
-  case tType of
-    Right t -> Right $ BizTransaction tId t
+parseBizTransactionHelp (btId, bt) = do
+  case readURI . T.strip $ bt of
+    Right t -> Right $ BizTransaction (Just . BizTransactionId . T.strip $ btId) t
     Left  e -> Left e
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
-  let texts = c $// element "bizTransaction" &/ content
+  let btId = c $// element "bizTransaction" &/ content
   -- looks like "http://transaction.acme.com/po/12345678"
-  let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
+  let bt = foldMap id (c $// element "bizTransaction" &| attribute "type")
   -- looks like urn:epcglobal:cbv:btt:po
-  let z = zip texts attrs
+  let z = zip btId bt
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType
