@@ -55,7 +55,7 @@ module Data.GS1.EPC
   where
 
 import           Control.Lens
-import           Data.Aeson
+import           Data.Aeson      as A
 import           Data.Swagger
 import qualified Data.Text       as T
 import           GHC.Generics    (Generic)
@@ -655,19 +655,35 @@ readURIBizTransactionType (Just btt) _ = Right btt
 instance URI BizTransactionType where
   uriPrefix _ = "urn:epcglobal:cbv:btt:"
   uriSuffix = Left . ppBizTransactionType
-  readURI s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
-                      in readURIBizTransactionType pURI s
+  readURI s = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
+              in readURIBizTransactionType pURI s
+
+instance FromJSON BizTransactionType where
+  parseJSON = withText "BizTransactionType" (either (fail . show) pure . readURI)
+
+instance ToJSON BizTransactionType where
+  toJSON = String . renderURL
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
   {
-    _btid :: BizTransactionId
+    _btid :: Maybe BizTransactionId
   , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
 -- $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
+instance FromJSON BizTransaction where
+  parseJSON = withObject "BizTransaction" $ \o -> BizTransaction
+      <$> o .:? "type"
+      <*> o .: "bizTransaction"
+
+instance ToJSON BizTransaction where
+  toJSON (BizTransaction mbId tr) = object
+    [ "type" A..= mbId
+    , "bizTransaction" A..= tr
+    ]
 
 -- | TransformationId
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
@@ -739,9 +755,7 @@ data Disposition
   | Stolen
   | Unknown
   deriving (Show, Eq, Generic, Read)
--- $(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
-
 
 ppDisposition :: Disposition -> T.Text
 ppDisposition = revertCamelCase . T.pack . show
@@ -756,6 +770,12 @@ instance URI Disposition where
   uriSuffix = Left . ppDisposition
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
                     in readURIDisposition pURI s
+
+instance FromJSON Disposition where
+  parseJSON = withText "Disposition" (either (fail . show) pure . readURI)
+
+instance ToJSON Disposition where
+  toJSON = String . renderURL
 
 ---------------------------
 -- WHEN  -------------------
