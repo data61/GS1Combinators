@@ -770,36 +770,3 @@ newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
   deriving (Show, Read, Eq, Generic, Ord, ToJSON, FromJSON)
 instance ToSchema EPCISTime
 
-data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
--- $(deriveJSON defaultOptions ''EPCISTimeError)
-instance ToSchema EPCISTimeError
-
-
-instance Eq ZonedTime where
-  x == y = show x == show y
-
--- $(deriveJSON defaultOptions ''TimeZone)
---instance ToSchema ZonedTime
-instance ToParamSchema TimeZone where
-  toParamSchema _ = mempty
-    & type_ .~ SwaggerString
-
--- copied from
--- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
-named :: T.Text -> Schema -> NamedSchema
-named n = NamedSchema (Just n) -- this function has been Eta reduced
-
-timeSchema :: T.Text -> Schema
-timeSchema fmt = mempty
-  & type_ .~ SwaggerString
-  & format ?~ fmt
-
-
--- XXX I have literally no idea what is happening here! Please check!
-instance ToSchema TimeZone where
-  declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
-
-instance FromJSON TimeZone where
-  parseJSON = withText "TimeZone" $ \str -> case ((parseTimeM True defaultTimeLocale "%z" (T.unpack str)) :: Maybe TimeZone) of
-    Just t  -> pure t
-    Nothing -> fail $ "Failed to parse timezone from: " <> T.unpack str
