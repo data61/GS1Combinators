@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
@@ -96,7 +97,8 @@ data ParseFailure
   -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-  deriving (Show, Read, Eq, Generic)
+  deriving (Show, Read, Eq, Generic, ToJSON)
+
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
