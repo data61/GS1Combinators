@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
 
 module Data.GS1.Event
@@ -36,8 +37,20 @@ data EventType
   | TransformationEventT
   deriving (Show, Eq, Generic, Enum, Read)
 
-$(deriveJSON defaultOptions ''EventType)
 instance ToSchema EventType
+
+instance ToJSON EventType where
+  toJSON evType = object
+    [ "isA" .= (stringify evType :: String) ]
+
+instance FromJSON EventType where
+  parseJSON = withObject "EventType" $ \o ->
+    (o .: "isA") >>= \case
+      ("ObjectEvent" :: String) -> pure ObjectEventT
+      "AggregationEvent"    -> pure AggregationEventT
+      "TransactionEvent"    -> pure TransactionEventT
+      "TransformationEvent" -> pure TransformationEventT
+      t                     -> fail $ "Invalid Event Type: " <> t
 
 stringify :: IsString a => EventType -> a
 stringify ObjectEventT         = "ObjectEvent"
@@ -65,5 +78,4 @@ data Event = Event
   , _where :: DWhere
   }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''Event)
 instance ToSchema Event

@@ -12,7 +12,7 @@ import           GHC.Generics
 
 import qualified Data.Text    as T
 
-import           Control.Lens
+import           Control.Lens hiding ((.=))
 
 data DWhen = DWhen
   {
@@ -29,7 +29,11 @@ instance FromJSON DWhen where
     <*> v .: "eventTimeZoneOffset"
 
 instance ToJSON DWhen where
-  toJSON = error "not implemented yet"
+  toJSON (DWhen eTime rTime etOffset) = object
+    [ "eventTime" .= eTime
+    , "recordTime" .= rTime
+    , "eventTimeZoneOffset" .= etOffset
+    ]
 
 -- copied from
 -- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
@@ -47,6 +51,8 @@ instance FromJSON TimeZone where
     Just t  -> pure t
     Nothing -> fail $ "Failed to parse timezone from: " <> T.unpack str
 
+instance ToJSON TimeZone where
+  toJSON = String . T.pack . timeZoneOffsetString
 
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named "TimeZone" $ timeSchema "date-time"
