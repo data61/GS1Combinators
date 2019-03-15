@@ -44,13 +44,12 @@ instance ToJSON EventType where
     [ "isA" .= (stringify evType :: String) ]
 
 instance FromJSON EventType where
-  parseJSON = withObject "EventType" $ \o ->
-    (o .: "isA") >>= \case
-      ("ObjectEvent" :: String) -> pure ObjectEventT
+  parseJSON = withText "EventType" $ \case
+      "ObjectEvent"         -> pure ObjectEventT
       "AggregationEvent"    -> pure AggregationEventT
       "TransactionEvent"    -> pure TransactionEventT
       "TransformationEvent" -> pure TransformationEventT
-      t                     -> fail $ "Invalid Event Type: " <> t
+      t                     -> fail $ "Invalid Event Type: " <> T.unpack t
 
 stringify :: IsString a => EventType -> a
 stringify ObjectEventT         = "ObjectEvent"
@@ -79,3 +78,12 @@ data Event = Event
   }
   deriving (Show, Eq, Generic)
 instance ToSchema Event
+
+instance FromJSON Event where
+  parseJSON = withObject "Event" $ \o -> Event
+    <$> o .: "isA"
+    <*> o .:? "eventID"
+    <*> error "lol"
+    <*> error "lol"
+    <*> error "lol"
+    <*> error "lol"

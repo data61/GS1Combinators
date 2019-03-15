@@ -1,7 +1,8 @@
+{-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 module Data.GS1.DWhat
   (LabelEPC(..)
@@ -41,7 +42,14 @@ data LabelEPC
 instance ToSchema LabelEPC
 
 -- instance FromJSON LabelEPC where
---   parseJSON =
+--   parseJSON = withObject "LabelEPC" $ \o -> do
+--     (o .:? "quantityElement") >>= \case
+--     -- case (r :: Maybe ClassLabelEPC) of
+--       Nothing -> error "lol"
+--       Just (e :: ClassLabelEPC)  -> error $ show e
+
+-- instance ToJSON LabelEPC where
+--   toJSON _l = error "lol"
 
 
 -- | Utlity function to extract the GS1CompanyPrefix of a Label
@@ -54,11 +62,11 @@ getCompanyPrefix (CL (LGTIN pfx _ _) _)  = pfx
 getCompanyPrefix (CL (CSGTIN pfx _ _) _) = pfx
 
 newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, URI)
+  deriving (Show, Read, Eq, Generic, URI)
 newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic)
 newtype OutputEPC    = OutputEPC {unOutputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic)
 
 instance ToSchema ParentLabel
 instance ToSchema InputEPC
@@ -122,15 +130,15 @@ data TransformationDWhat =
   , _transformationOutputEpcList :: [OutputEPC]
   } deriving (Show, Eq, Generic)
 
-instance FromJSON ObjectDWhat
-instance FromJSON AggregationDWhat
-instance FromJSON TransactionDWhat
-instance FromJSON TransformationDWhat
+-- instance FromJSON ObjectDWhat
+-- instance FromJSON AggregationDWhat
+-- instance FromJSON TransactionDWhat
+-- instance FromJSON TransformationDWhat
 
-instance ToJSON ObjectDWhat
-instance ToJSON AggregationDWhat
-instance ToJSON TransactionDWhat
-instance ToJSON TransformationDWhat
+-- instance ToJSON ObjectDWhat
+-- instance ToJSON AggregationDWhat
+-- instance ToJSON TransactionDWhat
+-- instance ToJSON TransformationDWhat
 
 instance ToSchema ObjectDWhat
 instance ToSchema AggregationDWhat
@@ -147,6 +155,5 @@ data DWhat =
   | TransformWhat TransformationDWhat
   deriving (Show, Eq, Generic)
 
-$(deriveJSON defaultOptions ''DWhat)
 instance ToSchema DWhat
 

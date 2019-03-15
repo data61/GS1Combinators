@@ -38,11 +38,8 @@ instance ToJSON BizLocation where
 
 newtype SrcDestLocation =
   SrcDestLocation {unSrcDestLocation :: (SourceDestType, LocationEPC)}
-    deriving (Show, Read, Eq, Generic)
+    deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 instance ToSchema SrcDestLocation
-
--- instance ToJSON SrcDestLocation where
--- instance FromJSON SrcDestLocation where
 
 data DWhere = DWhere
   {
@@ -52,5 +49,4 @@ data DWhere = DWhere
   , _destType    :: [SrcDestLocation]
   }
   deriving (Show, Eq, Generic)
--- $(deriveJSON defaultOptions ''DWhere)
 instance ToSchema DWhere

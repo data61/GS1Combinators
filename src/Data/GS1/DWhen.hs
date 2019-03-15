@@ -15,8 +15,7 @@ import qualified Data.Text    as T
 import           Control.Lens hiding ((.=))
 
 data DWhen = DWhen
-  {
-    _eventTime  :: EPCISTime
+  { _eventTime  :: EPCISTime
   , _recordTime :: Maybe EPCISTime-- minOccurs = 0
   , _timeZone   :: TimeZone
   }

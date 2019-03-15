@@ -1,8 +1,7 @@
-{-# LANGUAGE DeriveAnyClass             #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | module containing error types, URI class, epc types
@@ -218,6 +217,11 @@ data Quantity
     deriving (Show, Read, Eq, Generic)
 -- $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
+
+-- instance FromJSON Quantity where
+--   parseJSON = withObject "Quantity" $ \o ->
+
+
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
@@ -467,7 +471,6 @@ data SourceDestType
   | SDPossessingParty
   | SDLocation
   deriving (Show, Eq, Generic, Read)
--- $(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
@@ -483,6 +486,12 @@ readSrcDestURI "owning_party"     = Right SDOwningParty
 readSrcDestURI "possessing_party" = Right SDPossessingParty
 readSrcDestURI "location"         = Right SDLocation
 readSrcDestURI errTxt             = Left $ InvalidFormat (XMLSnippet errTxt)
+
+instance FromJSON SourceDestType where
+  parseJSON = withText "SourceDestType" (either (fail . show) pure . readURI)
+
+instance ToJSON SourceDestType where
+  toJSON = String . renderURL
 
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 newtype DocumentType     = DocumentType {unDocumentType :: T.Text}
@@ -597,8 +606,16 @@ data BizStep
   | Unloading
   | VoidShipping
   deriving (Show, Eq, Generic, Read)
--- $(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
+
+instance FromJSON BizStep where
+  parseJSON = withText "BizStep" $ \t ->
+    case parseURI t "urn:epcglobal:cbv:bizstep" of
+      Just bizstep -> pure bizstep
+      Nothing      -> fail "Invalid Bizstep"
+
+instance ToJSON BizStep where
+  toJSON = String . ppBizStep
 
 ppBizStep :: BizStep -> T.Text
 ppBizStep = revertCamelCase . T.pack . show
@@ -611,8 +628,8 @@ readURIBizStep (Just bizstep) _ = Right bizstep
 instance URI BizStep where
   uriPrefix _ = "urn:epcglobal:cbv:bizstep:"
   uriSuffix = Left . ppBizStep
-  readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
-                   in readURIBizStep pURI s
+  readURI s = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
+              in readURIBizStep pURI s
 
 {-
   Example:
