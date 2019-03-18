@@ -83,7 +83,10 @@ instance FromJSON Event where
   parseJSON = withObject "Event" $ \o -> Event
     <$> o .: "isA"
     <*> o .:? "eventID"
-    <*> error "lol"
-    <*> error "lol"
-    <*> error "lol"
-    <*> error "lol"
+    <*> error "fromJSON not implemented for this"
+    <*> error "fromJSON not implemented for this"
+    <*> error "fromJSON not implemented for this"
+    <*> error "fromJSON not implemented for this"
+
+instance ToJSON Event where
+  toJSON a = error "toJSON not implemented"
