@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass             #-}
+-- {-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
@@ -42,15 +42,16 @@ data LabelEPC
 
 instance ToSchema LabelEPC
 
--- instance FromJSON LabelEPC where
+instance FromJSON LabelEPC where
+  parseJSON = undefined
 --   parseJSON = withObject "LabelEPC" $ \o -> do
 --     (o .:? "quantityElement") >>= \case
 --     -- case (r :: Maybe ClassLabelEPC) of
 --       Nothing -> error "lol"
 --       Just (e :: ClassLabelEPC)  -> error $ show e
 
--- instance ToJSON LabelEPC where
---   toJSON _l = error "lol"
+instance ToJSON LabelEPC where
+  toJSON = undefined
 
 
 -- | Utlity function to extract the GS1CompanyPrefix of a Label
@@ -63,11 +64,14 @@ getCompanyPrefix (CL (LGTIN pfx _ _) _)  = pfx
 getCompanyPrefix (CL (CSGTIN pfx _ _) _) = pfx
 
 newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
-  deriving (Show, Read, Eq, Generic, URI)
+  deriving (Show, Read, Eq, Generic, URI, FromJSON, ToJSON)
+
+
 newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic)
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+
 newtype OutputEPC    = OutputEPC {unOutputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic)
+  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
 instance ToSchema ParentLabel
 instance ToSchema InputEPC
@@ -103,9 +107,14 @@ data ObjectDWhat =
   } deriving (Show, Eq, Generic)
 
 instance FromJSON ObjectDWhat where
-  parseJSON = undefined
+  parseJSON = withObject "ObjectDWhat" $ \o ->
+    ObjectDWhat <$> o .: "action"
+                <*> o .: "epcList"
+                
 instance ToJSON ObjectDWhat where
-  toJSON = undefined
+  toJSON (ObjectDWhat a b) = object [ "action" .= a
+                                    , "epcList" .= b
+                                    ]
 
 -- AggregationDWhat action parentLabel childEPC
 data AggregationDWhat =
@@ -117,9 +126,17 @@ data AggregationDWhat =
   } deriving (Show, Eq, Generic)
 
 instance FromJSON AggregationDWhat where
-  parseJSON = undefined
+  parseJSON = withObject "AggregationDWhat" $ \o ->
+    AggregationDWhat <$> o .: "action"
+                     <*> o .:? "parentID"
+                     <*> o .: "childEPCs"
+                     
 instance ToJSON AggregationDWhat where
-  toJSON = undefined
+  toJSON (AggregationDWhat a b c) =
+    object [ "action" .= a
+           , "parentID" .= b
+           , "childEPCs" .= c
+           ]
 
 -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
@@ -133,9 +150,19 @@ data TransactionDWhat =
   } deriving (Show, Eq, Generic)
 
 instance FromJSON TransactionDWhat where
-  parseJSON = undefined
+  parseJSON = withObject "TransactionDWhat" $ \o ->
+    TransactionDWhat <$> o .: "action"
+                     <*> o .:? "parentID"
+                     <*> o .: "bizTransactionList"
+                     <*> o .: "epcList"
+  
 instance ToJSON TransactionDWhat where
-  toJSON = undefined
+  toJSON (TransactionDWhat a b c d) =
+    object [ "action" .= a
+           , "parentID" .= b
+           , "bizTransactionList" .= c
+           , "epcList" .= d
+           ]
 
 -- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
@@ -147,9 +174,17 @@ data TransformationDWhat =
   } deriving (Show, Eq, Generic)
 
 instance FromJSON TransformationDWhat where
-  parseJSON = undefined
+  parseJSON = withObject "TransformationDWhat" $ \o ->
+    TransformationDWhat <$> o .:? "transformationID"
+                        <*> o .: "inputEPCList"
+                        <*> o .: "outputEPCList"
+                        
 instance ToJSON TransformationDWhat where
-  toJSON = undefined
+  toJSON (TransformationDWhat a b c) =
+    object [ "transformationID" .= a
+           , "inputEPCList" .= b
+           , "outputEPCList" .= c
+           ]
 
 instance ToSchema ObjectDWhat
 instance ToSchema AggregationDWhat
