@@ -44,7 +44,18 @@ instance FromJSON Event where
                 <*> parseJSON (Object o)
 
 instance ToJSON Event where
-  toJSON a = error "toJSON not implemented"
+  toJSON (Event t eif _what _when _why _where) =
+    let o = object [ "isA" .= t , "eventID" .= eif ] in
+      foldr merge o [ toJSON _what
+                    , toJSON _when
+                    , toJSON _why
+                    , toJSON _where
+                    ]
+       
+    where
+      merge :: Value -> Value -> Value
+      merge (Object a) (Object b) = Object (a <> b)
+      merge a _ = a
 
 -- | Calls the appropriate stringify for a DWhat
 getEventType :: DWhat -> EventType

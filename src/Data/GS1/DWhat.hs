@@ -104,6 +104,8 @@ data ObjectDWhat =
 
 instance FromJSON ObjectDWhat where
   parseJSON = undefined
+instance ToJSON ObjectDWhat where
+  toJSON = undefined
 
 -- AggregationDWhat action parentLabel childEPC
 data AggregationDWhat =
@@ -116,6 +118,8 @@ data AggregationDWhat =
 
 instance FromJSON AggregationDWhat where
   parseJSON = undefined
+instance ToJSON AggregationDWhat where
+  toJSON = undefined
 
 -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
@@ -130,6 +134,8 @@ data TransactionDWhat =
 
 instance FromJSON TransactionDWhat where
   parseJSON = undefined
+instance ToJSON TransactionDWhat where
+  toJSON = undefined
 
 -- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
@@ -142,16 +148,8 @@ data TransformationDWhat =
 
 instance FromJSON TransformationDWhat where
   parseJSON = undefined
-
--- instance FromJSON ObjectDWhat
--- instance FromJSON AggregationDWhat
--- instance FromJSON TransactionDWhat
--- instance FromJSON TransformationDWhat
-
--- instance ToJSON ObjectDWhat
--- instance ToJSON AggregationDWhat
--- instance ToJSON TransactionDWhat
--- instance ToJSON TransformationDWhat
+instance ToJSON TransformationDWhat where
+  toJSON = undefined
 
 instance ToSchema ObjectDWhat
 instance ToSchema AggregationDWhat
@@ -176,3 +174,9 @@ instance FromJSON DWhat where
     AggregationEventT -> AggWhat <$> parseJSON (Object o)
     TransactionEventT -> TransactWhat <$> parseJSON (Object o)
     TransformationEventT -> TransformWhat <$> parseJSON (Object o)
+
+instance ToJSON DWhat where
+  toJSON (ObjWhat o) = toJSON o
+  toJSON (AggWhat o) = toJSON o
+  toJSON (TransactWhat o) = toJSON o
+  toJSON (TransformWhat o) = toJSON o

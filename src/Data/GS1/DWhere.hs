@@ -54,3 +54,5 @@ instance ToSchema DWhere
 
 instance FromJSON DWhere where
   parseJSON = undefined
+instance ToJSON DWhere where
+  toJSON = undefined

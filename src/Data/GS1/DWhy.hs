@@ -19,8 +19,15 @@ data DWhy = DWhy
               _DWhyBizStep     :: Maybe BizStep
             , _DWhyDisposition :: Maybe Disposition
             }
-  deriving (Show, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Eq, Generic)
+
 instance ToSchema DWhy
+
+instance FromJSON DWhy where
+  parseJSON = undefined
+
+instance ToJSON DWhy where
+  toJSON = undefined
 
 -- given a disposition, returns the list of valid BizSteps
 dispositionValidList :: Disposition -> [BizStep]
