@@ -33,6 +33,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventId
+import           Data.GS1.EventType
 import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor

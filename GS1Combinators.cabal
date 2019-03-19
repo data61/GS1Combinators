@@ -27,6 +27,7 @@ library
                      , Data.GS1.EPC
                      , Data.GS1.Event
                      , Data.GS1.EventId
+                     , Data.GS1.EventType
   hs-source-dirs:      src
   other-modules:       Data.GS1
   build-depends:       base >= 4.7 && < 5

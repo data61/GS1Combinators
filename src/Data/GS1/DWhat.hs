@@ -27,6 +27,7 @@ import           Data.Aeson
 import           Data.Swagger
 import qualified Data.Text    as T
 
+import           Data.GS1.EventType ( EventType(..), withEvent )
 import           Data.GS1.EPC
 
 data LabelEPC
@@ -101,6 +102,9 @@ data ObjectDWhat =
   , _objEpcList :: [LabelEPC]
   } deriving (Show, Eq, Generic)
 
+instance FromJSON ObjectDWhat where
+  parseJSON = undefined
+
 -- AggregationDWhat action parentLabel childEPC
 data AggregationDWhat =
   AggregationDWhat
@@ -109,6 +113,9 @@ data AggregationDWhat =
   , _aggParentLabel  :: Maybe ParentLabel
   , _aggChildEpcList :: [LabelEPC]
   } deriving (Show, Eq, Generic)
+
+instance FromJSON AggregationDWhat where
+  parseJSON = undefined
 
 -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
@@ -121,6 +128,9 @@ data TransactionDWhat =
   , _transactionEpcList            :: [LabelEPC]
   } deriving (Show, Eq, Generic)
 
+instance FromJSON TransactionDWhat where
+  parseJSON = undefined
+
 -- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
   TransformationDWhat
@@ -129,6 +139,9 @@ data TransformationDWhat =
   , _transformationInputEpcList  :: [InputEPC]
   , _transformationOutputEpcList :: [OutputEPC]
   } deriving (Show, Eq, Generic)
+
+instance FromJSON TransformationDWhat where
+  parseJSON = undefined
 
 -- instance FromJSON ObjectDWhat
 -- instance FromJSON AggregationDWhat
@@ -157,3 +170,9 @@ data DWhat =
 
 instance ToSchema DWhat
 
+instance FromJSON DWhat where
+  parseJSON = withEvent $ \o -> \case
+    ObjectEventT -> ObjWhat <$> parseJSON (Object o)
+    AggregationEventT -> AggWhat <$> parseJSON (Object o)
+    TransactionEventT -> TransactWhat <$> parseJSON (Object o)
+    TransformationEventT -> TransformWhat <$> parseJSON (Object o)

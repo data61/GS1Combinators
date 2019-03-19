@@ -49,4 +49,8 @@ data DWhere = DWhere
   , _destType    :: [SrcDestLocation]
   }
   deriving (Show, Eq, Generic)
+
 instance ToSchema DWhere
+
+instance FromJSON DWhere where
+  parseJSON = undefined
