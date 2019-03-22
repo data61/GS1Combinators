@@ -12,7 +12,7 @@ import Test.Hspec
 import Data.GS1.EPC
 import Data.GS1.Event
 import Data.GS1.DWhat
-import Data.GS1.DWhere ( DWhere(..), SourceLocation(..), DestinationLocation(..) )
+import Data.GS1.DWhere
 import Data.GS1.DWhen ( DWhen(..) ) -- also imports orphan TimeZone To/FromJSON instances
 import Data.GS1.DWhy
 
@@ -74,18 +74,33 @@ whenProps = [ "eventTime" .= epcisTimeJSON
             ]
 
 why :: DWhy
-why = DWhy Nothing Nothing
+why = DWhy (Just bizStep) (Just disposition)
 
 whyProps :: [Pair]
-whyProps = []
+whyProps = [ "bizStep" .= bizStepJSON
+           , "disposition" .= dispositionJSON
+           ]
 
 where' :: DWhere
-where' = DWhere Nothing Nothing [] []
+where' = DWhere (Just $ ReadPointLocation location)
+                (Just $ BizLocation location)
+                [ sourceLocation ]
+                [ destinationLocation ]
 
 whereProps :: [Pair]
-whereProps = [ "sourceList" .= Array mempty
-             , "destinationList" .= Array mempty
+whereProps = [ "sourceList" .= [ sourceLocationJSON ]
+             , "destinationList" .= [ destinationLocationJSON ]
+             , "readPoint" .= locationJSON
+             , "bizLocation" .= locationJSON
              ]
+
+-- labelEPC :: LabelEPC
+-- labelEPC = IL _ Nothing
+
+-- labelEPCJSON :: Value
+-- labelEPCJSON = object [ "epcClass" .= String "urn:epc:class:lgtin:4012345.012345.998877"
+                      
+--                       ]
 
 
 location :: LocationEPC
@@ -95,18 +110,18 @@ locationJSON :: Value
 locationJSON = String "urn:epc:id:sgln:0614141.07346.1234"
 
 sourceLocation :: SourceLocation
-sourceLocation = SourceLocation SDOwningParty location
+sourceLocation = SourceLocation sourceOrDestType location
 
 sourceLocationJSON :: Value
-sourceLocationJSON = object [ "type" .= String "urn:epcglobal:cbv:sdt:owning_party"
+sourceLocationJSON = object [ "type" .= sourceOrDestTypeJSON
                             , "source" .= locationJSON
                             ]
 
 destinationLocation :: DestinationLocation
-destinationLocation = DestinationLocation SDOwningParty location
+destinationLocation = DestinationLocation sourceOrDestType location
 
 destinationLocationJSON :: Value
-destinationLocationJSON = object [ "type" .= String "urn:epcglobal:cbv:sdt:owning_party"
+destinationLocationJSON = object [ "type" .= sourceOrDestTypeJSON
                                  , "destination" .= locationJSON
                                  ]
 
@@ -121,3 +136,21 @@ epcisTime = EPCISTime $ UTCTime (ModifiedJulianDay 58564) 0
 
 epcisTimeJSON :: Value
 epcisTimeJSON = String ( "2019-03-22T00:00:00Z" )
+
+bizStep :: BizStep
+bizStep = Accepting
+
+bizStepJSON :: Value
+bizStepJSON = String "urn:epcglobal:cbv:bizstep:accepting"
+
+disposition :: Disposition
+disposition = Damaged
+
+dispositionJSON :: Value
+dispositionJSON = String "urn:epcglobal:cbv:disp:damaged"
+
+sourceOrDestType :: SourceDestType
+sourceOrDestType = SDOwningParty
+
+sourceOrDestTypeJSON :: Value
+sourceOrDestTypeJSON = String "urn:epcglobal:cbv:sdt:owning_party"

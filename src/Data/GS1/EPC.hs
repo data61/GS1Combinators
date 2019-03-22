@@ -615,7 +615,7 @@ instance FromJSON BizStep where
       Nothing      -> fail "Invalid Bizstep"
 
 instance ToJSON BizStep where
-  toJSON = String . ppBizStep
+  toJSON = String . renderURL
 
 ppBizStep :: BizStep -> T.Text
 ppBizStep = revertCamelCase . T.pack . show
