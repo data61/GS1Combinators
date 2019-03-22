@@ -66,7 +66,6 @@ getCompanyPrefix (CL (CSGTIN pfx _ _) _) = pfx
 newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
   deriving (Show, Read, Eq, Generic, URI, FromJSON, ToJSON)
 
-
 newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 

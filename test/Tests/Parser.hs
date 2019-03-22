@@ -370,21 +370,18 @@ testParser = do
                 (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing)
               -- BizLocation
                 [
-                  SrcDestLocation (
-                    SDPossessingParty, -- SourceDestType
-                    SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing
+                  SourceLocation
+                    SDPossessingParty
+                    (SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing)
                     -- LocationEPC
-                  )
+                  
                 ] -- srcType
-                [
-                  SrcDestLocation (
-                    SDOwningParty,
-                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing
-                  ),
-                  SrcDestLocation (
-                    SDLocation,
-                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing
-                  )
+                [ DestinationLocation
+                    SDOwningParty
+                    (SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing)
+                , DestinationLocation
+                    SDLocation
+                    (SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing)
                 ] -- destType
             )
           ]

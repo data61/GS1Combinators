@@ -169,16 +169,16 @@ parseDWhy c = do
 --          The content of this forms the LocationEPC
 -- attr --> The name of the attribute to look into for epc content, e.g, "type"
 --          The content found with this form the SourceDestTypes
-parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
-                            [Either ParseFailure SrcDestLocation]
-parseSourceDestLocation c listTag el attr = do
+parseSourceDestLocation :: Cursor -> Name -> (SourceDestType -> LocationEPC -> a)  -> Name -> Name ->
+                            [Either ParseFailure a]
+parseSourceDestLocation c listTag ctor  el attr = do
   -- scope for optimisation: factor out (c $// element listTag &/ element el)
   let locations =
         T.strip <$> (c $// element listTag &/ element el &/ content)
   let srcDestTypes =
         T.strip <$> concat
           (c $// element listTag &/ element el &| attribute attr)
-  uncurry (liftA2 (curry SrcDestLocation)) . (readURI *** readURI) <$> zip srcDestTypes locations
+  uncurry (liftA2 ctor) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 
   -- TODO: This looks like a great place to use the Validation type
@@ -189,9 +189,9 @@ parseDWhere c = do
   let (blsErrs, bls) = partitionEithers $ readURI <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
   let (srcTypeErrs, srcTypes) = partitionEithers $
-        parseSourceDestLocation c "sourceList" "source" "type"
+        parseSourceDestLocation c "sourceList" SourceLocation "source" "type"
   let (destTypeErrs, destTypes) = partitionEithers $
-        parseSourceDestLocation c "destinationList" "destination" "type"
+        parseSourceDestLocation c "destinationList" DestinationLocation "destination" "type"
 
   case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists

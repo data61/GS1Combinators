@@ -64,9 +64,11 @@ test-suite GS1Combinators-test
                      , Tests.DWhen
                      , Tests.DWhere
                      , Tests.DWhy
+                     , Tests.JSON
                      , Tests.Utils
                      , Tests.Parser
   build-depends:       base
+                     , aeson
                      , GS1Combinators
                      , hspec
                      , time
