@@ -51,7 +51,18 @@ instance FromJSON TimeZone where
     Nothing -> fail $ "Failed to parse timezone from: " <> T.unpack str
 
 instance ToJSON TimeZone where
-  toJSON = String . T.pack . timeZoneOffsetString
+  toJSON = String . offset
+    where
+      -- timeZoneOffsetString from Data.Time.LocalTime does not support the colon between hours & minutes
+      offset :: TimeZone -> T.Text
+      offset (TimeZone t _ _) =
+        let
+          p = if t < 0 then '-' else '+'
+          valueS = show ((div t 60) * 100 + (mod t 60))
+          [a,b,c,d] = replicate (4 - length valueS) '0' ++ valueS
+        in
+          T.pack [ p, a, b, ':', c, d]
+        
 
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named "TimeZone" $ timeSchema "date-time"

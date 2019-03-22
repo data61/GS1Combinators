@@ -3,15 +3,23 @@
 module Tests.JSON where
 
 import Data.Aeson
+import Data.Time.LocalTime ( TimeZone(..) )
 import Test.Hspec
 
 import Data.GS1.EPC
 import Data.GS1.DWhere
+import Data.GS1.DWhen () -- import orphan TimeZone To/FromJSON instances
 
 
 testJSON :: Spec
-testJSON = 
+testJSON = do
   testDWhere
+  testDWhen
+
+
+testDWhen :: Spec
+testDWhen = do
+  simpleJSONSpec "TimeZone" (String "+10:00") (TimeZone 600 False "")
 
 
 testDWhere :: Spec
