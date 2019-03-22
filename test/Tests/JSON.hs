@@ -57,11 +57,11 @@ objectEventJSON = object $ [ "isA" .= String "ObjectEvent"
 
 
 objectWhat :: DWhat
-objectWhat = ObjWhat $ ObjectDWhat Add []
+objectWhat = ObjWhat $ ObjectDWhat Add [ instanceLabelEPC ]
 
 objectWhatProps :: [Pair]
 objectWhatProps = [ "action" .= String "ADD"
-                  , "epcList" .= Array mempty
+                  , "epcList" .= [ instanceLabelEPCJSON ]
                   ]
 
 when :: DWhen
@@ -94,14 +94,12 @@ whereProps = [ "sourceList" .= [ sourceLocationJSON ]
              , "bizLocation" .= locationJSON
              ]
 
--- labelEPC :: LabelEPC
--- labelEPC = IL _ Nothing
+instanceLabelEPC :: LabelEPC
+instanceLabelEPC = IL (SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018"))
 
--- labelEPCJSON :: Value
--- labelEPCJSON = object [ "epcClass" .= String "urn:epc:class:lgtin:4012345.012345.998877"
+instanceLabelEPCJSON :: Value
+instanceLabelEPCJSON = String "urn:epc:id:sgtin:0614141.107346.2018"
                       
---                       ]
-
 
 location :: LocationEPC
 location = (SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just (SGLNExtension "1234")))
