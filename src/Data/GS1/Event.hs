@@ -11,16 +11,17 @@ module Data.GS1.Event
   )
   where
 
-import Data.Aeson
 import Data.GS1.DWhat
 import Data.GS1.DWhen
 import Data.GS1.DWhere
 import Data.GS1.DWhy
 import Data.GS1.EventId
 import Data.GS1.EventType ( EventType(..), withEvent )
+import Data.GS1.Utils ( optionally )
+
+import Data.Aeson
 import Data.Swagger
 import GHC.Generics
-
 
 
 data Event = Event
@@ -33,6 +34,7 @@ data Event = Event
   , _where :: DWhere
   }
   deriving (Show, Eq, Generic)
+
 instance ToSchema Event
 
 instance FromJSON Event where
@@ -45,7 +47,7 @@ instance FromJSON Event where
 
 instance ToJSON Event where
   toJSON (Event t eif _what _when _why _where) =
-    let o = object [ "isA" .= t , "eventID" .= eif ] in
+    let o = object $ [ "isA" .= t ] <> optionally "eventID" eif in
       foldr merge o [ toJSON _what
                     , toJSON _when
                     , toJSON _why

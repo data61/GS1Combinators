@@ -11,11 +11,13 @@ module Data.GS1.DWhere
   )
   where
 
-import           GHC.Generics
+import Data.Aeson
+import Data.Swagger
+import GHC.Generics
 
-import           Data.Aeson
-import           Data.GS1.EPC
-import           Data.Swagger
+import Data.GS1.EPC
+import Data.GS1.Utils
+
 
 -- | Location synonym
 newtype ReadPointLocation = ReadPointLocation {unReadPointLocation :: LocationEPC}
@@ -90,15 +92,15 @@ instance ToSchema DWhere
 
 instance FromJSON DWhere where
   parseJSON = withObject "DWhere" $ \o ->
-    DWhere <$> o .: "readPoint"
-           <*> o .: "bizLocation"
+    DWhere <$> o .:? "readPoint"
+           <*> o .:? "bizLocation"
            <*> o .: "sourceList"
            <*> o .: "destinationList"
   
 instance ToJSON DWhere where
   toJSON (DWhere a b c d) =
-    object [ "readPoint" .= a
-           , "bizLocation" .= b
-           , "sourceList" .= c
-           , "destinationList" .= d
-           ]
+    object $ [ "sourceList" .= c
+             , "destinationList" .= d
+             ]
+             <> optionally "readPoint" a
+             <> optionally "bizLocation" b

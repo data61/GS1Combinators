@@ -11,8 +11,10 @@ module Data.GS1.Utils (
 , parseURI
 , either2Maybe
 , getTotalLength
+, optionally
 ) where
 
+import           Data.Aeson.Types ( ToJSON(..), Pair )
 import           Data.Char
 import           Data.Monoid ((<>))
 import qualified Data.Text   as T
@@ -78,3 +80,8 @@ either2Maybe (Left _)  = Nothing
 
 getTotalLength :: [T.Text] -> Int
 getTotalLength ts = sum $ T.length <$> ts
+
+-- Useful when writing ToJSON instances and only want to include a field if it's not Nothing
+optionally :: ToJSON a => T.Text -> Maybe a -> [Pair]
+optionally _ Nothing = []
+optionally k (Just v) = [ (k, toJSON v) ]

@@ -31,8 +31,7 @@ data EventType
 instance ToSchema EventType
 
 instance ToJSON EventType where
-  toJSON evType = object
-    [ "isA" .= (stringify evType :: String) ]
+  toJSON = String . stringify
 
 instance FromJSON EventType where
   parseJSON = withText "EventType" $ \case

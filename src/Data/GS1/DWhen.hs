@@ -22,7 +22,7 @@ data DWhen = DWhen
   deriving (Show, Eq, Generic)
 
 instance FromJSON DWhen where
-  parseJSON = withObject "BizLocation" $ \v -> DWhen
+  parseJSON = withObject "DWhen" $ \v -> DWhen
     <$> v .: "eventTime"
     <*> v .:? "recordTime"
     <*> v .: "eventTimeZoneOffset"

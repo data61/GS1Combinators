@@ -806,6 +806,12 @@ instance ToJSON Disposition where
 -}
 -- |The TimeZone will be saved independently
 newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
-  deriving (Show, Read, Eq, Generic, Ord, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic, Ord)
+
 instance ToSchema EPCISTime
+
+instance ToJSON EPCISTime where
+  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%SZ")) . unEPCISTime
+instance FromJSON EPCISTime where
+  parseJSON = fmap EPCISTime . parseJSON
 

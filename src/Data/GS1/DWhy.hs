@@ -11,6 +11,7 @@ module Data.GS1.DWhy
 
 import           Data.Aeson
 import           Data.GS1.EPC
+import           Data.GS1.Utils ( optionally )
 import           Data.Swagger (ToSchema)
 import           GHC.Generics (Generic)
 
@@ -24,10 +25,16 @@ data DWhy = DWhy
 instance ToSchema DWhy
 
 instance FromJSON DWhy where
-  parseJSON = undefined
+  parseJSON = withObject "DWhy" $ \o ->
+    DWhy <$> o .:? "bizStep"
+         <*> o .:? "disposition"
 
 instance ToJSON DWhy where
-  toJSON = undefined
+  toJSON (DWhy a b) = object $ [] <> optionally "bizStep" a
+                                  <> optionally "disposition" b
+                      
+                                  
+                             
 
 -- given a disposition, returns the list of valid BizSteps
 dispositionValidList :: Disposition -> [BizStep]
