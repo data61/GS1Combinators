@@ -22,14 +22,14 @@ module Data.GS1.DWhat
 
 
 import           Data.Aeson
-import           Data.Aeson.Types ( Pair )
+import           Data.Aeson.Types ( Parser, Pair )
 import           Data.Swagger
 import qualified Data.Text    as T
 import           GHC.Generics
 
 import           Data.GS1.EventType ( EventType(..), withEvent )
 import           Data.GS1.EPC
-import           Data.GS1.Utils ( optionally )
+import           Data.GS1.Utils ( merge )
 
 data LabelEPC
   = CL
@@ -45,13 +45,21 @@ instance ToSchema LabelEPC
 
 instance FromJSON LabelEPC where
   parseJSON x@(String _) = fmap IL (parseJSON x)
+  
   parseJSON x = flip (withObject "LabelEPC") x $ \o ->
     CL <$> o .: "epcClass"
-       <*> pure Nothing --  o .:? "quantity"
+       <*> parseQuantityJSON o
+    where
+      parseQuantityJSON :: Object -> Parser (Maybe Quantity)
+      parseQuantityJSON o = do
+        q :: Maybe Value <- o .:? "quantity"
+        maybe (pure Nothing) (const $ parseJSON (Object o)) q
 
 instance ToJSON LabelEPC where
   toJSON (IL x) = toJSON x
-  toJSON (CL a b) = object $ [ "epcClass" .= a ] -- <> optionally "quantity" b
+  toJSON (CL a b) =
+    let o = object $ [ "epcClass" .= a ] in
+      maybe o (merge o . toJSON) b
 
 -- | Utlity function to extract the GS1CompanyPrefix of a Label
 getCompanyPrefix :: LabelEPC -> GS1CompanyPrefix
@@ -113,19 +121,23 @@ instance FromJSON ObjectDWhat where
                 
 instance ToJSON ObjectDWhat where
   toJSON (ObjectDWhat a b) = object $ [ "action" .= a ]
-                                   <> ("epcList" `ifNotEmpty` instanceLabels)
-                                   <> ("quantityList" `ifNotEmpty` classLabels)
+                                   <> ("epcList" `ifNotEmpty` instanceLabels b)
+                                   <> ("quantityList" `ifNotEmpty` classLabels b)
                                    
-    where
-      isInstanceLevel (IL _) = True
-      isInstanceLevel _ = False
 
-      instanceLabels = filter isInstanceLevel b
-      classLabels = filter (not . isInstanceLevel) b
+ifNotEmpty :: ToJSON a => T.Text -> [a] -> [Pair]
+ifNotEmpty _ [] = []
+ifNotEmpty k xs = [ k .= xs ]
 
-      ifNotEmpty :: T.Text -> [ LabelEPC ] -> [Pair]
-      ifNotEmpty _ [] = []
-      ifNotEmpty k xs = [ k .= xs ]
+isInstanceLabel :: LabelEPC -> Bool
+isInstanceLabel (IL _) = True
+isInstanceLabel _ = False
+
+instanceLabels :: [LabelEPC] -> [LabelEPC]
+instanceLabels = filter isInstanceLabel
+
+classLabels :: [LabelEPC] -> [LabelEPC]
+classLabels = filter (not . isInstanceLabel)
 
 -- AggregationDWhat action parentLabel childEPC
 data AggregationDWhat =
@@ -140,14 +152,17 @@ instance FromJSON AggregationDWhat where
   parseJSON = withObject "AggregationDWhat" $ \o ->
     AggregationDWhat <$> o .: "action"
                      <*> o .:? "parentID"
-                     <*> o .: "childEPCs"
+                     <*> (mappend <$> o .:? "childEPCs" .!= []
+                                  <*> o .:? "childQuantityList" .!= []
+                         )
                      
 instance ToJSON AggregationDWhat where
   toJSON (AggregationDWhat a b c) =
-    object [ "action" .= a
-           , "parentID" .= b
-           , "childEPCs" .= c
-           ]
+    object $ [ "action" .= a
+             , "parentID" .= b
+             ] <> ("childEPCs" `ifNotEmpty` instanceLabels c)
+               <> ("childQuantityList" `ifNotEmpty` classLabels c)
+           
 
 -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56

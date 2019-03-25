@@ -17,7 +17,7 @@ import Data.GS1.DWhere
 import Data.GS1.DWhy
 import Data.GS1.EventId
 import Data.GS1.EventType ( EventType(..), withEvent )
-import Data.GS1.Utils ( optionally )
+import Data.GS1.Utils ( merge, optionally )
 
 import Data.Aeson
 import Data.Swagger
@@ -53,11 +53,7 @@ instance ToJSON Event where
                     , toJSON _why
                     , toJSON _where
                     ]
-       
-    where
-      merge :: Value -> Value -> Value
-      merge (Object a) (Object b) = Object (a <> b)
-      merge a _ = a
+
 
 -- | Calls the appropriate stringify for a DWhat
 getEventType :: DWhat -> EventType

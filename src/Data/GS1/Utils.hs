@@ -12,9 +12,10 @@ module Data.GS1.Utils (
 , either2Maybe
 , getTotalLength
 , optionally
+, merge
 ) where
 
-import           Data.Aeson.Types ( ToJSON(..), Pair )
+import           Data.Aeson.Types ( Value(Object), ToJSON(..), Pair )
 import           Data.Char
 import           Data.Monoid ((<>))
 import qualified Data.Text   as T
@@ -85,3 +86,7 @@ getTotalLength ts = sum $ T.length <$> ts
 optionally :: ToJSON a => T.Text -> Maybe a -> [Pair]
 optionally _ Nothing = []
 optionally k (Just v) = [ (k, toJSON v) ]
+
+merge :: Value -> Value -> Value
+merge (Object a) (Object b) = Object (a <> b)
+merge a _ = a
