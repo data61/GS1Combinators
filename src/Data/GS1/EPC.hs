@@ -54,7 +54,7 @@ module Data.GS1.EPC
   )
   where
 
-import           Control.Lens
+import           Control.Lens hiding ( (.=) )
 import           Data.Aeson      as A
 import           Data.Swagger
 import qualified Data.Text       as T
@@ -218,10 +218,20 @@ data Quantity
 -- $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
 
--- instance FromJSON Quantity where
---   parseJSON = withObject "Quantity" $ \o ->
+instance FromJSON Quantity where
+  parseJSON = withObject "Quantity" $ \o -> do
+    uom <- o .:? "uom"
+    case uom of
+      Nothing -> ItemCount <$> o .: "quantity"
+      Just uom' -> do
+        q <- o .: "quantity"
+        pure $ MeasuredQuantity (Amount q) uom'
 
-
+instance ToJSON Quantity where
+  toJSON (MeasuredQuantity a b) = object [ "quantity" .= a
+                                         , "uom" .= b
+                                         ]
+  toJSON (ItemCount a) = object [ "quantity" .= a ]
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
