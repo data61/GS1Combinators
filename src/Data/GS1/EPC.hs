@@ -709,10 +709,9 @@ instance FromJSON BizTransaction where
       <*> o .: "bizTransaction"
 
 instance ToJSON BizTransaction where
-  toJSON (BizTransaction mbId tr) = object
-    [ "type" A..= mbId
-    , "bizTransaction" A..= tr
-    ]
+  toJSON (BizTransaction mbId tr) =
+    object $ [ "bizTransaction" A..= tr ]
+            <> optionally "type" mbId
 
 -- | TransformationId
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55

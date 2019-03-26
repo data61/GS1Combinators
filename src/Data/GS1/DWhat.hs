@@ -29,7 +29,7 @@ import           GHC.Generics
 
 import           Data.GS1.EventType ( EventType(..), withEvent )
 import           Data.GS1.EPC
-import           Data.GS1.Utils ( merge )
+import           Data.GS1.Utils ( merge, optionally )
 
 data LabelEPC
   = CL
@@ -73,15 +73,27 @@ getCompanyPrefix (CL (CSGTIN pfx _ _) _) = pfx
 newtype ParentLabel  = ParentLabel {unParentLabel :: InstanceLabelEPC}
   deriving (Show, Read, Eq, Generic, URI, FromJSON, ToJSON)
 
+instance ToSchema ParentLabel
+
 newtype InputEPC     = InputEPC {unInputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
+
+instance ToSchema InputEPC
+instance ToJSON InputEPC where
+  toJSON (InputEPC x) = toJSON x
+instance FromJSON InputEPC where
+  parseJSON = fmap InputEPC . parseJSON
 
 newtype OutputEPC    = OutputEPC {unOutputEPC :: LabelEPC}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
 
-instance ToSchema ParentLabel
-instance ToSchema InputEPC
 instance ToSchema OutputEPC
+instance ToJSON OutputEPC where
+  toJSON (OutputEPC x) = toJSON x
+instance FromJSON OutputEPC where
+  parseJSON = fmap OutputEPC . parseJSON
+
+
 
 
 -- | Parses an EPC URN into a LabelEPC.
@@ -180,15 +192,17 @@ instance FromJSON TransactionDWhat where
     TransactionDWhat <$> o .: "action"
                      <*> o .:? "parentID"
                      <*> o .: "bizTransactionList"
-                     <*> o .: "epcList"
+                     <*> ( mappend <$> o .:? "epcList" .!= []
+                                   <*> o .:? "quantityList" .!= []
+                         )
   
 instance ToJSON TransactionDWhat where
   toJSON (TransactionDWhat a b c d) =
-    object [ "action" .= a
-           , "parentID" .= b
-           , "bizTransactionList" .= c
-           , "epcList" .= d
-           ]
+    object $ [ "action" .= a
+             , "bizTransactionList" .= c
+             ] <> (optionally "parentID" b)
+               <> ("epcList" `ifNotEmpty` instanceLabels d)
+               <> ("quantityList" `ifNotEmpty` classLabels d)
 
 -- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
@@ -202,15 +216,20 @@ data TransformationDWhat =
 instance FromJSON TransformationDWhat where
   parseJSON = withObject "TransformationDWhat" $ \o ->
     TransformationDWhat <$> o .:? "transformationID"
-                        <*> o .: "inputEPCList"
-                        <*> o .: "outputEPCList"
+                        <*> ( mappend <$> o .:? "inputEPCList" .!= []
+                                      <*> o .:? "inputQuantityList" .!= []
+                            )
+                        <*> ( mappend <$> o .:? "outputEPCList" .!= []
+                                      <*> o .:? "outputQuantityList" .!= []
+                            )
                         
 instance ToJSON TransformationDWhat where
   toJSON (TransformationDWhat a b c) =
-    object [ "transformationID" .= a
-           , "inputEPCList" .= b
-           , "outputEPCList" .= c
-           ]
+    object $ optionally "transformationID" a
+          <> ("inputEPCList" `ifNotEmpty` instanceLabels (unInputEPC <$> b))
+          <> ("inputQuantityList" `ifNotEmpty` classLabels (unInputEPC <$> b))
+          <> ("outputEPCList" `ifNotEmpty` instanceLabels (unOutputEPC <$> c))
+          <> ("outputQuantityList" `ifNotEmpty` classLabels (unOutputEPC <$> c))
 
 instance ToSchema ObjectDWhat
 instance ToSchema AggregationDWhat

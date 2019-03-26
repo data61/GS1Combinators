@@ -43,6 +43,21 @@ testJSON = do
                  (eventJSON "AggregationEvent" aggregationWhatCLProps)
                  (event AggregationEventT aggregationWhatCL)
 
+  toFromJSONSpec "TransactionEvent-IL"
+                 (eventJSON "TransactionEvent" transactionWhatILProps)
+                 (event TransactionEventT transactionWhatIL)
+
+  toFromJSONSpec "TransactionEvent-CL"
+                 (eventJSON "TransactionEvent" transactionWhatCLProps)
+                 (event TransactionEventT transactionWhatCL)
+
+  toFromJSONSpec "TransformationEvent-ILIL"
+                 (eventJSON "TransformationEvent" transformationWhatILILProps)
+                 (event TransformationEventT transformationWhatILIL)
+
+  toFromJSONSpec "TransformationEvent-ILCLILCL"
+                 (eventJSON "TransformationEvent" transformationWhatILCLILCLProps)
+                 (event TransformationEventT transformationWhatILCLILCL)                 
 
    
 toFromJSONSpec :: (ToJSON a, FromJSON a, Show a, Eq a) => String -> Value -> a -> SpecWith ()
@@ -117,7 +132,64 @@ aggregationWhatCLProps = [ "action" .= String "DELETE"
                                                            ]
                                                   ]
                          ]
-                       
+
+
+transactionWhatIL :: DWhat
+transactionWhatIL = TransactWhat $ TransactionDWhat Add (Just $ ParentLabel instanceLabelEPC_5678) [bizTransaction] [ IL instanceLabelEPC_1234 ]
+
+transactionWhatILProps :: [Pair]
+transactionWhatILProps = [ "action" .= String "ADD"
+                         , "parentID" .= instanceLabelEPCJSON_5678
+                         , "bizTransactionList" .= [ bizTransactionJSON ]
+                         , "epcList" .= [ instanceLabelEPCJSON_1234 ]
+                         ]
+
+transactionWhatCL :: DWhat
+transactionWhatCL = TransactWhat $ TransactionDWhat Delete Nothing [ bizTransaction ] [ CL classLabelEPC_321 (Just $ ItemCount 100) ]
+
+transactionWhatCLProps :: [Pair]
+transactionWhatCLProps = [ "action" .= String "DELETE"
+                         , "bizTransactionList" .= [ bizTransactionJSON ]
+                         , "quantityList" .= [ object [ "epcClass" .= classLabelEPCJSON_321
+                                                      , "quantity" .= Number 100
+                                                      ]
+                                             ]
+                         ]
+
+
+transformationWhatILIL :: DWhat
+transformationWhatILIL = TransformWhat $ TransformationDWhat Nothing
+                                                             [ InputEPC $ IL instanceLabelEPC_1234 ]
+                                                             [ OutputEPC $ IL instanceLabelEPC_5678 ]
+
+transformationWhatILILProps :: [Pair]
+transformationWhatILILProps = [ "inputEPCList" .= [ instanceLabelEPCJSON_1234 ]
+                              , "outputEPCList" .= [ instanceLabelEPCJSON_5678 ]
+                              ]
+
+
+transformationWhatILCLILCL :: DWhat
+transformationWhatILCLILCL = TransformWhat $ TransformationDWhat Nothing
+                                                                 [ InputEPC $ IL instanceLabelEPC_1234
+                                                                 , InputEPC $ CL classLabelEPC_321 (Just $ ItemCount 100)
+                                                                 ]
+                                                                 [ OutputEPC $ IL instanceLabelEPC_5678
+                                                                 , OutputEPC $ CL classLabelEPC_654 (Just $ ItemCount 10)
+                                                                 ]
+
+transformationWhatILCLILCLProps :: [Pair]
+transformationWhatILCLILCLProps = [ "inputEPCList" .= [ instanceLabelEPCJSON_1234 ]
+                                  , "inputQuantityList" .= [ object [ "epcClass" .= classLabelEPCJSON_321
+                                                                    , "quantity" .= Number 100
+                                                                    ]
+                                                           ]
+                                  , "outputEPCList" .= [ instanceLabelEPCJSON_5678 ]
+                                  , "outputQuantityList" .= [ object [ "epcClass" .= classLabelEPCJSON_654
+                                                                     , "quantity" .= Number 10
+                                                                     ]
+                                                            ]
+                                  ]                              
+                         
 
 when :: DWhen
 when = DWhen epcisTime (Just epcisTime) timeZone
@@ -226,3 +298,10 @@ sourceOrDestType = SDOwningParty
 
 sourceOrDestTypeJSON :: Value
 sourceOrDestTypeJSON = String "urn:epcglobal:cbv:sdt:owning_party"
+
+bizTransaction :: BizTransaction
+bizTransaction = BizTransaction Nothing Bol
+
+bizTransactionJSON :: Value
+bizTransactionJSON = object [ "bizTransaction" .= String "urn:epcglobal:cbv:btt:bol"
+                            ]
