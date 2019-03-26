@@ -194,16 +194,16 @@ testParser = do
         [
           [
             Right BizTransaction {
-              _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
+              _btid =Just $  BizTransactionId "http://transaction.acme.com/po/12345678",
               _bt = Po
               }
           ],
           [
             Right BizTransaction {
-              _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
+              _btid =Just $  BizTransactionId "http://transaction.acme.com/po/12345678",
               _bt = Po},
             Right BizTransaction {
-              _btid = BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
+              _btid =Just $  BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
               _bt = Desadv
             }
           ]
@@ -292,16 +292,16 @@ testParser = do
       parseTransactionDWhat <$> teCursors `shouldBe`
         [Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
+            _btid =Just $  BizTransactionId "http://transaction.acme.com/po/12345678",
             _bt = Po}]
           [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
           IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]),
         Right (TransactionDWhat Observe Nothing
           [BizTransaction {
-            _btid = BizTransactionId "http://transaction.acme.com/po/12345678",
+            _btid =Just $  BizTransactionId "http://transaction.acme.com/po/12345678",
             _bt = Po},
           BizTransaction {
-            _btid = BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
+            _btid =Just $  BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152",
             _bt = Desadv}]
           [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")])]
 
@@ -370,21 +370,18 @@ testParser = do
                 (Just $ BizLocation $ SGLN (GS1CompanyPrefix "0614141") (LocationReference "00888") Nothing)
               -- BizLocation
                 [
-                  SrcDestLocation (
-                    SDPossessingParty, -- SourceDestType
-                    SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing
+                  SourceLocation
+                    SDPossessingParty
+                    (SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing)
                     -- LocationEPC
-                  )
+                  
                 ] -- srcType
-                [
-                  SrcDestLocation (
-                    SDOwningParty,
-                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing
-                  ),
-                  SrcDestLocation (
-                    SDLocation,
-                    SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing
-                  )
+                [ DestinationLocation
+                    SDOwningParty
+                    (SGLN (GS1CompanyPrefix "0614141") (LocationReference "00001") Nothing)
+                , DestinationLocation
+                    SDLocation
+                    (SGLN (GS1CompanyPrefix "0614141") (LocationReference "00777") Nothing)
                 ] -- destType
             )
           ]
@@ -523,7 +520,7 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid= BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po}
+              BizTransaction{_btid= Just $ BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po}
             ]
             [
               IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2017"),
@@ -560,8 +557,8 @@ testParser = do
             TransactWhat $ TransactionDWhat Observe
             Nothing
             [
-              BizTransaction{_btid= BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po},
-              BizTransaction{_btid= BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
+              BizTransaction{_btid= Just $ BizTransactionId "http://transaction.acme.com/po/12345678", _bt=Po},
+              BizTransaction{_btid= Just $ BizTransactionId "urn:epcglobal:cbv:bt:0614141073467:1152", _bt=Desadv}
             ]
             [IL $ SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") (SerialNumber "2018")]
           )

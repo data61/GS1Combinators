@@ -11,11 +11,11 @@
 
 module Data.GS1.Parser.Parser where
 import           Control.Applicative
-import           Control.Arrow         hiding (first, second)
+import           Control.Arrow         hiding (second)
 import           Data.Bifunctor        (second)
 import           Data.Either
-import           Data.Maybe          (listToMaybe)
 import           Data.List
+import           Data.Maybe            (listToMaybe)
 import qualified Data.Text             as T
 import           Data.Time
 import           Data.UUID             (fromString)
@@ -33,6 +33,7 @@ import           Data.GS1.DWhy
 import           Data.GS1.EPC
 import           Data.GS1.Event
 import           Data.GS1.EventId
+import           Data.GS1.EventType
 import           Data.GS1.Utils
 
 -- |Get all the cursors with the given name below the current cursor
@@ -168,16 +169,16 @@ parseDWhy c = do
 --          The content of this forms the LocationEPC
 -- attr --> The name of the attribute to look into for epc content, e.g, "type"
 --          The content found with this form the SourceDestTypes
-parseSourceDestLocation :: Cursor -> Name -> Name -> Name ->
-                            [Either ParseFailure SrcDestLocation]
-parseSourceDestLocation c listTag el attr = do
+parseSourceDestLocation :: Cursor -> Name -> (SourceDestType -> LocationEPC -> a)  -> Name -> Name ->
+                            [Either ParseFailure a]
+parseSourceDestLocation c listTag ctor  el attr = do
   -- scope for optimisation: factor out (c $// element listTag &/ element el)
   let locations =
         T.strip <$> (c $// element listTag &/ element el &/ content)
   let srcDestTypes =
         T.strip <$> concat
           (c $// element listTag &/ element el &| attribute attr)
-  uncurry (liftA2 (curry SrcDestLocation)) . (readURI *** readURI) <$> zip srcDestTypes locations
+  uncurry (liftA2 ctor) . (readURI *** readURI) <$> zip srcDestTypes locations
 
 
   -- TODO: This looks like a great place to use the Validation type
@@ -188,9 +189,9 @@ parseDWhere c = do
   let (blsErrs, bls) = partitionEithers $ readURI <$>
           (c $/ element "bizLocation" &/ element "id" &/ content)
   let (srcTypeErrs, srcTypes) = partitionEithers $
-        parseSourceDestLocation c "sourceList" "source" "type"
+        parseSourceDestLocation c "sourceList" SourceLocation "source" "type"
   let (destTypeErrs, destTypes) = partitionEithers $
-        parseSourceDestLocation c "destinationList" "destination" "type"
+        parseSourceDestLocation c "destinationList" DestinationLocation "destination" "type"
 
   case (rpsErrs, blsErrs, srcTypeErrs, destTypeErrs) of
     -- get the sourceDestType and put it in place of the empty lists
@@ -328,21 +329,19 @@ parseTransformationDWhat c = do
 
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
-parseBizTransactionHelp (a, b) = do
-  let tId   = BizTransactionId $ T.strip a
-  let tType = readURI $ T.strip b
-  case tType of
-    Right t -> Right $ BizTransaction tId t
+parseBizTransactionHelp (btId, bt) = do
+  case readURI . T.strip $ bt of
+    Right t -> Right $ BizTransaction (Just . BizTransactionId . T.strip $ btId) t
     Left  e -> Left e
 
 -- |BizTransactionList element
 parseBizTransaction :: Cursor -> [Either ParseFailure BizTransaction]
 parseBizTransaction c = do
-  let texts = c $// element "bizTransaction" &/ content
+  let btId = c $// element "bizTransaction" &/ content
   -- looks like "http://transaction.acme.com/po/12345678"
-  let attrs = foldMap id (c $// element "bizTransaction" &| attribute "type")
+  let bt = foldMap id (c $// element "bizTransaction" &| attribute "type")
   -- looks like urn:epcglobal:cbv:btt:po
-  let z = zip texts attrs
+  let z = zip btId bt
   parseBizTransactionHelp <$> z
 
 parseEventList :: EventType

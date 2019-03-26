@@ -1,64 +1,28 @@
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
 
 module Data.GS1.Event
-  (EventType(..)
-  , Event(..)
-  , allEventTypes
+  ( Event(..)
+  , EventType(..)
   , getEventType
-  , mkEventType
-  , stringify
   )
   where
 
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.GS1.DWhat
-import           Data.GS1.DWhen
-import           Data.GS1.DWhere
-import           Data.GS1.DWhy
-import           Data.GS1.EventId
-import           Data.GS1.Utils
-import           Data.String      (IsString)
-import           Data.Swagger
-import qualified Data.Text        as T
-import           GHC.Generics
+import Data.GS1.DWhat
+import Data.GS1.DWhen
+import Data.GS1.DWhere
+import Data.GS1.DWhy
+import Data.GS1.EventId
+import Data.GS1.EventType ( EventType(..), withEvent )
+import Data.GS1.Utils ( merge, optionally )
 
-data EventType
-  -- | When something is created
-  = ObjectEventT
-  -- | When something gets packaged into a container, or gets unpacked.
-  | AggregationEventT
-  -- | Some transaction has been made between 2 or more parties
-  | TransactionEventT
-  -- | Some product has been converted into another
-  -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
-  | TransformationEventT
-  deriving (Show, Eq, Generic, Enum, Read)
+import Data.Aeson
+import Data.Swagger
+import GHC.Generics
 
-$(deriveJSON defaultOptions ''EventType)
-instance ToSchema EventType
-
-stringify :: IsString a => EventType -> a
-stringify ObjectEventT         = "ObjectEvent"
-stringify AggregationEventT    = "AggregationEvent"
-stringify TransactionEventT    = "TransactionEvent"
-stringify TransformationEventT = "TransformationEvent"
-
--- | Calls the appropriate stringify for a DWhat
-getEventType :: DWhat -> EventType
-getEventType ObjWhat{}       = ObjectEventT
-getEventType AggWhat{}       = AggregationEventT
-getEventType TransactWhat{}  = TransactionEventT
-getEventType TransformWhat{} = TransformationEventT
-
-mkEventType :: T.Text -> Maybe EventType
-mkEventType = mkByName
-
-allEventTypes :: [EventType]
-allEventTypes = [ObjectEventT ..]
 
 data Event = Event
   {
@@ -70,5 +34,30 @@ data Event = Event
   , _where :: DWhere
   }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''Event)
+
 instance ToSchema Event
+
+instance FromJSON Event where
+  parseJSON = withEvent $ \o eType ->
+    Event eType <$> o .:? "eventID"
+                <*> parseJSON (Object o)
+                <*> parseJSON (Object o)
+                <*> parseJSON (Object o)
+                <*> parseJSON (Object o)
+
+instance ToJSON Event where
+  toJSON (Event t eif _what _when _why _where) =
+    let o = object $ [ "isA" .= t ] <> optionally "eventID" eif in
+      foldr merge o [ toJSON _what
+                    , toJSON _when
+                    , toJSON _why
+                    , toJSON _where
+                    ]
+
+
+-- | Calls the appropriate stringify for a DWhat
+getEventType :: DWhat -> EventType
+getEventType ObjWhat{}       = ObjectEventT
+getEventType AggWhat{}       = AggregationEventT
+getEventType TransactWhat{}  = TransactionEventT
+getEventType TransformWhat{} = TransformationEventT

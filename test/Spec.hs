@@ -4,6 +4,7 @@ import           Tests.DWhat
 import           Tests.DWhen
 import           Tests.DWhere
 import           Tests.DWhy
+import           Tests.JSON
 import           Tests.Parser
 import           Tests.Utils
 
@@ -25,7 +26,7 @@ main = do
   hspec testBizStep
   hspec testBizTransaction
 
-  -- -- DWhy
+  -- DWhy
   hspec testDisposition
 
   -- DWhen
@@ -33,3 +34,6 @@ main = do
 
   -- Parser
   hspec testParser
+
+  -- JSON
+  hspec testJSON

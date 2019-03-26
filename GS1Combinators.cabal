@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 
 library
   default-extensions: OverloadedStrings
+                    , FlexibleContexts
   exposed-modules:     RunApp.Main
                     -- exposed for tests
                      , Data.GS1.Utils
@@ -26,6 +27,7 @@ library
                      , Data.GS1.EPC
                      , Data.GS1.Event
                      , Data.GS1.EventId
+                     , Data.GS1.EventType
   hs-source-dirs:      src
   other-modules:       Data.GS1
   build-depends:       base >= 4.7 && < 5
@@ -62,9 +64,11 @@ test-suite GS1Combinators-test
                      , Tests.DWhen
                      , Tests.DWhere
                      , Tests.DWhy
+                     , Tests.JSON
                      , Tests.Utils
                      , Tests.Parser
   build-depends:       base
+                     , aeson
                      , GS1Combinators
                      , hspec
                      , time

@@ -1,14 +1,14 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | module containing error types, URI class, epc types
 -- the types in this file cover all dimensions
 
 module Data.GS1.EPC
-  (URI
+  ( URI
   , ParseFailure(..)
   , XMLSnippet(..)
   , MissingTag(..)
@@ -54,9 +54,8 @@ module Data.GS1.EPC
   )
   where
 
-import           Control.Lens
-import           Data.Aeson
-import           Data.Aeson.TH
+import           Control.Lens hiding ( (.=) )
+import           Data.Aeson      as A
 import           Data.Swagger
 import qualified Data.Text       as T
 import           GHC.Generics    (Generic)
@@ -97,8 +96,8 @@ data ParseFailure
   -- ^ When there is a list of Parsefailures
   -- typically applicable to higher level structures,
   -- like DWhat, DWhere, etc
-  deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''ParseFailure)
+  deriving (Show, Read, Eq, Generic, ToJSON)
+
 
 instance Semigroup ParseFailure where
   ChildFailure xs <> ChildFailure ys = ChildFailure (xs++ys)
@@ -178,7 +177,7 @@ data SGTINFilterValue
   | UnitLoad
   | UnitInsideTradeItemOrComponentInsideAProductNotIntendedForIndividualSale
   deriving (Eq, Generic, Read, Enum, Show)
-$(deriveJSON defaultOptions ''SGTINFilterValue)
+-- $(deriveJSON defaultOptions ''SGTINFilterValue)
 instance ToSchema SGTINFilterValue
 
 {-
@@ -216,8 +215,23 @@ data Quantity
       _quantityCount :: Integer
     }
     deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''Quantity)
+-- $(deriveJSON defaultOptions ''Quantity)
 instance ToSchema Quantity
+
+instance FromJSON Quantity where
+  parseJSON = withObject "Quantity" $ \o -> do
+    uom <- o .:? "uom"
+    case uom of
+      Nothing -> ItemCount <$> o .: "quantity"
+      Just uom' -> do
+        q <- o .: "quantity"
+        pure $ MeasuredQuantity (Amount q) uom'
+
+instance ToJSON Quantity where
+  toJSON (MeasuredQuantity a b) = object [ "quantity" .= a
+                                         , "uom" .= b
+                                         ]
+  toJSON (ItemCount a) = object [ "quantity" .= a ]
 
 -- Given a suffix/uri body, returns a list of strings separated by "."
 -- The separator should be passed on as an argument to this function in order
@@ -256,7 +270,6 @@ instance URI ClassLabelEPC where
 
   readURI epcStr = readURIClassLabelEPC $ T.splitOn ":" epcStr
 
-
 -- implement reader for :idpat:sgtin:
 readURIClassLabelEPC :: [T.Text] -> Either ParseFailure ClassLabelEPC
 readURIClassLabelEPC ("urn" : "epc" : "class" : "lgtin" : rest) =
@@ -267,8 +280,12 @@ readURIClassLabelEPC ("urn" : "epc" : "idpat" : "sgtin" : rest) =
     where (pfix:itemReference:_) = getSuffixTokens rest
 readURIClassLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
+instance FromJSON ClassLabelEPC where
+  parseJSON = withText "ClassLabelEPC" (either (fail . show) pure . readURI)
 
-$(deriveJSON defaultOptions ''ClassLabelEPC)
+instance ToJSON ClassLabelEPC where
+  toJSON = String . renderURL
+
 instance ToSchema ClassLabelEPC
 
 
@@ -331,7 +348,6 @@ ssccPadLen = 17
 -- TODO: This could be easily implemnted using proper parser combinators from attoparsec
 -- parsec, megaparsec or trifecta (parsers library)
 readURIInstanceLabelEPC :: [T.Text] -> Either ParseFailure InstanceLabelEPC
-
 readURIInstanceLabelEPC ("urn" : "epc" : "id" : "giai" : rest) =
   Right $ GIAI (GS1CompanyPrefix pfix) (SerialNumber sn)
     where [pfix, sn] = getSuffixTokens rest
@@ -360,8 +376,13 @@ readURIInstanceLabelEPC xSnippet@("urn" : "epc" : "id" : "sgtin" : rest)
 
 readURIInstanceLabelEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
+instance FromJSON InstanceLabelEPC where
+  parseJSON = withText "InstanceLabelEPC" (either (fail . show) pure . readURI)
 
-$(deriveJSON defaultOptions ''InstanceLabelEPC)
+instance ToJSON InstanceLabelEPC where
+  toJSON = String . renderURL
+
+-- $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
 
 newtype Lng = Lng {unLng :: Double}
@@ -374,7 +395,7 @@ newtype LocationReference
     _locationRefVal :: T.Text
   }
   deriving (Read, Eq, Generic, Show)
-$(deriveJSON defaultOptions ''LocationReference)
+-- $(deriveJSON defaultOptions ''LocationReference)
 
 -- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 35 4.7.2
 -- In EPCIS, the GLN+extension is represented as a Uniform Resource Identifier
@@ -389,7 +410,6 @@ data LocationEPC = SGLN {
   , _sglnExt           :: Maybe SGLNExtension
   }
   deriving (Show, Read, Eq, Generic)
-$(deriveJSON defaultOptions ''LocationEPC)
 
 instance ToSchema LocationReference
 
@@ -406,6 +426,13 @@ instance URI LocationEPC where
    | isLocationEPC (T.splitOn ":" epcStr) =
       readURILocationEPC $ T.splitOn "." $ last $ T.splitOn ":" epcStr -- TODO: Last is unsafe
    | otherwise            = Left $ InvalidFormat (XMLSnippet epcStr)
+
+
+instance FromJSON LocationEPC where
+  parseJSON = withText "LocationEPC" (either (fail . show) pure . readURI)
+
+instance ToJSON LocationEPC where
+  toJSON = String . renderURL
 
 isLocationEPC :: [T.Text] -> Bool
 isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
@@ -454,7 +481,6 @@ data SourceDestType
   | SDPossessingParty
   | SDLocation
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''SourceDestType)
 instance ToSchema SourceDestType
 
 instance URI SourceDestType where
@@ -470,6 +496,12 @@ readSrcDestURI "owning_party"     = Right SDOwningParty
 readSrcDestURI "possessing_party" = Right SDPossessingParty
 readSrcDestURI "location"         = Right SDLocation
 readSrcDestURI errTxt             = Left $ InvalidFormat (XMLSnippet errTxt)
+
+instance FromJSON SourceDestType where
+  parseJSON = withText "SourceDestType" (either (fail . show) pure . readURI)
+
+instance ToJSON SourceDestType where
+  toJSON = String . renderURL
 
 -- https://github.csiro.au/Blockchain/GS1Combinators/blob/master/doc/GS1_EPC_TDS_i1_11.pdf
 newtype DocumentType     = DocumentType {unDocumentType :: T.Text}
@@ -535,7 +567,7 @@ readURIBusinessTransactionEPC xSnippet@([pfix, docType, sn])
     isCorrectLen = getTotalLength [pfix, docType, sn] == gdtiPadLen
 readURIBusinessTransactionEPC xSnippet = makeErrorType InvalidFormat xSnippet
 
-$(deriveJSON defaultOptions ''BusinessTransactionEPC)
+-- $(deriveJSON defaultOptions ''BusinessTransactionEPC)
 instance ToSchema BusinessTransactionEPC
 
 data LocationError
@@ -584,8 +616,16 @@ data BizStep
   | Unloading
   | VoidShipping
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''BizStep)
 instance ToSchema BizStep
+
+instance FromJSON BizStep where
+  parseJSON = withText "BizStep" $ \t ->
+    case parseURI t "urn:epcglobal:cbv:bizstep" of
+      Just bizstep -> pure bizstep
+      Nothing      -> fail "Invalid Bizstep"
+
+instance ToJSON BizStep where
+  toJSON = String . renderURL
 
 ppBizStep :: BizStep -> T.Text
 ppBizStep = revertCamelCase . T.pack . show
@@ -598,8 +638,8 @@ readURIBizStep (Just bizstep) _ = Right bizstep
 instance URI BizStep where
   uriPrefix _ = "urn:epcglobal:cbv:bizstep:"
   uriSuffix = Left . ppBizStep
-  readURI  s   = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
-                   in readURIBizStep pURI s
+  readURI s = let pURI = parseURI s "urn:epcglobal:cbv:bizstep" :: Maybe BizStep
+              in readURIBizStep pURI s
 
 {-
   Example:
@@ -628,7 +668,7 @@ data BizTransactionType
   | Recadv    -- Receiving Advice
   | Rma       -- Return Mechandise Authorisation
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''BizTransactionType)
+-- $(deriveJSON defaultOptions ''BizTransactionType)
 instance ToSchema BizTransactionType
 
 ppBizTransactionType :: BizTransactionType -> T.Text
@@ -644,19 +684,34 @@ readURIBizTransactionType (Just btt) _ = Right btt
 instance URI BizTransactionType where
   uriPrefix _ = "urn:epcglobal:cbv:btt:"
   uriSuffix = Left . ppBizTransactionType
-  readURI s    = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
-                      in readURIBizTransactionType pURI s
+  readURI s = let pURI = parseURI s "urn:epcglobal:cbv:btt" :: Maybe BizTransactionType
+              in readURIBizTransactionType pURI s
+
+instance FromJSON BizTransactionType where
+  parseJSON = withText "BizTransactionType" (either (fail . show) pure . readURI)
+
+instance ToJSON BizTransactionType where
+  toJSON = String . renderURL
 
 -- |BizTransaction CBV Section 7.3 and Section 8.5
 data BizTransaction = BizTransaction
   {
-    _btid :: BizTransactionId
+    _btid :: Maybe BizTransactionId
   , _bt   :: BizTransactionType
   }
   deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''BizTransaction)
+-- $(deriveJSON defaultOptions ''BizTransaction)
 instance ToSchema BizTransaction
 
+instance FromJSON BizTransaction where
+  parseJSON = withObject "BizTransaction" $ \o -> BizTransaction
+      <$> o .:? "type"
+      <*> o .: "bizTransaction"
+
+instance ToJSON BizTransaction where
+  toJSON (BizTransaction mbId tr) =
+    object $ [ "bizTransaction" A..= tr ]
+            <> optionally "type" mbId
 
 -- | TransformationId
 -- From the spec EPCIS-Standard-1.2-r-2016-09-29.pdf Page 55
@@ -674,13 +729,25 @@ data Action
   | Observe
   | Delete
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''Action)
+-- $(deriveJSON defaultOptions ''Action)
 instance ToSchema Action
 instance ToParamSchema Action where
   toParamSchema _ = mempty
     & type_ .~ SwaggerString
 instance FromHttpApiData Action where
   parseQueryParam t = first (T.pack . show) (mkAction t)
+
+instance FromJSON Action where
+  parseJSON = withText "Action" $ \case
+    "ADD" -> pure Add
+    "OBSERVE" -> pure Observe
+    "DELETE" -> pure Delete
+    t -> fail $ "Invalid value for Action: " <> T.unpack t
+
+instance ToJSON Action where
+  toJSON Add     = "ADD"
+  toJSON Observe = "OBSERVE"
+  toJSON Delete  = "DELETE"
 
 mkAction :: T.Text -> Either ParseFailure Action
 mkAction t =
@@ -716,9 +783,7 @@ data Disposition
   | Stolen
   | Unknown
   deriving (Show, Eq, Generic, Read)
-$(deriveJSON defaultOptions ''Disposition)
 instance ToSchema Disposition
-
 
 ppDisposition :: Disposition -> T.Text
 ppDisposition = revertCamelCase . T.pack . show
@@ -734,6 +799,12 @@ instance URI Disposition where
   readURI  s    = let pURI = parseURI s "urn:epcglobal:cbv:disp" :: Maybe Disposition
                     in readURIDisposition pURI s
 
+instance FromJSON Disposition where
+  parseJSON = withText "Disposition" (either (fail . show) pure . readURI)
+
+instance ToJSON Disposition where
+  toJSON = String . renderURL
+
 ---------------------------
 -- WHEN  -------------------
 ---------------------------
@@ -744,34 +815,12 @@ instance URI Disposition where
 -}
 -- |The TimeZone will be saved independently
 newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
-  deriving (Show, Read, Eq, Generic, Ord, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic, Ord)
+
 instance ToSchema EPCISTime
 
-data EPCISTimeError = IllegalTimeFormat deriving (Show, Eq, Generic)
-$(deriveJSON defaultOptions ''EPCISTimeError)
-instance ToSchema EPCISTimeError
+instance ToJSON EPCISTime where
+  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%SZ")) . unEPCISTime
+instance FromJSON EPCISTime where
+  parseJSON = fmap EPCISTime . parseJSON
 
-
-instance Eq ZonedTime where
-  x == y = show x == show y
-
-$(deriveJSON defaultOptions ''TimeZone)
---instance ToSchema ZonedTime
-instance ToParamSchema TimeZone where
-  toParamSchema _ = mempty
-    & type_ .~ SwaggerString
-
--- copied from
--- https://hackage.haskell.org/package/swagger2-2.1.3/docs/src/Data.Swagger.Internal.Schema.html#line-477
-named :: T.Text -> Schema -> NamedSchema
-named n = NamedSchema (Just n) -- this function has been Eta reduced
-
-timeSchema :: T.Text -> Schema
-timeSchema fmt = mempty
-  & type_ .~ SwaggerString
-  & format ?~ fmt
-
-
--- XXX I have literally no idea what is happening here! Please check!
-instance ToSchema TimeZone where
-  declareNamedSchema _ = pure $ named (T.pack "TimeZone") $ timeSchema (T.pack "date-time")
