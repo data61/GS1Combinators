@@ -820,7 +820,7 @@ newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
 instance ToSchema EPCISTime
 
 instance ToJSON EPCISTime where
-  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S.%sssZ")) . unEPCISTime
+  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S.%sZ")) . unEPCISTime
 instance FromJSON EPCISTime where
   parseJSON = fmap EPCISTime . parseJSON
 
