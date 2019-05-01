@@ -34,7 +34,6 @@ library
                      , aeson
                      , aeson-pretty
                      , time >= 1.4.1
-                     , time
                      , lens
                      , uuid
                      , hashable

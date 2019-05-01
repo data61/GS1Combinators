@@ -8,12 +8,12 @@ module Data.GS1.EventType
   , withEvent
   ) where
 
-import Data.Aeson
-import Data.Aeson.Types ( Parser )
-import Data.String ( IsString )
-import Data.Swagger
-import Data.Text ( unpack )
-import GHC.Generics
+import           Data.Aeson
+import           Data.Aeson.Types (Parser)
+import           Data.String      (IsString)
+import           Data.Swagger
+import           Data.Text        (unpack)
+import           GHC.Generics
 
 
 data EventType

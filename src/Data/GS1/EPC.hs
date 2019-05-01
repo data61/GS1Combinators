@@ -54,7 +54,7 @@ module Data.GS1.EPC
   )
   where
 
-import           Control.Lens hiding ( (.=) )
+import           Control.Lens    hiding ((.=))
 import           Data.Aeson      as A
 import           Data.Swagger
 import qualified Data.Text       as T

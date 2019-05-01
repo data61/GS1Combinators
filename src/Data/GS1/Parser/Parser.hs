@@ -329,7 +329,7 @@ parseTransformationDWhat c = do
 
 parseBizTransactionHelp :: (T.Text, T.Text)
                         -> Either ParseFailure BizTransaction
-parseBizTransactionHelp (btId, bt) = do
+parseBizTransactionHelp (btId, bt) =
   case readURI . T.strip $ bt of
     Right t -> Right $ BizTransaction (Just . BizTransactionId . T.strip $ btId) t
     Left  e -> Left e

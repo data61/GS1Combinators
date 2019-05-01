@@ -374,7 +374,7 @@ testParser = do
                     SDPossessingParty
                     (SGLN (GS1CompanyPrefix "4012345") (LocationReference "00001") Nothing)
                     -- LocationEPC
-                  
+
                 ] -- srcType
                 [ DestinationLocation
                     SDOwningParty

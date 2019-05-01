@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -11,9 +10,9 @@ module Data.GS1.DWhy
 
 import           Data.Aeson
 import           Data.GS1.EPC
-import           Data.GS1.Utils ( optionally )
-import           Data.Swagger (ToSchema)
-import           GHC.Generics (Generic)
+import           Data.GS1.Utils (optionally)
+import           Data.Swagger   (ToSchema)
+import           GHC.Generics   (Generic)
 
 data DWhy = DWhy
             {
@@ -32,9 +31,6 @@ instance FromJSON DWhy where
 instance ToJSON DWhy where
   toJSON (DWhy a b) = object $ [] <> optionally "bizStep" a
                                   <> optionally "disposition" b
-                      
-                                  
-                             
 
 -- given a disposition, returns the list of valid BizSteps
 dispositionValidList :: Disposition -> [BizStep]
