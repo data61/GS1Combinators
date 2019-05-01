@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -11,17 +10,17 @@ module Data.GS1.Event
   )
   where
 
-import Data.GS1.DWhat
-import Data.GS1.DWhen
-import Data.GS1.DWhere
-import Data.GS1.DWhy
-import Data.GS1.EventId
-import Data.GS1.EventType ( EventType(..), withEvent )
-import Data.GS1.Utils ( merge, optionally )
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EventId
+import           Data.GS1.EventType (EventType (..), withEvent)
+import           Data.GS1.Utils     (merge, optionally)
 
-import Data.Aeson
-import Data.Swagger
-import GHC.Generics
+import           Data.Aeson
+import           Data.Swagger
+import           GHC.Generics
 
 
 data Event = Event

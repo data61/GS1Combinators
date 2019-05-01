@@ -15,10 +15,10 @@ module Data.GS1.Utils (
 , merge
 ) where
 
-import           Data.Aeson.Types ( Value(Object), ToJSON(..), Pair )
+import           Data.Aeson.Types (Pair, ToJSON (..), Value (Object))
 import           Data.Char
-import           Data.Monoid ((<>))
-import qualified Data.Text   as T
+import           Data.Monoid      ((<>))
+import qualified Data.Text        as T
 import           Text.Read
 
 -- TODO: Write some tests for this code and make sure it's safe. A lot could be
@@ -84,9 +84,9 @@ getTotalLength ts = sum $ T.length <$> ts
 
 -- Useful when writing ToJSON instances and only want to include a field if it's not Nothing
 optionally :: ToJSON a => T.Text -> Maybe a -> [Pair]
-optionally _ Nothing = []
+optionally _ Nothing  = []
 optionally k (Just v) = [ (k, toJSON v) ]
 
 merge :: Value -> Value -> Value
 merge (Object a) (Object b) = Object (a <> b)
-merge a _ = a
+merge a _                   = a

@@ -1,22 +1,21 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Tests.JSON where
 
-import Data.Aeson
-import Data.Aeson.Types (Pair)
-import Data.Text ( Text )
-import Data.Time.Clock ( UTCTime(..) )
-import Data.Time.LocalTime ( TimeZone(..) )
-import Data.Time.Calendar ( Day(..) )
-import Test.Hspec
+import           Data.Aeson
+import           Data.Aeson.Types    (Pair)
+import           Data.Text           (Text)
+import           Data.Time.Calendar  (Day (..))
+import           Data.Time.Clock     (UTCTime (..))
+import           Data.Time.LocalTime (TimeZone (..))
+import           Test.Hspec
 
-import Data.GS1.EPC
-import Data.GS1.Event
-import Data.GS1.DWhat
-import Data.GS1.DWhere
-import Data.GS1.DWhen ( DWhen(..) ) -- also imports orphan TimeZone To/FromJSON instances
-import Data.GS1.DWhy
+import           Data.GS1.DWhat
+import           Data.GS1.DWhen      (DWhen (..))
+import           Data.GS1.DWhere
+import           Data.GS1.DWhy
+import           Data.GS1.EPC
+import           Data.GS1.Event
 
 
 testJSON :: Spec
@@ -25,7 +24,7 @@ testJSON = do
   toFromJSONSpec "EPCISTime" epcisTimeJSON epcisTime
   toFromJSONSpec "SourceLocation" sourceLocationJSON sourceLocation
   toFromJSONSpec "DestinationLocation" destinationLocationJSON destinationLocation
-  
+
   toFromJSONSpec "ObjectEvent-IL"
                  (eventJSON "ObjectEvent" objectWhatILProps)
                  (event ObjectEventT objectWhatIL)
@@ -33,8 +32,8 @@ testJSON = do
   toFromJSONSpec "ObjectEvent-CL"
                  (eventJSON "ObjectEvent" objectWhatCLProps)
                  (event ObjectEventT objectWhatCL)
-                 
-                 
+
+
   toFromJSONSpec "AggregationEvent-IL"
                  (eventJSON "AggregationEvent" aggregationWhatILProps)
                  (event AggregationEventT aggregationWhatIL)
@@ -57,9 +56,9 @@ testJSON = do
 
   toFromJSONSpec "TransformationEvent-ILCLILCL"
                  (eventJSON "TransformationEvent" transformationWhatILCLILCLProps)
-                 (event TransformationEventT transformationWhatILCLILCL)                 
+                 (event TransformationEventT transformationWhatILCLILCL)
 
-   
+
 toFromJSONSpec :: (ToJSON a, FromJSON a, Show a, Eq a) => String -> Value -> a -> SpecWith ()
 toFromJSONSpec s v x =
   describe s $ do
@@ -69,7 +68,7 @@ toFromJSONSpec s v x =
 parsing :: FromJSON a => Value -> (a -> Expectation) -> SpecWith ()
 parsing x f = it "can be parsed from JSON" $
   case fromJSON x of
-    Error e -> expectationFailure $ "no parse: " <> e
+    Error e    -> expectationFailure $ "no parse: " <> e
     Success a' -> f a'
 
 writing :: ToJSON a => a -> (Value -> Expectation) -> SpecWith ()
@@ -119,7 +118,7 @@ aggregationWhatILProps = [ "action" .= String "DELETE"
                          , "childEPCs" .= [ instanceLabelEPCJSON_5678 ]
                          ]
 
-                         
+
 
 aggregationWhatCL :: DWhat
 aggregationWhatCL = AggWhat $ AggregationDWhat Delete (Just $ ParentLabel instanceLabelEPC_1234) [ CL classLabelEPC_654 (Just $ ItemCount 19) ]
@@ -188,8 +187,8 @@ transformationWhatILCLILCLProps = [ "inputEPCList" .= [ instanceLabelEPCJSON_123
                                                                      , "quantity" .= Number 10
                                                                      ]
                                                             ]
-                                  ]                              
-                         
+                                  ]
+
 
 when :: DWhen
 when = DWhen epcisTime (Just epcisTime) timeZone
@@ -228,7 +227,7 @@ mkInstanceLabelEPCJSON :: Text -> Value
 mkInstanceLabelEPCJSON = String . mappend "urn:epc:id:sgtin:0614141.107346."
 
 mkInstanceLabel :: Text -> (InstanceLabelEPC, Value)
-mkInstanceLabel x = (mkInstanceLabelEPC x, mkInstanceLabelEPCJSON x) 
+mkInstanceLabel x = (mkInstanceLabelEPC x, mkInstanceLabelEPCJSON x)
 
 (instanceLabelEPC_1234, instanceLabelEPCJSON_1234) = mkInstanceLabel "1234"
 (instanceLabelEPC_5678, instanceLabelEPCJSON_5678) = mkInstanceLabel "5678"
@@ -245,7 +244,7 @@ mkClassLabel x = (mkClassLabelEPC x, mkClassLabelEPCJSON x)
 
 (classLabelEPC_321, classLabelEPCJSON_321) = mkClassLabel "321"
 (classLabelEPC_654, classLabelEPCJSON_654) = mkClassLabel "654"
-                      
+
 
 location :: LocationEPC
 location = (SGLN (GS1CompanyPrefix "0614141") (LocationReference "07346") (Just (SGLNExtension "1234")))

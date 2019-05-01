@@ -54,7 +54,7 @@ module Data.GS1.EPC
   )
   where
 
-import           Control.Lens hiding ( (.=) )
+import           Control.Lens    hiding ((.=))
 import           Data.Aeson      as A
 import           Data.Swagger
 import qualified Data.Text       as T
@@ -820,7 +820,7 @@ newtype EPCISTime = EPCISTime {unEPCISTime :: UTCTime}
 instance ToSchema EPCISTime
 
 instance ToJSON EPCISTime where
-  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%SZ")) . unEPCISTime
+  toJSON = String . T.pack . formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%QZ")) . unEPCISTime
 instance FromJSON EPCISTime where
   parseJSON = fmap EPCISTime . parseJSON
 

@@ -11,12 +11,12 @@ module Data.GS1.DWhere
   )
   where
 
-import Data.Aeson
-import Data.Swagger
-import GHC.Generics
+import           Data.Aeson
+import           Data.Swagger
+import           GHC.Generics
 
-import Data.GS1.EPC
-import Data.GS1.Utils
+import           Data.GS1.EPC
+import           Data.GS1.Utils
 
 
 -- | Location synonym
@@ -42,7 +42,7 @@ instance ToJSON BizLocation where
 
 
 data SourceLocation = SourceLocation
-  { _sourceLocationType :: SourceDestType
+  { _sourceLocationType   :: SourceDestType
   , _sourceLocationSource :: LocationEPC
   } deriving (Show, Read, Eq, Generic)
 
@@ -58,10 +58,10 @@ instance ToJSON SourceLocation where
     object [ "type" .= a
            , "source" .= b
            ]
-    
+
 
 data DestinationLocation = DestinationLocation
-  { _destinationLocationType :: SourceDestType
+  { _destinationLocationType        :: SourceDestType
   , _destinationLocationDestination :: LocationEPC
   } deriving (Show, Read, Eq, Generic)
 
@@ -96,7 +96,7 @@ instance FromJSON DWhere where
            <*> o .:? "bizLocation"
            <*> o .: "sourceList"
            <*> o .: "destinationList"
-  
+
 instance ToJSON DWhere where
   toJSON (DWhere a b c d) =
     object $ [ "sourceList" .= c

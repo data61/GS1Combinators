@@ -62,7 +62,7 @@ instance ToJSON TimeZone where
           [a,b,c,d] = replicate (4 - length valueS) '0' ++ valueS
         in
           T.pack [ p, a, b, ':', c, d]
-        
+
 
 instance ToSchema TimeZone where
   declareNamedSchema _ = pure $ named "TimeZone" $ timeSchema "date-time"

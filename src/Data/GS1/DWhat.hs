@@ -5,7 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 
 module Data.GS1.DWhat
-  (LabelEPC(..)
+  ( LabelEPC(..)
   , ParentLabel(..)
   , InputEPC(..)
   , OutputEPC (..)
@@ -22,14 +22,14 @@ module Data.GS1.DWhat
 
 
 import           Data.Aeson
-import           Data.Aeson.Types ( Parser, Pair )
+import           Data.Aeson.Types   (Pair, Parser)
 import           Data.Swagger
-import qualified Data.Text    as T
+import qualified Data.Text          as T
 import           GHC.Generics
 
-import           Data.GS1.EventType ( EventType(..), withEvent )
 import           Data.GS1.EPC
-import           Data.GS1.Utils ( merge, optionally )
+import           Data.GS1.EventType (EventType (..), withEvent)
+import           Data.GS1.Utils     (merge, optionally)
 
 data LabelEPC
   = CL
@@ -45,7 +45,7 @@ instance ToSchema LabelEPC
 
 instance FromJSON LabelEPC where
   parseJSON x@(String _) = fmap IL (parseJSON x)
-  
+
   parseJSON x = flip (withObject "LabelEPC") x $ \o ->
     CL <$> o .: "epcClass"
        <*> parseQuantityJSON o
@@ -130,12 +130,12 @@ instance FromJSON ObjectDWhat where
                 <*> ( mappend <$> o .:? "epcList" .!= []
                               <*> o .:? "quantityList" .!= []
                     )
-                
+
 instance ToJSON ObjectDWhat where
   toJSON (ObjectDWhat a b) = object $ [ "action" .= a ]
                                    <> ("epcList" `ifNotEmpty` instanceLabels b)
                                    <> ("quantityList" `ifNotEmpty` classLabels b)
-                                   
+
 
 ifNotEmpty :: ToJSON a => T.Text -> [a] -> [Pair]
 ifNotEmpty _ [] = []
@@ -143,7 +143,7 @@ ifNotEmpty k xs = [ k .= xs ]
 
 isInstanceLabel :: LabelEPC -> Bool
 isInstanceLabel (IL _) = True
-isInstanceLabel _ = False
+isInstanceLabel _      = False
 
 instanceLabels :: [LabelEPC] -> [LabelEPC]
 instanceLabels = filter isInstanceLabel
@@ -167,14 +167,14 @@ instance FromJSON AggregationDWhat where
                      <*> (mappend <$> o .:? "childEPCs" .!= []
                                   <*> o .:? "childQuantityList" .!= []
                          )
-                     
+
 instance ToJSON AggregationDWhat where
   toJSON (AggregationDWhat a b c) =
     object $ [ "action" .= a
              , "parentID" .= b
              ] <> ("childEPCs" `ifNotEmpty` instanceLabels c)
                <> ("childQuantityList" `ifNotEmpty` classLabels c)
-           
+
 
 -- TransactionDWhat action parentLabel(URI) bizTransactionList epcList
 -- EPCIS-Standard-1.2-r-2016-09-29.pdf Page 56
@@ -195,7 +195,7 @@ instance FromJSON TransactionDWhat where
                      <*> ( mappend <$> o .:? "epcList" .!= []
                                    <*> o .:? "quantityList" .!= []
                          )
-  
+
 instance ToJSON TransactionDWhat where
   toJSON (TransactionDWhat a b c d) =
     object $ [ "action" .= a
@@ -222,7 +222,7 @@ instance FromJSON TransformationDWhat where
                         <*> ( mappend <$> o .:? "outputEPCList" .!= []
                                       <*> o .:? "outputQuantityList" .!= []
                             )
-                        
+
 instance ToJSON TransformationDWhat where
   toJSON (TransformationDWhat a b c) =
     object $ optionally "transformationID" a
@@ -256,7 +256,7 @@ instance FromJSON DWhat where
     TransformationEventT -> TransformWhat <$> parseJSON (Object o)
 
 instance ToJSON DWhat where
-  toJSON (ObjWhat o) = toJSON o
-  toJSON (AggWhat o) = toJSON o
-  toJSON (TransactWhat o) = toJSON o
+  toJSON (ObjWhat o)       = toJSON o
+  toJSON (AggWhat o)       = toJSON o
+  toJSON (TransactWhat o)  = toJSON o
   toJSON (TransformWhat o) = toJSON o
