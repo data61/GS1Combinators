@@ -13,6 +13,7 @@ module Data.GS1.DWhat
   , AggregationDWhat(..)
   , TransactionDWhat(..)
   , TransformationDWhat(..)
+  , AssociationDWhat(..)
   , DWhat(..)
   , readLabelEPC
   , urn2LabelEPC
@@ -231,11 +232,35 @@ instance ToJSON TransformationDWhat where
           <> ("outputEPCList" `ifNotEmpty` instanceLabels (unOutputEPC <$> c))
           <> ("outputQuantityList" `ifNotEmpty` classLabels (unOutputEPC <$> c))
 
+
+-- AssociationDWhat parentLabel childEPC
+-- Tentative implementation pre-2.0 ratification
+data AssociationDWhat =
+  AssociationDWhat { _assocParentLabel  :: ParentLabel
+                   , _assocChildEpcList :: [LabelEPC]
+                   } deriving (Show, Eq, Generic)
+
+
+instance FromJSON AssociationDWhat where
+  parseJSON = withObject "AssociationDWhat" $ \o ->
+    AssociationDWhat <$> o .: "parentID"
+                     <*> (mappend <$> o .:? "childEPCs" .!= []
+                                  <*> o .:? "childQuantityList" .!= []
+                         )
+
+instance ToJSON AssociationDWhat where
+  toJSON (AssociationDWhat a b) =
+    object $ [ "parentID" .= a
+             ] <> ("childEPCs" `ifNotEmpty` instanceLabels b)
+               <> ("childQuantityList" `ifNotEmpty` classLabels b)
+
+
+
 instance ToSchema ObjectDWhat
 instance ToSchema AggregationDWhat
 instance ToSchema TransactionDWhat
 instance ToSchema TransformationDWhat
-
+instance ToSchema AssociationDWhat
 
 -- |The What dimension specifies what physical or digital objects
 -- participated in the event
@@ -244,6 +269,7 @@ data DWhat =
   | AggWhat AggregationDWhat
   | TransactWhat TransactionDWhat
   | TransformWhat TransformationDWhat
+  | AssociationWhat AssociationDWhat
   deriving (Show, Eq, Generic)
 
 instance ToSchema DWhat
@@ -254,9 +280,12 @@ instance FromJSON DWhat where
     AggregationEventT -> AggWhat <$> parseJSON (Object o)
     TransactionEventT -> TransactWhat <$> parseJSON (Object o)
     TransformationEventT -> TransformWhat <$> parseJSON (Object o)
+    AssociationEventT -> AssociationWhat <$> parseJSON (Object o)
 
 instance ToJSON DWhat where
-  toJSON (ObjWhat o)       = toJSON o
-  toJSON (AggWhat o)       = toJSON o
-  toJSON (TransactWhat o)  = toJSON o
-  toJSON (TransformWhat o) = toJSON o
+  toJSON (ObjWhat o)         = toJSON o
+  toJSON (AggWhat o)         = toJSON o
+  toJSON (TransactWhat o)    = toJSON o
+  toJSON (TransformWhat o)   = toJSON o
+  toJSON (AssociationWhat o) = toJSON o
+  
