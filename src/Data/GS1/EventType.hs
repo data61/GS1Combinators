@@ -26,6 +26,8 @@ data EventType
   -- | Some product has been converted into another
   -- e.g A bucket of Tomatoes became some bottles of Tomato Sauce
   | TransformationEventT
+  -- | When associating sensors with a label
+  | AssociationEventT
   deriving (Show, Eq, Generic, Enum, Read)
 
 instance ToSchema EventType
@@ -39,6 +41,7 @@ instance FromJSON EventType where
       "AggregationEvent"    -> pure AggregationEventT
       "TransactionEvent"    -> pure TransactionEventT
       "TransformationEvent" -> pure TransformationEventT
+      "AssociationEvent"    -> pure AssociationEventT
       t                     -> fail $ "Invalid Event Type: " <> unpack t
 
 stringify :: IsString a => EventType -> a
@@ -46,6 +49,7 @@ stringify ObjectEventT         = "ObjectEvent"
 stringify AggregationEventT    = "AggregationEvent"
 stringify TransactionEventT    = "TransactionEvent"
 stringify TransformationEventT = "TransformationEvent"
+stringify AssociationEventT    = "AssociationEvent"
 
 allEventTypes :: [EventType]
 allEventTypes = [ObjectEventT ..]
