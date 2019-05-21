@@ -58,6 +58,10 @@ testJSON = do
                  (eventJSON "TransformationEvent" transformationWhatILCLILCLProps)
                  (event TransformationEventT transformationWhatILCLILCL)
 
+  toFromJSONSpec "AssociationEvent-Pallet-Sensor"
+                 (eventJSON "AssociationEvent" associationWhatPalletSensorProps)
+                 (event AssociationEventT associationWhatPalletSensor)
+
 
 toFromJSONSpec :: (ToJSON a, FromJSON a, Show a, Eq a) => String -> Value -> a -> SpecWith ()
 toFromJSONSpec s v x =
@@ -190,6 +194,16 @@ transformationWhatILCLILCLProps = [ "inputEPCList" .= [ instanceLabelEPCJSON_123
                                   ]
 
 
+associationWhatPalletSensor :: DWhat
+associationWhatPalletSensor = AssociationWhat $ AssociationDWhat ( ParentLabel palletLabel_1234 )
+                                                                 [ IL sensorLabel_1234 ]
+
+associationWhatPalletSensorProps :: [Pair]
+associationWhatPalletSensorProps = [ "parentID" .= palletLabelJSON_1234
+                                   , "childEPCs" .= [ sensorLabelJSON_1234 ]
+                                   ]
+
+
 when :: DWhen
 when = DWhen epcisTime (Just epcisTime) timeZone
 
@@ -219,6 +233,30 @@ whereProps = [ "sourceList" .= [ sourceLocationJSON ]
              , "readPoint" .= locationJSON
              , "bizLocation" .= locationJSON
              ]
+
+mkAssetLabelEPC :: Text -> InstanceLabelEPC
+mkAssetLabelEPC = GIAI (GS1CompanyPrefix "0614141") . SerialNumber
+
+mkAssetLabelEPCJSON :: Text -> Value
+mkAssetLabelEPCJSON = String . mappend "urn:epc:id:giai:0614141."
+
+mkAssetLabel :: Text -> (InstanceLabelEPC, Value)
+mkAssetLabel x = (mkAssetLabelEPC x, mkAssetLabelEPCJSON x)
+
+(sensorLabel_1234, sensorLabelJSON_1234) = mkAssetLabel "1234"
+
+
+mkReturnableAssetLabelEPC :: AssetType -> Text -> InstanceLabelEPC
+mkReturnableAssetLabelEPC assetType serialNo = GRAI (GS1CompanyPrefix "0614141") assetType $ SerialNumber serialNo
+
+mkReturnableAssetLabelEPCJSON :: Text -> Value
+mkReturnableAssetLabelEPCJSON = String . mappend "urn:epc:id:grai:0614141.1."
+
+mkReturnableAssetLabel :: Text -> (InstanceLabelEPC, Value)
+mkReturnableAssetLabel x = (mkReturnableAssetLabelEPC (AssetType "1") x, mkReturnableAssetLabelEPCJSON x)
+
+(palletLabel_1234, palletLabelJSON_1234) = mkReturnableAssetLabel "1234"
+
 
 mkInstanceLabelEPC :: Text -> InstanceLabelEPC
 mkInstanceLabelEPC = SGTIN (GS1CompanyPrefix "0614141") Nothing (ItemReference "107346") . SerialNumber

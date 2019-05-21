@@ -56,7 +56,8 @@ instance ToJSON Event where
 
 -- | Calls the appropriate stringify for a DWhat
 getEventType :: DWhat -> EventType
-getEventType ObjWhat{}       = ObjectEventT
-getEventType AggWhat{}       = AggregationEventT
-getEventType TransactWhat{}  = TransactionEventT
-getEventType TransformWhat{} = TransformationEventT
+getEventType ObjWhat{}         = ObjectEventT
+getEventType AggWhat{}         = AggregationEventT
+getEventType TransactWhat{}    = TransactionEventT
+getEventType TransformWhat{}   = TransformationEventT
+getEventType AssociationWhat{} = AssociationEventT
