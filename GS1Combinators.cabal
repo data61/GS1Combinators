@@ -30,10 +30,12 @@ library
                      , Data.GS1.EventType
   hs-source-dirs:      src
   other-modules:       Data.GS1
+                     , Data.Format
+                     , Data.Time.Format.ISO8601
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , aeson-pretty
-                     , time >= 1.4.1
+                     , time >= 1.8
                      , lens
                      , uuid
                      , hashable
