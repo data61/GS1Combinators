@@ -1,3 +1,6 @@
+-- | Copied from https://raw.githubusercontent.com/haskell/time/master/lib/Data/Time/Format/ISO8601.hs
+-- Commit: 50fb131
+
 module Data.Time.Format.ISO8601
     (
         -- * Format
@@ -47,7 +50,6 @@ import           Data.Fixed
 import           Data.Format
 import           Data.Time
 import           Data.Time.Calendar.OrdinalDate
--- import           Data.Time.Calendar.Private
 import           Data.Time.Calendar.WeekDate
 import           Prelude
 import           Text.ParserCombinators.ReadP

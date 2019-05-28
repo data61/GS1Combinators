@@ -1,3 +1,6 @@
+-- | Copied from https://raw.githubusercontent.com/haskell/time/master/lib/Data/Format.hs
+-- Commit: 50fb131
+
 module Data.Format
     ( Productish(..)
     , Summish(..)
