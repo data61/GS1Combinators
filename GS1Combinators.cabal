@@ -44,6 +44,7 @@ library
                      , directory
                      , http-api-data
                      , filepath
+                     , scientific
   default-language:    Haskell2010
 
 executable Parser-exe
