@@ -378,6 +378,8 @@ parseDWhat TransactionEventT eCursors =
     (second TransactWhat) . parseTransactionDWhat <$> eCursors
 parseDWhat TransformationEventT eCursors =
     (second TransformWhat) . parseTransformationDWhat <$> eCursors
+-- AssociationEvents are not part of the 1.2/XML Standard.
+parseDWhat AssociationEventT _ = [ Left (InvalidFormat $ XMLSnippet "<associationEvent>...</associationEvent>" ) ]
 
 -- this function takes in the top-most cursor
 -- | Find all events (that match the specified EventType)

@@ -10,7 +10,6 @@ import           Data.Swagger
 import           Data.Time
 import           GHC.Generics
 
-import           Debug.Trace ( traceShowId )
 import qualified Data.Text    as T
 
 import           Control.Lens hiding ((.=))
