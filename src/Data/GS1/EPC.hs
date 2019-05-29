@@ -68,6 +68,8 @@ import           Data.UUID       (UUID)
 
 import           Data.Hashable   (Hashable (..))
 
+import           Data.Scientific (fromFloatDigits, toRealFloat)
+
 newtype XMLSnippet = XMLSnippet T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
 newtype MissingTag = MissingTag T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
 newtype EventIdStr = EventIdStr T.Text deriving (Show, Eq, Read, Generic, ToJSON, FromJSON)
@@ -192,9 +194,19 @@ instance ToSchema SGTINFilterValue
 -}
 
 newtype Uom       = Uom {unUom :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON Uom where
+  parseJSON = withText "Uom" $ \t -> pure $ Uom t
+instance ToJSON Uom where
+  toJSON (Uom u) = String u
+
 newtype Amount    = Amount {unAmount :: Double}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON Amount where
+  parseJSON = withScientific "Amount" $ \a -> pure $ Amount $ toRealFloat a
+instance ToJSON Amount where
+  toJSON (Amount a) = Number . fromFloatDigits $ a
+
 newtype AssetType = AssetType {unAssetType :: T.Text}
   deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
 
