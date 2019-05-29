@@ -58,7 +58,8 @@ instance ToJSON TimeZone where
       offset (TimeZone t _ _) =
         let
           p = if t < 0 then '-' else '+'
-          valueS = show ((div t 60) * 100 + (mod t 60))
+          t' = abs t
+          valueS = show ((div t' 60) * 100 + (mod t' 60))
           [a,b,c,d] = replicate (4 - length valueS) '0' ++ valueS
         in
           T.pack [ p, a, b, ':', c, d]
