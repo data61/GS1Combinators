@@ -47,7 +47,7 @@ timeSchema fmt = mempty
 
 
 instance FromJSON TimeZone where
-  parseJSON = withText "TimeZone" $ \str -> case ((parseTimeM True defaultTimeLocale "%z" (T.unpack str)) :: Maybe TimeZone) of
+  parseJSON = withText "TimeZone" $ \str -> case (parseTimeM True defaultTimeLocale "%z" (T.unpack str) :: Maybe TimeZone) of
     Just t  -> pure t
     Nothing -> fail $ "Failed to parse timezone from: " <> T.unpack str
 
