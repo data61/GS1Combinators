@@ -6,7 +6,7 @@ import           Test.Hspec
 
 testReadSGLN :: Spec
 testReadSGLN =
-  describe "Location - Testing readURI" $
+  describe "Location - Testing readURI" $ do
     describe "SGLN with location reference" $ do
       it "LocationReference with extension" $
         readURI "urn:epc:id:sgln:0614141.12345.400" `shouldBe`
@@ -42,10 +42,15 @@ testReadSGLN =
             "urn:epc:id:sgln:06534590.123234322.4"
               `shouldBe`
                 (Left $ InvalidLength (XMLSnippet "06534590.123234322.4"))
+    describe "RFC5870 encoded Geo locations" $ do
+      it "Supports geo locations" $
+        readURI @LocationEPC "geo:37.786971,-122.399677"
+          `shouldBe` Right (Geo "37.786971,-122.399677")
+ 
 
 testPrintSGLN :: Spec
 testPrintSGLN =
-  describe "Location - Testing renderURL" $
+  describe "Location - Testing renderURL" $ do
     describe "SGLN with location reference" $ do
       it "LocationReference with extension" $
         renderURL (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") (Just (SGLNExtension "400")))
@@ -53,3 +58,6 @@ testPrintSGLN =
       it "LocationReference without extension" $
         renderURL (SGLN (GS1CompanyPrefix "0614141") (LocationReference "12345") Nothing)
           `shouldBe` "urn:epc:id:sgln:0614141.12345"
+    describe "Geo" $ do
+      it "Should print coordinates with geo: prefix" $
+        renderURL (Geo "37.786971,-122.399677") `shouldBe` "geo:37.786971,-122.399677"
