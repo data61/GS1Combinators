@@ -416,27 +416,31 @@ newtype LocationReference
 -- GLN+extension or a GLN without extension. The SGLN for
 -- GLN 0614141111114 and extension 987 looks like this:
 -- urn:epc:id:sgln:0614141.11111.978
-data LocationEPC = SGLN {
-    _sglnCompanyPrefix :: GS1CompanyPrefix
-  , _locationRef       :: LocationReference
-  , _sglnExt           :: Maybe SGLNExtension
-  }
+data LocationEPC = SGLN { _sglnCompanyPrefix :: GS1CompanyPrefix
+                        , _locationRef       :: LocationReference
+                        , _sglnExt           :: Maybe SGLNExtension
+                        }
+                 | Geo T.Text
   deriving (Show, Read, Eq, Generic)
 
 instance ToSchema LocationReference
 
 instance Hashable LocationEPC where
   hashWithSalt salt (SGLN pfx _ _) = hashWithSalt salt $ unGS1CompanyPrefix pfx
+  hashWithSalt salt (Geo x) = hashWithSalt salt x
 
 instance URI LocationEPC where
   uriPrefix SGLN{} = "urn:epc:id:sgln:"
-  uriSuffix (SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (Just (SGLNExtension ext))) =
-    Right [pfix, loc, ext]
+  uriPrefix (Geo _) = "geo:"
+  
+  uriSuffix (SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (Just (SGLNExtension ext))) = Right [pfix, loc, ext]
   uriSuffix (SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing) = Right [pfix, loc]
+  uriSuffix (Geo x) = Right [x]
 
   readURI epcStr
-   | isLocationEPC (T.splitOn ":" epcStr) =
+   | isSGLNEPC (T.splitOn ":" epcStr) =
       readURILocationEPC $ T.splitOn "." $ last $ T.splitOn ":" epcStr -- TODO: Last is unsafe
+   | isGeoEPC (T.splitOn ":" epcStr) = Right . Geo . snd $ T.splitAt 4 epcStr
    | otherwise            = Left $ InvalidFormat (XMLSnippet epcStr)
 
 
@@ -446,9 +450,13 @@ instance FromJSON LocationEPC where
 instance ToJSON LocationEPC where
   toJSON = String . renderURL
 
-isLocationEPC :: [T.Text] -> Bool
-isLocationEPC ("urn" : "epc" : "id" : "sgln" : _) = True
-isLocationEPC _                                   = False
+isSGLNEPC :: [T.Text] -> Bool
+isSGLNEPC ("urn" : "epc" : "id" : "sgln" : _) = True
+isSGLNEPC _                                   = False
+
+isGeoEPC :: [T.Text] -> Bool
+isGeoEPC ("geo":_) = True
+isGeoEPC _ = False
 
 -- | GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPadLen :: Int
