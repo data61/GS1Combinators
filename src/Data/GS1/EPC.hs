@@ -25,8 +25,6 @@ module Data.GS1.EPC
   , Uom(..)
   , Amount(..)
   , AssetType(..)
-  , Lng(..)
-  , Lat(..)
   , LocationReference(..)
   , DocumentType(..)
   , ServiceReference(..)
@@ -440,22 +438,7 @@ instance FromJSON InstanceLabelEPC where
 instance ToJSON InstanceLabelEPC where
   toJSON = String . renderURL
 
--- $(deriveJSON defaultOptions ''InstanceLabelEPC)
 instance ToSchema InstanceLabelEPC
-
-newtype Lng = Lng {unLng :: Double}
-  deriving (Show, Read, Eq, Generic)
-instance FromJSON Lng where
-  parseJSON = fmap Lng . parseJSON
-instance ToJSON Lng where
-  toJSON = toJSON . unLng
-
-newtype Lat = Lat {unLat :: Double}
-  deriving (Show, Read, Eq, Generic)
-instance FromJSON Lat where
-  parseJSON = fmap Lat . parseJSON
-instance ToJSON Lat where
-  toJSON = toJSON . unLat
 
 newtype LocationReference = LocationReference { locationRefVal :: T.Text }
   deriving (Read, Eq, Generic, Show)
