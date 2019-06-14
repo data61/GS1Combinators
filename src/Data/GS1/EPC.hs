@@ -136,27 +136,69 @@ makeErrorType e snippets = Left $ e (XMLSnippet $ dots snippets)
 
 -- |Assigned by a GS1 Member Organisation to a user/subscriber
 newtype GS1CompanyPrefix = GS1CompanyPrefix {unGS1CompanyPrefix :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON GS1CompanyPrefix where
+  parseJSON = fmap GS1CompanyPrefix . parseJSON
+instance ToJSON GS1CompanyPrefix where
+  toJSON = toJSON . unGS1CompanyPrefix
 
-newtype ItemReference     = ItemReference {unItemReference :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype ExtensionDigit    = ExtensionDigit {unExtensionDigit :: Int}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SerialReference   = SerialReference {unSerialReference :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype ItemReference = ItemReference {unItemReference :: T.Text}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON ItemReference where
+  parseJSON = fmap ItemReference . parseJSON
+instance ToJSON ItemReference where
+  toJSON = toJSON . unItemReference
+
+newtype ExtensionDigit = ExtensionDigit {unExtensionDigit :: Int}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON ExtensionDigit where
+  parseJSON = fmap ExtensionDigit . parseJSON
+instance ToJSON ExtensionDigit where
+  toJSON = toJSON . unExtensionDigit
+
+newtype SerialReference = SerialReference {unSerialReference :: T.Text}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON SerialReference where
+  parseJSON = fmap SerialReference . parseJSON
+instance ToJSON SerialReference where
+  toJSON = toJSON . unSerialReference
 
 -- |Calculated according to an algorithm https://en.wikipedia.org/wiki/Global_Location_Number
-newtype CheckDigit               = CheckDigit {unCheckDigit :: Int}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype Lot                      = Lot {unLot :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+newtype CheckDigit = CheckDigit {unCheckDigit :: Int}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON CheckDigit where
+  parseJSON = fmap CheckDigit . parseJSON
+instance ToJSON CheckDigit where
+  toJSON = toJSON . unCheckDigit
+
+newtype Lot = Lot {unLot :: T.Text}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON Lot where
+  parseJSON = fmap Lot . parseJSON
+instance ToJSON Lot where
+  toJSON = toJSON . unLot
+
 newtype IndividualAssetReference =
   IndividualAssetReference {unIndividualAssetReference :: T.Text}
-    deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SerialNumber             = SerialNumber {unSerialNumber :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
-newtype SGLNExtension            = SGLNExtension {unSGLNExtension :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON IndividualAssetReference where
+  parseJSON = fmap IndividualAssetReference . parseJSON
+instance ToJSON IndividualAssetReference where
+  toJSON = toJSON . unIndividualAssetReference
+
+newtype SerialNumber = SerialNumber {unSerialNumber :: T.Text}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON SerialNumber where
+  parseJSON = fmap SerialNumber . parseJSON
+instance ToJSON SerialNumber where
+  toJSON = toJSON . unSerialNumber
+
+newtype SGLNExtension = SGLNExtension {unSGLNExtension :: T.Text}
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON SGLNExtension where
+  parseJSON = fmap SGLNExtension . parseJSON
+instance ToJSON SGLNExtension where
+  toJSON = toJSON . unSGLNExtension
 
 instance ToSchema GS1CompanyPrefix
 instance ToParamSchema GS1CompanyPrefix
@@ -193,14 +235,14 @@ instance ToSchema SGTINFilterValue
   and treating the result as a single numeric string.
 -}
 
-newtype Uom       = Uom {unUom :: T.Text}
+newtype Uom = Uom {unUom :: T.Text}
   deriving (Show, Read, Eq, Generic)
 instance FromJSON Uom where
-  parseJSON = withText "Uom" $ \t -> pure $ Uom t
+  parseJSON = fmap Uom . parseJSON
 instance ToJSON Uom where
-  toJSON (Uom u) = String u
+  toJSON = toJSON . unUom
 
-newtype Amount    = Amount {unAmount :: Double}
+newtype Amount = Amount {unAmount :: Double}
   deriving (Show, Read, Eq, Generic)
 instance FromJSON Amount where
   parseJSON = withScientific "Amount" $ \a -> pure $ Amount $ toRealFloat a
@@ -208,7 +250,11 @@ instance ToJSON Amount where
   toJSON (Amount a) = Number . fromFloatDigits $ a
 
 newtype AssetType = AssetType {unAssetType :: T.Text}
-  deriving (Show, Read, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON AssetType where
+  parseJSON = fmap AssetType . parseJSON
+instance ToJSON AssetType where
+  toJSON = toJSON . unAssetType
 
 instance ToSchema Amount
 instance ToSchema Uom
@@ -398,16 +444,25 @@ instance ToJSON InstanceLabelEPC where
 instance ToSchema InstanceLabelEPC
 
 newtype Lng = Lng {unLng :: Double}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON Lng where
+  parseJSON = fmap Lng . parseJSON
+instance ToJSON Lng where
+  toJSON = toJSON . unLng
+
 newtype Lat = Lat {unLat :: Double}
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
-newtype LocationReference
-  = LocationReference
-  {
-    _locationRefVal :: T.Text
-  }
+  deriving (Show, Read, Eq, Generic)
+instance FromJSON Lat where
+  parseJSON = fmap Lat . parseJSON
+instance ToJSON Lat where
+  toJSON = toJSON . unLat
+
+newtype LocationReference = LocationReference { locationRefVal :: T.Text }
   deriving (Read, Eq, Generic, Show)
--- $(deriveJSON defaultOptions ''LocationReference)
+instance FromJSON LocationReference where
+  parseJSON = fmap LocationReference . parseJSON
+instance ToJSON LocationReference where
+  toJSON = toJSON . locationRefVal
 
 -- | EPCIS_Guideline.pdf Release 1.2 Ratified Feb 2017 - page 35 4.7.2
 -- In EPCIS, the GLN+extension is represented as a Uniform Resource Identifier
@@ -430,9 +485,9 @@ instance Hashable LocationEPC where
   hashWithSalt salt (Geo x) = hashWithSalt salt x
 
 instance URI LocationEPC where
-  uriPrefix SGLN{} = "urn:epc:id:sgln:"
+  uriPrefix SGLN{}  = "urn:epc:id:sgln:"
   uriPrefix (Geo _) = "geo:"
-  
+
   uriSuffix (SGLN (GS1CompanyPrefix pfix) (LocationReference loc) (Just (SGLNExtension ext))) = Right [pfix, loc, ext]
   uriSuffix (SGLN (GS1CompanyPrefix pfix) (LocationReference loc) Nothing) = Right [pfix, loc]
   uriSuffix (Geo x) = Right [x]
@@ -456,7 +511,7 @@ isSGLNEPC _                                   = False
 
 isGeoEPC :: [T.Text] -> Bool
 isGeoEPC ("geo":_) = True
-isGeoEPC _ = False
+isGeoEPC _         = False
 
 -- | GS1_EPC_TDS_i1_11.pdf Page 29
 sglnPadLen :: Int
@@ -688,7 +743,6 @@ data BizTransactionType
   | Recadv    -- Receiving Advice
   | Rma       -- Return Mechandise Authorisation
   deriving (Show, Eq, Generic, Read)
--- $(deriveJSON defaultOptions ''BizTransactionType)
 instance ToSchema BizTransactionType
 
 ppBizTransactionType :: BizTransactionType -> T.Text
