@@ -192,7 +192,7 @@ instance FromJSON TransactionDWhat where
   parseJSON = withObject "TransactionDWhat" $ \o ->
     TransactionDWhat <$> o .: "action"
                      <*> o .:? "parentID"
-                     <*> o .: "bizTransactionList"
+                     <*> o .:? "bizTransactionList" .!= []
                      <*> ( mappend <$> o .:? "epcList" .!= []
                                    <*> o .:? "quantityList" .!= []
                          )
@@ -200,10 +200,10 @@ instance FromJSON TransactionDWhat where
 instance ToJSON TransactionDWhat where
   toJSON (TransactionDWhat a b c d) =
     object $ [ "action" .= a
-             , "bizTransactionList" .= c
              ] <> (optionally "parentID" b)
                <> ("epcList" `ifNotEmpty` instanceLabels d)
                <> ("quantityList" `ifNotEmpty` classLabels d)
+               <> ("bizTransactionList" `ifNotEmpty` c)
 
 -- TransformationDWhat transformationId inputEPCList outputEPCList
 data TransformationDWhat =
