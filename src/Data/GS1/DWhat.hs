@@ -288,4 +288,4 @@ instance ToJSON DWhat where
   toJSON (TransactWhat o)    = toJSON o
   toJSON (TransformWhat o)   = toJSON o
   toJSON (AssociationWhat o) = toJSON o
-  
+
