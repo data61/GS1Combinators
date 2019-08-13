@@ -407,9 +407,9 @@ parseFile xmlFile = do
       allParsedEvents = concat $ parseEventByType mainCursor <$> allEventTypes
   return allParsedEvents
 
-parseBS :: ByteString -> IO [Either ParseFailure Event]
+parseBS :: ByteString -> [Either ParseFailure Event]
 parseBS bs = let mainCursor = fromDocument (parseLBS_ def bs) in
-               pure $ concat $ parseEventByType mainCursor <$> allEventTypes
+               concat $ parseEventByType mainCursor <$> allEventTypes
 
 -- | Takes in a directory name and parses all XML in it.
 -- TODO: Error handling
