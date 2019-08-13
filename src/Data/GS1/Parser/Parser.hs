@@ -13,6 +13,7 @@ module Data.GS1.Parser.Parser where
 import           Control.Applicative
 import           Control.Arrow         hiding (second)
 import           Data.Bifunctor        (second)
+import           Data.ByteString.Lazy  ( ByteString )
 import           Data.Either
 import           Data.List
 import           Data.Maybe            (listToMaybe)
@@ -405,6 +406,10 @@ parseFile xmlFile = do
   -- scope for optimization: only call parseEventByType on existent EventTypes
       allParsedEvents = concat $ parseEventByType mainCursor <$> allEventTypes
   return allParsedEvents
+
+parseBS :: ByteString -> IO [Either ParseFailure Event]
+parseBS bs = let mainCursor = fromDocument (parseLBS_ def bs) in
+               pure $ concat $ parseEventByType mainCursor <$> allEventTypes
 
 -- | Takes in a directory name and parses all XML in it.
 -- TODO: Error handling
